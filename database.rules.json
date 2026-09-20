@@ -1,0 +1,48 @@
+{
+  "rules": {
+    "appConfig": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'gestor'"
+    },
+
+    "users": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'gestor' || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'gestor' || (root.child('users').child(auth.uid).child('role').val() === 'admin' && newData.child('role').val() === 'user'))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['name', 'role', 'active']) && newData.child('name').isString())"
+      }
+    },
+
+    "cristolandia_check": {
+      ".read": true,
+      ".write": true
+    },
+
+    "dados_gerais": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('active').val() === true",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('active').val() === true",
+      "$itemId": {
+        ".validate": "!newData.exists() || newData.hasChildren(['titulo', 'data'])"
+      }
+    },
+
+    "areas_restritas": {
+      "$areaId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'gestor' || root.child('users').child(auth.uid).child('permissions').child($areaId).val() === true)",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'gestor' || (root.child('users').child(auth.uid).child('active').val() === true && root.child('users').child(auth.uid).child('permissions').child($areaId).val() === true))",
+        "$subItem": {
+          ".validate": "!newData.exists() || newData.exists()"
+        }
+      }
+    },
+
+    "logs_auditoria": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'gestor'",
+      "$logId": {
+        ".write": "auth != null && !data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['usuario', 'acao', 'timestamp'])"
+      }
+    }
+  }
+}
