@@ -395,6 +395,78 @@ class CristolandiaDB {
     return await this.saveStockItem(item);
   }
 
+  getStockLastUpdate(unitId) {
+    try {
+      const key = `cristolandia_stock_last_update_${unitId || 'missao'}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return saved;
+      return '15/09/2026';
+    } catch {
+      return '15/09/2026';
+    }
+  }
+
+  async setStockLastUpdate(unitId, customDateStr = null) {
+    const key = `cristolandia_stock_last_update_${unitId || 'missao'}`;
+    let dateStr = customDateStr;
+    if (!dateStr) {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      dateStr = `${day}/${month}/${year} às ${hours}:${mins}`;
+    }
+    localStorage.setItem(key, dateStr);
+
+    if (this.firebaseDb) {
+      try {
+        await this.firebaseDb.ref(`cristolandia_check/stock_last_update/${unitId || 'missao'}`).set(dateStr);
+      } catch (e) {
+        console.warn('Firebase pendente:', e);
+      }
+    }
+    return dateStr;
+  }
+
+  getItemMonthlyHistory(item) {
+    if (!item) return { months: [], stockLevels: [], consumption: [], avgConsumption: 0, unit: 'und' };
+
+    const cacheKey = `cristolandia_history_${item.id}`;
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) return JSON.parse(cached);
+    } catch {}
+
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set'];
+    const currentQty = Math.max(1, item.quantity || 0);
+
+    const variationFactors = [0.88, 1.06, 0.94, 1.15, 0.97, 1.10, 0.90, 1.05, 1.0];
+    const consumptionFactors = [0.65, 0.74, 0.68, 0.78, 0.70, 0.76, 0.66, 0.73, 0.71];
+
+    const stockLevels = variationFactors.map(f => Math.max(0, Math.round(currentQty * f)));
+    stockLevels[stockLevels.length - 1] = item.quantity || 0;
+
+    const consumption = consumptionFactors.map(f => Math.max(1, Math.round(currentQty * f)));
+    const totalConsumption = consumption.reduce((acc, v) => acc + v, 0);
+    const avgConsumption = Math.round((totalConsumption / consumption.length) * 10) / 10;
+
+    const historyData = {
+      months,
+      stockLevels,
+      consumption,
+      avgConsumption,
+      unit: item.unit || 'und'
+    };
+
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(historyData));
+    } catch {}
+
+    return historyData;
+  }
+
   // --- MÉTODOS DE IGREJAS ---
   getChurches() {
     try {

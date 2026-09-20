@@ -729,6 +729,279 @@ body {
   animation: unitFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* --- ESTILOS DO NOVO MÓDULO DE ESTOQUE AVANÇADO (Seleção, Atualizar e Analisar) --- */
+.stock-unit-selector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.stock-unit-card-choice {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-beige);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  box-shadow: var(--shadow-subtle);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.stock-unit-card-choice:hover {
+  border-color: var(--gold-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.stock-unit-card-choice:active {
+  transform: scale(0.98);
+}
+
+.stock-unit-choice-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stock-unit-choice-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--green-light);
+  color: var(--green-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(30, 77, 43, 0.12);
+  flex-shrink: 0;
+}
+
+.stock-unit-choice-info h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.stock-unit-choice-info p {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.stock-unit-choice-arrow {
+  color: var(--gold-primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* Escolha de Operação: Atualizar vs Analisar */
+.stock-actions-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.stock-action-choice-card {
+  background: var(--bg-surface);
+  border: 2px solid var(--border-beige);
+  border-radius: var(--radius-lg);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: var(--shadow-subtle);
+  transition: all var(--transition-fast);
+}
+
+.stock-action-choice-card:hover {
+  border-color: var(--gold-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(197, 137, 8, 0.15);
+}
+
+.stock-action-choice-card:active {
+  transform: scale(0.96);
+}
+
+.stock-action-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.stock-action-icon-box.update {
+  background: var(--green-light);
+  color: var(--green-primary);
+  border: 1.5px solid rgba(30, 77, 43, 0.2);
+}
+
+.stock-action-icon-box.analytics {
+  background: var(--gold-light);
+  color: var(--gold-primary);
+  border: 1.5px solid rgba(197, 137, 8, 0.25);
+}
+
+.stock-action-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: 0.2px;
+}
+
+.stock-action-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+/* --- GRÁFICO DE BARRAS HORIZONTAL SCROLLÁVEL --- */
+.stock-chart-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 4px 14px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-primary) var(--bg-surface);
+}
+
+.stock-chart-scroll-wrapper::-webkit-scrollbar {
+  height: 5px;
+}
+
+.stock-chart-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: var(--gold-primary);
+  border-radius: 10px;
+}
+
+.stock-chart-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: max-content;
+  height: 220px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid var(--border-beige);
+  position: relative;
+}
+
+.stock-chart-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 54px;
+  height: 100%;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.stock-chart-bar-col:hover {
+  transform: translateY(-4px);
+}
+
+.stock-chart-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--green-primary);
+  background: #FFFFFF;
+  border: 1px solid var(--border-beige);
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  letter-spacing: 0.2px;
+  text-align: center;
+}
+
+.stock-chart-bar {
+  width: 32px;
+  border-radius: 8px 8px 4px 4px;
+  background: linear-gradient(180deg, var(--gold-primary) 0%, var(--green-primary) 100%);
+  box-shadow: 0 4px 10px rgba(30, 77, 43, 0.2);
+  transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.15s ease;
+  min-height: 6px;
+}
+
+.stock-chart-bar-col:hover .stock-chart-bar {
+  filter: brightness(1.15);
+  box-shadow: 0 6px 14px rgba(197, 137, 8, 0.35);
+}
+
+.stock-chart-label {
+  position: absolute;
+  bottom: 4px;
+  width: 54px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- MODAL E GRÁFICO DE OSCILAÇÃO MENSAL --- */
+.oscillation-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.oscillation-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-beige);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-subtle);
+}
+
+.avg-consumption-box {
+  background: linear-gradient(135deg, #1E4D2B, #276036);
+  color: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 4px 16px rgba(30, 77, 43, 0.22);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.avg-consumption-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #E8D8A0;
+  font-weight: 700;
+}
+
+.avg-consumption-val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.15;
+}
+
+.avg-consumption-sub {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 2px;
+}
+
 /* Histórico */
 .history-item {
   background: var(--bg-surface);

@@ -246,40 +246,18 @@ async function handleSaveUnitReport() {
   }
 }
 
-// --- MÓDULO 4: ESTOQUE DAS 3 DESPENSAS (MISSÃO, MACEDÔNIA, FEMININA) ---
+// --- MÓDULO 4: ESTOQUE DAS 3 DESPENSAS (SELEÇÃO, ATUALIZAR E ANALISAR) ---
 const STOCK_UNITS = [
-  { id: 'missao', name: 'Missão' },
-  { id: 'macedonia', name: 'Macedônia' },
-  { id: 'feminina', name: 'Feminina' }
+  { id: 'missao', name: 'Missão', icon: '🏛️', subtitle: 'Unidade Masculina Central' },
+  { id: 'macedonia', name: 'Macedônia', icon: '🌾', subtitle: 'Unidade de Acolhimento Rural' },
+  { id: 'feminina', name: 'Feminina', icon: '👩', subtitle: 'Unidade de Acolhimento Feminino' }
 ];
 
 window.currentStockUnit = window.currentStockUnit || 'missao';
+window.currentStockCategory = window.currentStockCategory || 'todas';
 
-function getStockCurrentUnit() {
-  return STOCK_UNITS.find(u => u.id === (window.currentStockUnit || 'missao')) || STOCK_UNITS[0];
-}
-
-function nextStockUnit() {
-  if (navigator.vibrate) navigator.vibrate(15);
-  const currentIdx = STOCK_UNITS.findIndex(u => u.id === (window.currentStockUnit || 'missao'));
-  const nextIdx = (currentIdx + 1) % STOCK_UNITS.length;
-  window.currentStockUnit = STOCK_UNITS[nextIdx].id;
-  const unit = STOCK_UNITS[nextIdx];
-
-  const bannerUnitEl = document.getElementById('stock-banner-unit-name');
-  if (bannerUnitEl) {
-    bannerUnitEl.textContent = `Unidade ${unit.name}`;
-    bannerUnitEl.classList.remove('unit-fade-in');
-    void bannerUnitEl.offsetWidth;
-    bannerUnitEl.classList.add('unit-fade-in');
-  }
-
-  const modalHeaderSub = document.getElementById('stock-modal-subtitle');
-  if (modalHeaderSub) {
-    modalHeaderSub.textContent = `Unidade ${unit.name}`;
-  }
-
-  renderStockList();
+function getStockUnitObj(unitId) {
+  return STOCK_UNITS.find(u => u.id === (unitId || 'missao')) || STOCK_UNITS[0];
 }
 
 const STOCK_CATEGORIES_INFO = [
@@ -291,12 +269,11 @@ const STOCK_CATEGORIES_INFO = [
   { id: 'verduras_legumes', label: 'Verduras e Legumes', icon: '🫑' }
 ];
 
+// 1. TELA DE SELEÇÃO DA DESPENSA (MISSÃO, MACEDÔNIA, FEMININA)
 function openStockModal() {
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
-
-  const currUnit = getStockCurrentUnit();
 
   modalHeader.innerHTML = `
     <div class="modal-header-title">
@@ -308,44 +285,153 @@ function openStockModal() {
         </svg>
       </div>
       <div>
-        <h2>Despensa de Alimentos</h2>
-        <p id="stock-modal-subtitle" style="font-size:0.75rem; color:var(--text-muted);">Unidade ${currUnit.name}</p>
+        <h2>Despensas de Alimentos</h2>
+        <p style="font-size:0.75rem; color:var(--text-muted);">Selecione qual estoque deseja acessar</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   modalBody.innerHTML = `
-    <!-- Banner Oficial Despensa com Seletor de Unidade -->
+    <div class="stock-unit-selector-list">
+      ${STOCK_UNITS.map(unit => {
+        const count = dbManager.getStock(unit.id).length;
+        const lastUpdate = dbManager.getStockLastUpdate(unit.id);
+        return `
+          <div class="stock-unit-card-choice" onclick="selectStockUnit('${unit.id}')">
+            <div class="stock-unit-choice-left">
+              <div class="stock-unit-choice-icon" style="font-size: 1.4rem;">
+                ${unit.icon}
+              </div>
+              <div class="stock-unit-choice-info">
+                <h3>Unidade ${unit.name}</h3>
+                <p>${count} itens cadastrados · Última contagem: <strong>${lastUpdate}</strong></p>
+              </div>
+            </div>
+            <div class="stock-unit-choice-arrow">→</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-primary-action" style="width:100%;" onclick="closeModal('modal-generic')">
+      Fechar
+    </button>
+  `;
+
+  openModal('modal-generic');
+}
+
+// 2. TELA DE ESCOLHA DE AÇÃO: ATUALIZAR OU ANALISAR
+function selectStockUnit(unitId) {
+  window.currentStockUnit = unitId;
+  const unit = getStockUnitObj(unitId);
+  const lastUpdate = dbManager.getStockLastUpdate(unitId);
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openStockModal()" title="Voltar para seleção de unidades" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+        <span style="font-size: 1.2rem;">${unit.icon}</span>
+      </div>
+      <div>
+        <h2>Unidade ${unit.name}</h2>
+        <p style="font-size:0.75rem; color:var(--text-muted);">Última atualização: ${lastUpdate}</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <div style="background: linear-gradient(135deg, #1E4D2B, #276036); border-radius: 12px; padding: 12px 16px; color: #FFFFFF; box-shadow: 0 4px 12px rgba(30,77,43,0.18); margin-bottom: 12px;">
+      <div style="font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px;">DESPENSA ${unit.name.toUpperCase()}</div>
+      <div style="font-size: 0.76rem; color: #E8D8A0; margin-top: 3px;">Selecione o modo de acesso desejado:</div>
+    </div>
+
+    <div class="stock-actions-choice-grid">
+      <!-- 1. Atualizar Estoque -->
+      <div class="stock-action-choice-card" onclick="openStockUpdateView('${unitId}')">
+        <div class="stock-action-icon-box update">
+          📝
+        </div>
+        <div class="stock-action-title">Atualizar</div>
+        <div class="stock-action-desc">Contar itens, acrescentar ou remover quantidades do estoque</div>
+      </div>
+
+      <!-- 2. Analisar Gráficos -->
+      <div class="stock-action-choice-card" onclick="openStockAnalyticsView('${unitId}')">
+        <div class="stock-action-icon-box analytics">
+          📊
+        </div>
+        <div class="stock-action-title">Analisar</div>
+        <div class="stock-action-desc">Ver gráfico em barras com escala adaptativa, histórico e consumo médio</div>
+      </div>
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-primary-action" style="width:100%; background:var(--bg-surface); color:var(--text-main); border:1.5px solid var(--border-beige);" onclick="openStockModal()">
+      ← Escolher Outra Unidade
+    </button>
+  `;
+}
+
+// 3. MODO ATUALIZAR: LISTA DE ITENS + SALVAR COM DATA NO TOPO
+function openStockUpdateView(unitId) {
+  window.currentStockUnit = unitId;
+  const unit = getStockUnitObj(unitId);
+  const lastUpdate = dbManager.getStockLastUpdate(unitId);
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="selectStockUnit('${unitId}')" title="Voltar" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+        <span style="font-size: 1.2rem;">${unit.icon}</span>
+      </div>
+      <div>
+        <h2>Atualizar Estoque</h2>
+        <p style="font-size:0.75rem; color:var(--text-muted);">Unidade ${unit.name}</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <!-- Banner Oficial com Data da Última Atualização no Topo -->
     <div style="background: linear-gradient(135deg, #1E4D2B, #276036); border-radius: 12px; padding: 10px 14px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30,77,43,0.18);">
       <div>
-        <div id="stock-banner-unit-name" class="unit-fade-in" style="font-size: 1.08rem; font-weight: 800; letter-spacing: 0.4px; color: #FFFFFF; line-height: 1.2;">Unidade ${currUnit.name}</div>
+        <div style="font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px;">Unidade ${unit.name}</div>
+        <div style="font-size: 0.68rem; color: #E8D8A0; font-weight: 700; text-transform: uppercase; margin-top: 1px;">ÚLTIMA ATUALIZAÇÃO</div>
       </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <div style="text-align: right; background: rgba(0,0,0,0.25); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.35);">
-          <div style="font-size: 0.62rem; color: #E8D8A0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">ÚLTIMA CONTAGEM</div>
-          <div style="font-size: 0.82rem; font-weight: 800; color: #FFFFFF;">🗓️ 15/09/2026</div>
-        </div>
-        <button type="button" class="btn-stock-next-unit" onclick="nextStockUnit()" title="Avançar para a próxima despensa (Missão → Macedônia → Feminina)" aria-label="Próxima despensa">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
+      <div style="text-align: right; background: rgba(0,0,0,0.28); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.35);">
+        <div id="stock-last-update-banner-val" style="font-size: 0.8rem; font-weight: 800; color: #FFFFFF;">🗓️ ${lastUpdate}</div>
       </div>
     </div>
 
-    <!-- Controles Fixos no Topo (Sticky Header): Busca e Tags Sempre Visíveis no Topo da Lista -->
+    <!-- Controles Fixos no Topo: Busca, Tags e Ação de Adicionar Item -->
     <div class="stock-sticky-controls">
-      <!-- Barra de Busca Rápida -->
-      <div style="position: relative;">
-        <input type="text" id="stock-search-input" class="form-input" placeholder="🔍 Buscar alimento no estoque..." oninput="handleStockSearchInput(this.value)" style="padding-left: 12px; padding-right: 32px; background:var(--white); height:38px;">
-        <button type="button" id="stock-clear-search" onclick="clearStockSearch()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; color: var(--text-muted); cursor: pointer; display: none; padding: 4px;">&times;</button>
+      <div style="display: flex; gap: 8px;">
+        <div style="position: relative; flex: 1;">
+          <input type="text" id="stock-search-input" class="form-input" placeholder="🔍 Buscar alimento no estoque..." oninput="handleStockSearchInput(this.value)" style="padding-left: 12px; padding-right: 32px; background:var(--white); height:38px;">
+          <button type="button" id="stock-clear-search" onclick="clearStockSearch()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; color: var(--text-muted); cursor: pointer; display: none; padding: 4px;">&times;</button>
+        </div>
+        <button type="button" onclick="promptAddNewStockItem('${unitId}')" class="btn-step" title="Cadastrar novo alimento nesta despensa" style="width:38px; height:38px; background:var(--green-light); border-color:var(--green-primary); color:var(--green-primary); font-weight:800; font-size:1.1rem; flex-shrink:0;">＋</button>
       </div>
 
-      <!-- Tags das Categorias Sempre Fixas e Visíveis -->
+      <!-- Tags das Categorias Sempre Fixas -->
       <div class="stock-tags-scroll">
         ${STOCK_CATEGORIES_INFO.map(cat => `
-          <button type="button" class="chip-filter ${cat.id === 'todas' ? 'active' : ''}" data-cat="${cat.id}" onclick="setStockCategoryFilter('${cat.id}', this)">
+          <button type="button" class="chip-filter ${cat.id === (window.currentStockCategory || 'todas') ? 'active' : ''}" data-cat="${cat.id}" onclick="setStockCategoryFilter('${cat.id}', this)">
             <span style="font-size:0.95rem;">${cat.icon}</span>
             <span>${cat.label}</span>
           </button>
@@ -353,21 +439,42 @@ function openStockModal() {
       </div>
     </div>
 
-    <!-- Lista de Itens do Estoque Agrupada por Categoria -->
+    <!-- Lista de Itens do Estoque -->
     <div id="stock-items-container" style="display:flex; flex-direction:column; gap:10px; margin-top:2px;">
-      <!-- Renderizado dinamicamente -->
+      <!-- Itens renderizados aqui -->
     </div>
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%;" onclick="closeModal('modal-generic')">
-      Concluir & Fechar
-    </button>
+    <div style="display: flex; gap: 8px; width: 100%;">
+      <button type="button" class="btn-primary-action" style="flex:1; background:linear-gradient(135deg, #1E4D2B, #2E6A3B); color:#FFFFFF; font-weight:800; box-shadow: 0 4px 12px rgba(30,77,43,0.3);" onclick="saveStockUpdate('${unitId}', this)">
+        💾 Salvar Alterações
+      </button>
+      <button type="button" class="btn-primary-action" style="width:auto; padding:0 16px; background:var(--bg-surface); color:var(--text-main); border:1.5px solid var(--border-beige);" onclick="selectStockUnit('${unitId}')">
+        Voltar
+      </button>
+    </div>
   `;
 
-  window.currentStockCategory = 'todas';
   renderStockList();
-  openModal('modal-generic');
+}
+
+async function saveStockUpdate(unitId, btn) {
+  if (btn) btn.disabled = true;
+  showLoading('Gravando atualização do estoque...');
+
+  try {
+    const newDateStr = await dbManager.setStockLastUpdate(unitId);
+    const bannerVal = document.getElementById('stock-last-update-banner-val');
+    if (bannerVal) bannerVal.textContent = `🗓️ ${newDateStr}`;
+    showToast(`Estoque da Unidade ${getStockUnitObj(unitId).name} salvo com sucesso!`, 'success');
+    if (navigator.vibrate) navigator.vibrate([20, 60, 20]);
+  } catch (err) {
+    showToast('Erro ao salvar estoque: ' + err.message, 'danger');
+  } finally {
+    hideLoading();
+    if (btn) btn.disabled = false;
+  }
 }
 
 function handleStockSearchInput(val) {
@@ -397,15 +504,14 @@ function renderStockList() {
 
   const query = (document.getElementById('stock-search-input')?.value || '').toLowerCase().trim();
   const selectedCat = window.currentStockCategory || 'todas';
+  const unitId = window.currentStockUnit || 'missao';
 
-  let items = dbManager.getStock(window.currentStockUnit || 'missao');
+  let items = dbManager.getStock(unitId);
 
-  // Filtrar por categoria se não for 'todas'
   if (selectedCat !== 'todas') {
     items = items.filter(i => i.category === selectedCat);
   }
 
-  // Filtrar por busca se digitado
   if (query) {
     items = items.filter(i => i.name.toLowerCase().includes(query) || (i.categoryLabel || '').toLowerCase().includes(query));
   }
@@ -420,7 +526,6 @@ function renderStockList() {
     return;
   }
 
-  // Agrupar por categorias
   const categoriesPresent = STOCK_CATEGORIES_INFO.filter(c => c.id !== 'todas' && items.some(i => i.category === c.id));
 
   let html = '';
@@ -450,7 +555,7 @@ function renderStockCardHTML(item) {
     <div class="stepper-card" style="border-left: 3.5px solid var(--green-primary); padding: 8px 12px;">
       <div class="stepper-info" style="flex:1;">
         <h4 style="font-size:0.88rem; color:var(--text-main); font-weight:700;">${item.name}</h4>
-        <span style="font-size:0.68rem; color:var(--text-muted);">${item.categoryLabel || ''}</span>
+        <span style="font-size:0.68rem; color:var(--text-muted);">${item.categoryLabel || ''} (${item.unit || 'und'})</span>
       </div>
 
       <div class="stepper-controls">
@@ -458,7 +563,7 @@ function renderStockCardHTML(item) {
         
         <div style="position:relative;" title="Toque no número para digitar">
           <input type="number" 
-                 id="stock-qty-input-${item.id}"
+                 id="stock-qty-input-${item.id}" 
                  class="stock-qty-input" 
                  value="${item.quantity}" 
                  min="0"
@@ -468,6 +573,10 @@ function renderStockCardHTML(item) {
         </div>
 
         <button type="button" class="btn-step" onclick="handleStockDelta('${item.id}', 1)" title="Aumentar 1">+</button>
+
+        <button type="button" onclick="removeStockItem('${item.id}', '${item.unitId || 'missao'}')" title="Remover item da despensa" style="background:none; border:none; color:#DC2626; opacity:0.6; font-size:1rem; cursor:pointer; padding:2px 4px; margin-left:2px;">
+          🗑️
+        </button>
       </div>
     </div>
   `;
@@ -493,6 +602,258 @@ async function handleStockDirectInput(itemId, value) {
   await dbManager.setStockQuantity(itemId, cleanVal);
   const inputEl = document.getElementById(`stock-qty-input-${itemId}`);
   if (inputEl) inputEl.value = cleanVal;
+}
+
+async function promptAddNewStockItem(unitId) {
+  const name = prompt('Nome do novo alimento ou item:');
+  if (!name || !name.trim()) return;
+
+  const qtyStr = prompt(`Quantidade inicial para "${name.trim()}":`, '10');
+  const qty = parseInt(qtyStr, 10) || 0;
+
+  const unitStr = prompt('Unidade de medida (und, pct, kg, cx, etc.):', 'und') || 'und';
+
+  const newItem = {
+    id: `stk_${unitId}_custom_${Date.now()}`,
+    baseId: `c_${Date.now()}`,
+    name: name.trim(),
+    category: window.currentStockCategory !== 'todas' ? window.currentStockCategory : 'alimentos_grossos',
+    categoryLabel: 'Alimentos Gerais',
+    categoryIcon: '📦',
+    quantity: Math.max(0, qty),
+    unit: unitStr.trim().toLowerCase(),
+    minQty: 5,
+    unitId: unitId
+  };
+
+  await dbManager.saveStockItem(newItem);
+  showToast(`Item "${newItem.name}" adicionado com sucesso!`, 'success');
+  renderStockList();
+}
+
+async function removeStockItem(itemId, unitId) {
+  const stock = dbManager.getStock();
+  const item = stock.find(s => s.id === itemId);
+  if (!item) return;
+
+  if (!confirm(`Deseja realmente remover "${item.name}" do estoque desta despensa?`)) {
+    return;
+  }
+
+  const filtered = stock.filter(s => s.id !== itemId);
+  localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(filtered));
+
+  if (dbManager.firebaseDb) {
+    try {
+      await dbManager.firebaseDb.ref(`cristolandia_check/stock/${itemId}`).remove();
+    } catch (e) {
+      console.warn('Erro ao remover no Firebase:', e);
+    }
+  }
+
+  showToast(`Item "${item.name}" removido.`, 'info');
+  renderStockList();
+}
+
+// 4. MODO ANALISAR: GRÁFICO EM BARRAS HORIZONTAL COM ESCALA ADAPTATIVA
+function openStockAnalyticsView(unitId, filterCat = 'todas') {
+  window.currentStockUnit = unitId;
+  const unit = getStockUnitObj(unitId);
+  const allItems = dbManager.getStock(unitId);
+  const items = filterCat === 'todas' ? allItems : allItems.filter(i => i.category === filterCat);
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="selectStockUnit('${unitId}')" title="Voltar para ações" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+        <span style="font-size: 1.2rem;">📊</span>
+      </div>
+      <div>
+        <h2>Análise de Estoque</h2>
+        <p style="font-size:0.75rem; color:var(--text-muted);">Unidade ${unit.name} (${items.length} itens)</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  // Cálculo da altura calibrada com escala logarítmica para itens > 100 não desproporcionarem o gráfico
+  const maxQty = Math.max(...allItems.map(i => i.quantity || 0), 1);
+
+  function getScaledHeight(qty) {
+    if (qty <= 0) return 6;
+    // Escala logarítmica suave para visualização harmoniosa entre pequenas (2, 4) e grandes quantidades (100, 300)
+    const logVal = Math.log10(qty + 1);
+    const logMax = Math.log10(maxQty + 1);
+    const ratio = Math.max(0.06, logVal / (logMax || 1));
+    return Math.round(16 + ratio * 136); // Altura entre 22px e 152px
+  }
+
+  modalBody.innerHTML = `
+    <!-- Banner Informativo da Análise -->
+    <div style="background: linear-gradient(135deg, #1E4D2B, #276036); border-radius: 12px; padding: 10px 14px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30,77,43,0.18);">
+      <div>
+        <div style="font-size: 0.95rem; font-weight: 800; letter-spacing: 0.3px;">GRÁFICO DA DESPENSA ${unit.name.toUpperCase()}</div>
+        <div style="font-size: 0.7rem; color: #E8D8A0; margin-top: 1px;">Deslize para os lados ⇄ Toque na barra para oscilação mensal</div>
+      </div>
+      <div style="font-size: 1.3rem;">📈</div>
+    </div>
+
+    <!-- Filtros de Categorias para o Gráfico -->
+    <div class="stock-tags-scroll" style="margin-top: 6px;">
+      ${STOCK_CATEGORIES_INFO.map(cat => `
+        <button type="button" class="chip-filter ${cat.id === filterCat ? 'active' : ''}" onclick="openStockAnalyticsView('${unitId}', '${cat.id}')">
+          <span style="font-size:0.95rem;">${cat.icon}</span>
+          <span>${cat.label}</span>
+        </button>
+      `).join('')}
+    </div>
+
+    <!-- Container do Gráfico em Barras com Scroll Horizontal -->
+    <div class="stock-chart-scroll-wrapper">
+      <div class="stock-chart-track">
+        ${items.map(item => {
+          const barH = getScaledHeight(item.quantity || 0);
+          return `
+            <div class="stock-chart-bar-col" onclick="openStockItemOscillationModal('${item.id}', '${unitId}')" title="${item.name}: ${item.quantity} ${item.unit || 'und'} (Toque para oscilação mensal)">
+              <div class="stock-chart-badge">${item.quantity} ${item.unit || 'und'}</div>
+              <div class="stock-chart-bar" style="height: ${barH}px;"></div>
+              <div class="stock-chart-label">${item.name}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 6px;">
+      <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">
+        💡 Escala balanceada aplicada: valores reais exibidos abaixo de cada barra. Toque em qualquer item para ver o histórico.
+      </span>
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-primary-action" style="width:100%; background:var(--bg-surface); color:var(--text-main); border:1.5px solid var(--border-beige);" onclick="selectStockUnit('${unitId}')">
+      ← Voltar às Ações
+    </button>
+  `;
+}
+
+// 5. MODAL DE OSCILAÇÃO MENSAL E CONSUMO MÉDIO DO ITEM ESPECÍFICO
+function openStockItemOscillationModal(itemId, unitId) {
+  const stock = dbManager.getStock(unitId);
+  const item = stock.find(s => s.id === itemId);
+  if (!item) return;
+
+  const unit = getStockUnitObj(unitId);
+  const history = dbManager.getItemMonthlyHistory(item);
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openStockAnalyticsView('${unitId}')" title="Voltar ao gráfico geral" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+        <span style="font-size: 1.2rem;">📈</span>
+      </div>
+      <div>
+        <h2>Oscilação do Item</h2>
+        <p style="font-size:0.75rem; color:var(--text-muted);">${item.name} · Unidade ${unit.name}</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  // Construção do Gráfico SVG de Oscilação Mensal
+  const months = history.months;
+  const values = history.stockLevels;
+  const maxVal = Math.max(...values, 1);
+  const svgW = 310;
+  const svgH = 140;
+  const padL = 26;
+  const padR = 26;
+  const padT = 20;
+  const padB = 24;
+  const drawW = svgW - padL - padR;
+  const drawH = svgH - padT - padB;
+
+  const points = values.map((val, i) => {
+    const x = Math.round(padL + (i / (values.length - 1)) * drawW);
+    const y = Math.round(padT + drawH - (val / maxVal) * drawH);
+    return { x, y, val, month: months[i] };
+  });
+
+  const pathD = points.reduce((acc, p, i) => `${acc} ${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`, '');
+  const areaD = `${pathD} L ${points[points.length - 1].x} ${padT + drawH} L ${points[0].x} ${padT + drawH} Z`;
+
+  modalBody.innerHTML = `
+    <div class="oscillation-container">
+      <!-- Card do Item Selecionado -->
+      <div style="background: var(--bg-surface); border: 1.5px solid var(--border-beige); border-radius: var(--radius-md); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-subtle);">
+        <div>
+          <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main);">${item.name}</h3>
+          <p style="font-size: 0.72rem; color: var(--text-muted);">${item.categoryLabel || 'Alimento'} · ${item.unit || 'und'}</p>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Estoque Atual</span>
+          <div style="font-size: 1.15rem; font-weight: 800; color: var(--green-primary);">${item.quantity} ${item.unit || 'und'}</div>
+        </div>
+      </div>
+
+      <!-- Gráfico SVG de Linha e Área de Oscilação -->
+      <div class="oscillation-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 0.72rem; font-weight: 700; color: var(--green-primary); text-transform: uppercase; letter-spacing: 0.5px;">Oscilação Mensal em Estoque (2026)</span>
+          <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">Jan – Set</span>
+        </div>
+
+        <svg viewBox="0 0 ${svgW} ${svgH}" style="width: 100%; height: auto; overflow: visible;">
+          <defs>
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#C58908" stop-opacity="0.38"/>
+              <stop offset="100%" stop-color="#1E4D2B" stop-opacity="0.04"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Linha de base -->
+          <line x1="${padL}" y1="${padT + drawH}" x2="${svgW - padR}" y2="${padT + drawH}" stroke="var(--border-beige)" stroke-width="1.5" />
+
+          <!-- Área sombreada -->
+          <path d="${areaD}" fill="url(#areaGradient)" />
+
+          <!-- Linha da curva -->
+          <path d="${pathD}" fill="none" stroke="var(--gold-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+          <!-- Pontos e Rótulos -->
+          ${points.map(p => `
+            <circle cx="${p.x}" cy="${p.y}" r="4" fill="#FFFFFF" stroke="var(--green-primary)" stroke-width="2.5" />
+            <text x="${p.x}" y="${p.y - 7}" font-size="8.5" font-weight="700" fill="var(--green-primary)" text-anchor="middle">${p.val}</text>
+            <text x="${p.x}" y="${svgH - 6}" font-size="8.5" font-weight="600" fill="var(--text-muted)" text-anchor="middle">${p.month}</text>
+          `).join('')}
+        </svg>
+      </div>
+
+      <!-- Card de Consumo Médio Mensal em Destaque Conforme Solicitado -->
+      <div class="avg-consumption-box">
+        <div class="avg-consumption-label">Consumo Médio Mensal do Item</div>
+        <div class="avg-consumption-val">${history.avgConsumption} ${history.unit || 'und'} / mês</div>
+        <div class="avg-consumption-sub">
+          Média calculada com base na rotina de preparo das refeições e atendimento da Unidade ${unit.name}.
+        </div>
+      </div>
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-primary-action" style="width:100%;" onclick="openStockAnalyticsView('${unitId}')">
+      ← Voltar ao Gráfico Geral
+    </button>
+  `;
 }
 
 // --- MÓDULO 5: RELATÓRIOS CONSOLIDADOS CLEAN ---
