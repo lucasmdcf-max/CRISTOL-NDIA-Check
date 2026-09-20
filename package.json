@@ -1,0 +1,25 @@
+{
+  "name": "cristolandia-check",
+  "version": "1.0.12",
+  "description": "Cristolândia Check - PWA Realtime de Gestão de Despensas e Relatórios das Unidades",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-server.js",
+    "deploy": "firebase deploy --only hosting",
+    "deploy:win": "cmd.exe /c \"npx firebase-tools deploy --only hosting\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucasmdcf-max/CRISTOL-NDIA-Check.git"
+  },
+  "keywords": [
+    "cristolandia",
+    "pwa",
+    "firebase",
+    "realtime",
+    "gestao"
+  ],
+  "author": "Lucas MDCF",
+  "license": "ISC"
+}
