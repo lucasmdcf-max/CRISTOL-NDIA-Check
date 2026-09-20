@@ -1,6 +1,6 @@
 {
-  "version": "1.0.14",
-  "build": "20260920_14",
+  "version": "1.0.15",
+  "build": "20260920_15",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Notificação flutuante neon amarelo com letra verde escura ao surgir nova versão após deploy."
+  "releaseNotes": "Aba superior e painel diário fixados no topo com botões centralizados na tela."
 }

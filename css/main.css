@@ -73,24 +73,23 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   user-select: none;
   letter-spacing: 0.1px;
-  padding: calc(var(--safe-top) + 8px) 14px calc(var(--safe-bottom) + 8px) 14px;
+  padding: calc(var(--safe-top) + 6px) 14px calc(var(--safe-bottom) + 10px) 14px;
 }
 
 /* ==========================================================================
-   CONTAINER DO APLICATIVO (Encaixado perfeitamente na tela sem rolagem)
+   CONTAINER DO APLICATIVO (Encaixado perfeitamente no topo com botões centralizados)
    ========================================================================== */
 .app-container {
   width: 100%;
   max-width: 390px;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   margin: 0 auto;
-  max-height: 100%;
-  justify-content: center;
 }
 
 /* ==========================================================================
