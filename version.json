@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "build": "20260918_01",
+  "version": "1.0.13",
+  "build": "20260920_13",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Lançamento inicial com 6 módulos táteis 3D e sincronização dual-layer."
+  "releaseNotes": "Remoção das bolinhas douradas indicadoras dos botões das unidades Missão, Macedônia e Feminina."
 }

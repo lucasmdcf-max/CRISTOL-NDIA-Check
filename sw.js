@@ -4,7 +4,7 @@
    mantendo suporte completo a funcionamento offline.
    ========================================================================== */
 
-const CACHE_NAME = 'cristolandia-check-live-v12';
+const CACHE_NAME = 'cristolandia-check-live-v13';
 
 self.addEventListener('install', (event) => {
   // Ativa imediatamente a nova versão do worker sem esperar o fechamento de abas

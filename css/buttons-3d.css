@@ -133,18 +133,6 @@
   color: var(--green-primary);
 }
 
-/* Indicador de Status Diário (Ponto Dourado Minimalista) */
-.btn-badge-today {
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--gold-primary);
-  box-shadow: 0 0 5px var(--gold-primary);
-}
-
 /* ==========================================================================
    ESTILOS ESPECÍFICOS DOS 6 BOTÕES (PALETA DOURADO, BEGE E VERDE)
    - Cima (Unidades): Missão, Macedônia e Feminina com a mesma cor e ícone verde

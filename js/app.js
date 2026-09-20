@@ -86,15 +86,6 @@ function updateHeroMetrics() {
   if (elRefeicoes) elRefeicoes.textContent = refeicoes;
   if (elTriagens) elTriagens.textContent = triagens;
   if (elRelatoriosCount) elRelatoriosCount.textContent = `${todayReports.length}/3`;
-
-  // Atualiza bolinhas verdes nos botões que já têm relatório hoje
-  ['missao', 'macedonia', 'feminina'].forEach(unitId => {
-    const hasToday = todayReports.some(r => r.unitId === unitId);
-    const badge = document.getElementById(`badge-unit-${unitId}`);
-    if (badge) {
-      badge.style.display = hasToday ? 'block' : 'none';
-    }
-  });
 }
 
 // Efeito 3D Tátil, Iluminação Dinâmica e Micro-Animações no Mouse e Dedo
