@@ -1,0 +1,860 @@
+/* ==========================================================================
+   CRISTOLÂNDIA CHECK - MÓDULOS DE NEGÓCIO E TELAS CLEAN
+   Paleta: Dourado, Bege e Verde. Tipografia Century Gothic.
+   Ícones de linha simples com alto contraste.
+   ========================================================================== */
+
+// Mapeamento das Unidades com Ícones de Linha Vetoriais
+const UNIT_PROFILES = {
+  missao: {
+    id: 'missao',
+    name: 'Missão',
+    fullName: 'Unidade Missão • Atendimento & Triagem',
+    badgeClass: 'badge-missao',
+    iconSvg: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10L12 3L21 10"/><path d="M5 10V20H19V10"/><path d="M9 20V14H15V20"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
+    defaultReporter: 'Pr. Marcos Lima'
+  },
+  macedonia: {
+    id: 'macedonia',
+    name: 'Macedônia',
+    fullName: 'Unidade Macedônia • Internação & Vida',
+    badgeClass: 'badge-macedonia',
+    iconSvg: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/><path d="M12 17C15 17 18 19 19 22"/></svg>`,
+    defaultReporter: 'Missionário Carlos'
+  },
+  feminina: {
+    id: 'feminina',
+    name: 'Feminina',
+    fullName: 'Unidade Feminina • Mulheres & Filhos',
+    badgeClass: 'badge-feminina',
+    iconSvg: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.5C14 11.5 15.8 9.8 15.8 7.5C15.8 5.2 14 3.5 12 3.5C10 3.5 8.2 5.2 8.2 7.5C8.2 9.8 10 11.5 12 11.5Z"/><path d="M8.5 7.5C8.5 4.8 10 4 12 4C14.2 4 15.5 5.2 15.5 7.5"/><path d="M15.5 7.5C16.8 9.5 16.5 12.5 15.5 14"/><path d="M8.5 7.5C7.2 9.5 7.5 12.5 8.5 14"/><path d="M5.5 21C5.5 17.5 8.4 15 12 15C15.6 15 18.5 17.5 18.5 21"/></svg>`,
+    defaultReporter: 'Missionária Sarah'
+  }
+};
+
+// --- MÓDULOS DE UNIDADE (MISSÃO, MACEDÔNIA, FEMININA) ---
+function openUnitReportModal(unitId) {
+  const unit = UNIT_PROFILES[unitId];
+  if (!unit) return;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const reports = dbManager.getReports();
+  const existing = reports.find(r => r.unitId === unitId && r.date === todayStr);
+
+  const acolhidos = existing ? existing.acolhidosPresentes : (unitId === 'missao' ? 45 : unitId === 'macedonia' ? 60 : 28);
+  const triagens = existing ? existing.novasTriagens : 2;
+  const desligamentos = existing ? existing.desligamentos : 0;
+  const cafe = existing ? existing.refeicoes.cafe : acolhidos;
+  const almoco = existing ? existing.refeicoes.almoco : (acolhidos + 4);
+  const lanche = existing ? existing.refeicoes.lanche : acolhidos;
+  const jantar = existing ? existing.refeicoes.jantar : acolhidos;
+  const atividades = existing ? existing.atividades : '';
+  const saude = existing ? existing.saude : '';
+  const necessidades = existing ? existing.necessidades : '';
+  const reporter = existing ? existing.reporterName : unit.defaultReporter;
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon">
+        ${unit.iconSvg}
+      </div>
+      <div>
+        <h2>Relatório ${unit.name}</h2>
+        <p>${unit.fullName}</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <form id="unit-report-form" onsubmit="event.preventDefault();">
+      <input type="hidden" id="rep-unit-id" value="${unit.id}">
+      <input type="hidden" id="rep-id" value="${existing ? existing.id : 'rep_' + Date.now()}">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data do Relatório</label>
+          <input type="date" id="rep-date" class="form-input" value="${existing ? existing.date : todayStr}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsável / Plantonista</label>
+          <input type="text" id="rep-reporter" class="form-input" value="${reporter}" placeholder="Nome do plantonista" required>
+        </div>
+      </div>
+
+      <div class="form-section-title">
+        Censo de Acolhidos
+      </div>
+
+      <div class="stepper-card">
+        <div class="stepper-info">
+          <h4>Acolhidos Presentes</h4>
+          <span>Total residente no dia</span>
+        </div>
+        <div class="stepper-controls">
+          <button type="button" class="btn-step" onclick="adjustInputStep('rep-acolhidos', -1)">-</button>
+          <input type="number" id="rep-acolhidos" class="step-value form-input" style="width:65px; text-align:center; padding:4px;" value="${acolhidos}">
+          <button type="button" class="btn-step" onclick="adjustInputStep('rep-acolhidos', 1)">+</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="stepper-card" style="padding:10px 12px;">
+          <div class="stepper-info">
+            <h4 style="font-size:0.8rem;">Entradas</h4>
+            <span style="font-size:0.66rem;">Triagens</span>
+          </div>
+          <div class="stepper-controls">
+            <button type="button" class="btn-step" style="width:30px;height:30px;" onclick="adjustInputStep('rep-triagens', -1)">-</button>
+            <input type="number" id="rep-triagens" class="step-value form-input" style="width:42px; text-align:center; padding:2px;" value="${triagens}">
+            <button type="button" class="btn-step" style="width:30px;height:30px;" onclick="adjustInputStep('rep-triagens', 1)">+</button>
+          </div>
+        </div>
+
+        <div class="stepper-card" style="padding:10px 12px;">
+          <div class="stepper-info">
+            <h4 style="font-size:0.8rem;">Saídas</h4>
+            <span style="font-size:0.66rem;">Desligamentos</span>
+          </div>
+          <div class="stepper-controls">
+            <button type="button" class="btn-step" style="width:30px;height:30px;" onclick="adjustInputStep('rep-desligamentos', -1)">-</button>
+            <input type="number" id="rep-desligamentos" class="step-value form-input" style="width:42px; text-align:center; padding:2px;" value="${desligamentos}">
+            <button type="button" class="btn-step" style="width:30px;height:30px;" onclick="adjustInputStep('rep-desligamentos', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section-title" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>Refeições Servidas</div>
+        <button type="button" onclick="autoFillMeals()" style="font-family:var(--font-gothic); font-size:0.7rem; padding:4px 8px; border-radius:6px; border:1px solid var(--border-beige); background:var(--bg-surface); color:var(--green-primary); font-weight:700; cursor:pointer;">
+          Igualar aos Acolhidos
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem;">Café da Manhã</label>
+          <input type="number" id="rep-meal-cafe" class="form-input" value="${cafe}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem;">Almoço</label>
+          <input type="number" id="rep-meal-almoco" class="form-input" value="${almoco}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem;">Café da Tarde</label>
+          <input type="number" id="rep-meal-lanche" class="form-input" value="${lanche}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.75rem;">Jantar</label>
+          <input type="number" id="rep-meal-jantar" class="form-input" value="${jantar}">
+        </div>
+      </div>
+
+      <div class="form-section-title">
+        Atividades & Ocorrências
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Cultos, Oficinas e Devocionais</label>
+        <textarea id="rep-atividades" class="form-textarea" rows="2" placeholder="Ex: Culto devocional pela manhã, oficina e alfabetização...">${atividades}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Saúde, Enfermagem e Consultas</label>
+        <textarea id="rep-saude" class="form-textarea" rows="2" placeholder="Ex: Acolhidos atendidos pela UBS, medicação ministrada...">${saude}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Necessidades Imediatas de Insumos</label>
+        <textarea id="rep-necessidades" class="form-textarea" rows="2" placeholder="Ex: Sabonetes e pastas de dente em falta...">${necessidades}</textarea>
+      </div>
+    </form>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-secondary-action" onclick="closeModal('modal-generic')">Cancelar</button>
+    <button type="button" id="btn-save-unit-report" class="btn-primary-action" onclick="handleSaveUnitReport()">
+      Salvar Relatório
+    </button>
+  `;
+
+  openModal('modal-generic');
+}
+
+function adjustInputStep(inputId, delta) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  let val = parseInt(el.value, 10) || 0;
+  val = Math.max(0, val + delta);
+  el.value = val;
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+function autoFillMeals() {
+  const acolhidos = parseInt(document.getElementById('rep-acolhidos').value, 10) || 0;
+  document.getElementById('rep-meal-cafe').value = acolhidos;
+  document.getElementById('rep-meal-almoco').value = acolhidos + 2;
+  document.getElementById('rep-meal-lanche').value = acolhidos;
+  document.getElementById('rep-meal-jantar').value = acolhidos;
+  showToast('Refeições sincronizadas com acolhidos!', 'info');
+}
+
+async function handleSaveUnitReport() {
+  const btn = document.getElementById('btn-save-unit-report');
+  const unitId = document.getElementById('rep-unit-id').value;
+  const unit = UNIT_PROFILES[unitId];
+
+  const reportData = {
+    id: document.getElementById('rep-id').value,
+    unitId: unitId,
+    unitName: unit.name,
+    date: document.getElementById('rep-date').value,
+    reporterName: document.getElementById('rep-reporter').value.trim() || 'Equipe de Plantão',
+    acolhidosPresentes: parseInt(document.getElementById('rep-acolhidos').value, 10) || 0,
+    novasTriagens: parseInt(document.getElementById('rep-triagens').value, 10) || 0,
+    desligamentos: parseInt(document.getElementById('rep-desligamentos').value, 10) || 0,
+    refeicoes: {
+      cafe: parseInt(document.getElementById('rep-meal-cafe').value, 10) || 0,
+      almoco: parseInt(document.getElementById('rep-meal-almoco').value, 10) || 0,
+      lanche: parseInt(document.getElementById('rep-meal-lanche').value, 10) || 0,
+      jantar: parseInt(document.getElementById('rep-meal-jantar').value, 10) || 0
+    },
+    atividades: document.getElementById('rep-atividades').value.trim(),
+    saude: document.getElementById('rep-saude').value.trim(),
+    necessidades: document.getElementById('rep-necessidades').value.trim(),
+    status: 'concluido'
+  };
+
+  if (btn) btn.disabled = true;
+  showLoading('Sincronizando...');
+
+  try {
+    await dbManager.saveReport(reportData);
+    closeModal('modal-generic');
+    showToast(`Relatório ${unit.name} salvo com sucesso!`, 'success');
+    if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
+    updateHeroMetrics();
+  } catch (err) {
+    showToast('Erro ao salvar: ' + err.message, 'danger');
+  } finally {
+    hideLoading();
+    if (btn) btn.disabled = false;
+  }
+}
+
+// --- MÓDULO 4: ESTOQUE DAS 3 DESPENSAS (MISSÃO, MACEDÔNIA, FEMININA) ---
+const STOCK_UNITS = [
+  { id: 'missao', name: 'Missão' },
+  { id: 'macedonia', name: 'Macedônia' },
+  { id: 'feminina', name: 'Feminina' }
+];
+
+window.currentStockUnit = window.currentStockUnit || 'missao';
+
+function getStockCurrentUnit() {
+  return STOCK_UNITS.find(u => u.id === (window.currentStockUnit || 'missao')) || STOCK_UNITS[0];
+}
+
+function nextStockUnit() {
+  if (navigator.vibrate) navigator.vibrate(15);
+  const currentIdx = STOCK_UNITS.findIndex(u => u.id === (window.currentStockUnit || 'missao'));
+  const nextIdx = (currentIdx + 1) % STOCK_UNITS.length;
+  window.currentStockUnit = STOCK_UNITS[nextIdx].id;
+  const unit = STOCK_UNITS[nextIdx];
+
+  const bannerUnitEl = document.getElementById('stock-banner-unit-name');
+  if (bannerUnitEl) {
+    bannerUnitEl.textContent = `Unidade ${unit.name}`;
+    bannerUnitEl.classList.remove('unit-fade-in');
+    void bannerUnitEl.offsetWidth;
+    bannerUnitEl.classList.add('unit-fade-in');
+  }
+
+  const modalHeaderSub = document.getElementById('stock-modal-subtitle');
+  if (modalHeaderSub) {
+    modalHeaderSub.textContent = `Unidade ${unit.name}`;
+  }
+
+  renderStockList();
+}
+
+const STOCK_CATEGORIES_INFO = [
+  { id: 'todas', label: 'Todas', icon: '🏷️' },
+  { id: 'alimentos_grossos', label: 'Alimentos Grossos', icon: '🫘' },
+  { id: 'proteinas', label: 'Proteínas', icon: '🍖' },
+  { id: 'temperos', label: 'Temperos', icon: '🧄' },
+  { id: 'lanches', label: 'Lanches', icon: '🍟' },
+  { id: 'verduras_legumes', label: 'Verduras e Legumes', icon: '🫑' }
+];
+
+function openStockModal() {
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  const currUnit = getStockCurrentUnit();
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 8L12 3L3 8L12 13L21 8Z"/>
+          <path d="M3 8V16L12 21L21 16V8"/>
+          <line x1="12" y1="13" x2="12" y2="21"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Despensa de Alimentos</h2>
+        <p id="stock-modal-subtitle" style="font-size:0.75rem; color:var(--text-muted);">Unidade ${currUnit.name}</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <!-- Banner Oficial Despensa com Seletor de Unidade -->
+    <div style="background: linear-gradient(135deg, #1E4D2B, #276036); border-radius: 12px; padding: 10px 14px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30,77,43,0.18);">
+      <div>
+        <div id="stock-banner-unit-name" class="unit-fade-in" style="font-size: 1.08rem; font-weight: 800; letter-spacing: 0.4px; color: #FFFFFF; line-height: 1.2;">Unidade ${currUnit.name}</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="text-align: right; background: rgba(0,0,0,0.25); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.35);">
+          <div style="font-size: 0.62rem; color: #E8D8A0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">ÚLTIMA CONTAGEM</div>
+          <div style="font-size: 0.82rem; font-weight: 800; color: #FFFFFF;">🗓️ 15/09/2026</div>
+        </div>
+        <button type="button" class="btn-stock-next-unit" onclick="nextStockUnit()" title="Avançar para a próxima despensa (Missão → Macedônia → Feminina)" aria-label="Próxima despensa">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Controles Fixos no Topo (Sticky Header): Busca e Tags Sempre Visíveis no Topo da Lista -->
+    <div class="stock-sticky-controls">
+      <!-- Barra de Busca Rápida -->
+      <div style="position: relative;">
+        <input type="text" id="stock-search-input" class="form-input" placeholder="🔍 Buscar alimento no estoque..." oninput="handleStockSearchInput(this.value)" style="padding-left: 12px; padding-right: 32px; background:var(--white); height:38px;">
+        <button type="button" id="stock-clear-search" onclick="clearStockSearch()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; color: var(--text-muted); cursor: pointer; display: none; padding: 4px;">&times;</button>
+      </div>
+
+      <!-- Tags das Categorias Sempre Fixas e Visíveis -->
+      <div class="stock-tags-scroll">
+        ${STOCK_CATEGORIES_INFO.map(cat => `
+          <button type="button" class="chip-filter ${cat.id === 'todas' ? 'active' : ''}" data-cat="${cat.id}" onclick="setStockCategoryFilter('${cat.id}', this)">
+            <span style="font-size:0.95rem;">${cat.icon}</span>
+            <span>${cat.label}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Lista de Itens do Estoque Agrupada por Categoria -->
+    <div id="stock-items-container" style="display:flex; flex-direction:column; gap:10px; margin-top:2px;">
+      <!-- Renderizado dinamicamente -->
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-primary-action" style="width:100%;" onclick="closeModal('modal-generic')">
+      Concluir & Fechar
+    </button>
+  `;
+
+  window.currentStockCategory = 'todas';
+  renderStockList();
+  openModal('modal-generic');
+}
+
+function handleStockSearchInput(val) {
+  const clearBtn = document.getElementById('stock-clear-search');
+  if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
+  renderStockList();
+}
+
+function clearStockSearch() {
+  const searchInput = document.getElementById('stock-search-input');
+  const clearBtn = document.getElementById('stock-clear-search');
+  if (searchInput) searchInput.value = '';
+  if (clearBtn) clearBtn.style.display = 'none';
+  renderStockList();
+}
+
+function setStockCategoryFilter(cat, btn) {
+  window.currentStockCategory = cat;
+  document.querySelectorAll('.chip-filter').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderStockList();
+}
+
+function renderStockList() {
+  const container = document.getElementById('stock-items-container');
+  if (!container) return;
+
+  const query = (document.getElementById('stock-search-input')?.value || '').toLowerCase().trim();
+  const selectedCat = window.currentStockCategory || 'todas';
+
+  let items = dbManager.getStock(window.currentStockUnit || 'missao');
+
+  // Filtrar por categoria se não for 'todas'
+  if (selectedCat !== 'todas') {
+    items = items.filter(i => i.category === selectedCat);
+  }
+
+  // Filtrar por busca se digitado
+  if (query) {
+    items = items.filter(i => i.name.toLowerCase().includes(query) || (i.categoryLabel || '').toLowerCase().includes(query));
+  }
+
+  if (items.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:26px; color:var(--text-muted); background:var(--bg-surface); border-radius:12px; border:1px solid var(--border-beige);">
+        <p style="font-weight:700; font-size:0.9rem; color:var(--text-main);">Nenhum item encontrado</p>
+        <p style="font-size:0.75rem; margin-top:4px;">Tente buscar com outro termo ou toque em "Todas".</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Agrupar por categorias
+  const categoriesPresent = STOCK_CATEGORIES_INFO.filter(c => c.id !== 'todas' && items.some(i => i.category === c.id));
+
+  let html = '';
+
+  categoriesPresent.forEach(cat => {
+    const catItems = items.filter(i => i.category === cat.id);
+    if (catItems.length === 0) return;
+
+    html += `
+      <div class="stock-cat-section">
+        <div class="stock-cat-title">
+          <span>${cat.icon} ${cat.label.toUpperCase()}</span>
+          <span class="stock-cat-count">${catItems.length} ${catItems.length === 1 ? 'item' : 'itens'}</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          ${catItems.map(item => renderStockCardHTML(item)).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderStockCardHTML(item) {
+  return `
+    <div class="stepper-card" style="border-left: 3.5px solid var(--green-primary); padding: 8px 12px;">
+      <div class="stepper-info" style="flex:1;">
+        <h4 style="font-size:0.88rem; color:var(--text-main); font-weight:700;">${item.name}</h4>
+        <span style="font-size:0.68rem; color:var(--text-muted);">${item.categoryLabel || ''}</span>
+      </div>
+
+      <div class="stepper-controls">
+        <button type="button" class="btn-step" onclick="handleStockDelta('${item.id}', -1)" title="Diminuir 1">-</button>
+        
+        <div style="position:relative;" title="Toque no número para digitar">
+          <input type="number" 
+                 id="stock-qty-input-${item.id}"
+                 class="stock-qty-input" 
+                 value="${item.quantity}" 
+                 min="0"
+                 onchange="handleStockDirectInput('${item.id}', this.value)"
+                 onfocus="this.select()"
+                 inputmode="numeric">
+        </div>
+
+        <button type="button" class="btn-step" onclick="handleStockDelta('${item.id}', 1)" title="Aumentar 1">+</button>
+      </div>
+    </div>
+  `;
+}
+
+async function handleStockDelta(itemId, delta) {
+  if (navigator.vibrate) navigator.vibrate(10);
+  const updated = await dbManager.adjustStockQuantity(itemId, delta);
+  if (updated) {
+    const inputEl = document.getElementById(`stock-qty-input-${itemId}`);
+    if (inputEl) {
+      inputEl.value = updated.quantity;
+    } else {
+      renderStockList();
+    }
+  }
+}
+
+async function handleStockDirectInput(itemId, value) {
+  if (navigator.vibrate) navigator.vibrate(8);
+  const parsed = parseInt(value, 10);
+  const cleanVal = isNaN(parsed) ? 0 : Math.max(0, parsed);
+  await dbManager.setStockQuantity(itemId, cleanVal);
+  const inputEl = document.getElementById(`stock-qty-input-${itemId}`);
+  if (inputEl) inputEl.value = cleanVal;
+}
+
+// --- MÓDULO 5: RELATÓRIOS CONSOLIDADOS CLEAN ---
+function openReportsModal() {
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3H15M9 3C9 2 10 1 12 1C14 1 15 2 15 3M9 3H6C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V5C20 3.89543 19.1046 3 18 3H15"/>
+          <path d="M8 12L11 15L16 9"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Relatórios Consolidados</h2>
+        <p>Visão geral de atendimento das unidades</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
+      <select id="report-filter-unit" class="form-select" style="flex:1;" onchange="renderReportsHistory()">
+        <option value="todas">Todas as Unidades</option>
+        <option value="missao">Unidade Missão</option>
+        <option value="macedonia">Unidade Macedônia</option>
+        <option value="feminina">Unidade Feminina</option>
+      </select>
+
+      <button class="btn-primary-action" style="padding:10px 14px; font-size:0.76rem; flex:none;" onclick="shareReportsWhatsApp()">
+        WhatsApp
+      </button>
+    </div>
+
+    <!-- KPIs de Resumo -->
+    <div id="reports-kpi-summary" class="hero-metrics-row" style="background:var(--bg-surface); border:1px solid var(--border-beige); color:var(--text-main); margin-bottom:12px;">
+      <!-- KPIs calculados -->
+    </div>
+
+    <!-- Histórico de Relatórios -->
+    <div id="reports-history-list" style="display:flex; flex-direction:column; gap:10px;">
+      <!-- Lista -->
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-secondary-action" onclick="window.print()">Imprimir / PDF</button>
+    <button type="button" class="btn-primary-action" onclick="closeModal('modal-generic')">Fechar</button>
+  `;
+
+  renderReportsHistory();
+  openModal('modal-generic');
+}
+
+function renderReportsHistory() {
+  const container = document.getElementById('reports-history-list');
+  const kpiContainer = document.getElementById('reports-kpi-summary');
+  if (!container) return;
+
+  const unitFilter = document.getElementById('report-filter-unit')?.value || 'todas';
+  let reports = dbManager.getReports();
+
+  if (unitFilter !== 'todas') {
+    reports = reports.filter(r => r.unitId === unitFilter);
+  }
+
+  const totalAcolhidos = reports.reduce((acc, r) => acc + (r.acolhidosPresentes || 0), 0);
+  const totalRefeicoes = reports.reduce((acc, r) => {
+    const ref = r.refeicoes || {};
+    return acc + (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
+  }, 0);
+  const totalTriagens = reports.reduce((acc, r) => acc + (r.novasTriagens || 0), 0);
+
+  if (kpiContainer) {
+    kpiContainer.innerHTML = `
+      <div class="metric-item">
+        <span class="metric-label" style="color:var(--text-muted);">Acolhidos</span>
+        <span class="metric-value" style="color:var(--green-primary);">${totalAcolhidos}</span>
+        <span class="metric-sub" style="color:var(--text-muted);">no período</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label" style="color:var(--text-muted);">Refeições</span>
+        <span class="metric-value" style="color:var(--gold-primary);">${totalRefeicoes}</span>
+        <span class="metric-sub" style="color:var(--text-muted);">servidas</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label" style="color:var(--text-muted);">Triagens</span>
+        <span class="metric-value" style="color:var(--green-primary);">${totalTriagens}</span>
+        <span class="metric-sub" style="color:var(--text-muted);">novas</span>
+      </div>
+    `;
+  }
+
+  if (reports.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px; color:var(--text-muted);">
+        <p>Nenhum relatório cadastrado para este filtro.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = reports.map(r => {
+    const badgeClass = r.unitId === 'missao' ? 'badge-missao' : (r.unitId === 'macedonia' ? 'badge-macedonia' : 'badge-feminina');
+    const totalRef = (r.refeicoes?.cafe || 0) + (r.refeicoes?.almoco || 0) + (r.refeicoes?.lanche || 0) + (r.refeicoes?.jantar || 0);
+    return `
+      <div class="history-item">
+        <div class="history-item-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="history-badge ${badgeClass}">${r.unitName}</span>
+            <span style="font-size:0.8rem; font-weight:700; color:var(--green-primary);">${formatDateBR(r.date)}</span>
+          </div>
+          <span style="font-size:0.72rem; color:var(--text-muted);">${r.reporterName}</span>
+        </div>
+
+        <div class="history-stats">
+          <div><strong>Acolhidos:</strong> ${r.acolhidosPresentes}</div>
+          <div><strong>Triagens:</strong> ${r.novasTriagens}</div>
+          <div><strong>Refeições:</strong> ${totalRef}</div>
+        </div>
+
+        ${r.atividades ? `<p style="font-size:0.76rem; color:var(--text-main); line-height:1.3;"><strong>Atividades:</strong> ${r.atividades}</p>` : ''}
+        ${r.necessidades ? `<p style="font-size:0.76rem; color:var(--gold-primary); line-height:1.3;"><strong>Necessidades:</strong> ${r.necessidades}</p>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function shareReportsWhatsApp() {
+  const reports = dbManager.getReports();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayReports = reports.filter(r => r.date === todayStr);
+
+  let text = `*CRISTOLÂNDIA CHECK • RESUMO DIÁRIO (${formatDateBR(todayStr)})*\n\n`;
+
+  if (todayReports.length === 0) {
+    text += `Nenhum relatório preenchido hoje ainda.\n`;
+  } else {
+    todayReports.forEach(r => {
+      const totalRef = (r.refeicoes?.cafe || 0) + (r.refeicoes?.almoco || 0) + (r.refeicoes?.lanche || 0) + (r.refeicoes?.jantar || 0);
+      text += `*UNIDADE ${r.unitName.toUpperCase()}*\n`;
+      text += `• Acolhidos: ${r.acolhidosPresentes} | Triagens: ${r.novasTriagens}\n`;
+      text += `• Refeições: ${totalRef}\n`;
+      if (r.atividades) text += `• Atividades: ${r.atividades}\n`;
+      if (r.necessidades) text += `• Necessidades: ${r.necessidades}\n`;
+      text += `• Plantonista: ${r.reporterName}\n\n`;
+    });
+  }
+
+  text += `_Cristolândia Check PWA_`;
+  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
+// --- MÓDULO 6: CADASTRAR IGREJA CLEAN ---
+function openChurchesModal() {
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="2" x2="12" y2="7"/>
+          <line x1="10" y1="4" x2="14" y2="4"/>
+          <path d="M12 7L4 12V22H20V12L12 7Z"/>
+          <path d="M10 22V16C10 14.9 10.9 14 12 14C13.1 14 14 14.9 14 16V22"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Igrejas Parceiras</h2>
+        <p>Parcerias, mantenedores e visitas</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+      <input type="text" id="church-search-input" class="form-input" placeholder="Buscar igreja ou pastor..." oninput="renderChurchesList()">
+      <button class="btn-primary-action" style="padding:10px 14px; flex:none; font-size:0.78rem;" onclick="openAddChurchForm()">
+        + Nova
+      </button>
+    </div>
+
+    <div id="churches-list-container" style="display:flex; flex-direction:column; gap:8px;">
+      <!-- Lista de igrejas -->
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="closeModal('modal-generic')">Fechar</button>
+  `;
+
+  renderChurchesList();
+  openModal('modal-generic');
+}
+
+function renderChurchesList() {
+  const container = document.getElementById('churches-list-container');
+  if (!container) return;
+
+  const query = (document.getElementById('church-search-input')?.value || '').toLowerCase();
+  let churches = dbManager.getChurches();
+
+  if (query) {
+    churches = churches.filter(c => 
+      c.name.toLowerCase().includes(query) || 
+      (c.pastor && c.pastor.toLowerCase().includes(query)) ||
+      (c.neighborhood && c.neighborhood.toLowerCase().includes(query))
+    );
+  }
+
+  if (churches.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px; color:var(--text-muted);">
+        <p style="font-weight:600;">Nenhuma igreja cadastrada.</p>
+        <p style="font-size:0.76rem;">Cadastre as congregações parceiras e voluntárias.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = churches.map(c => {
+    const rawPhone = (c.phone || '').replace(/\D/g, '');
+    const waUrl = rawPhone ? `https://wa.me/55${rawPhone}?text=Olá%20${encodeURIComponent(c.pastor || '')},%20paz%20do%20Senhor!%20Mensagem%20da%20Cristolândia:` : '#';
+
+    return `
+      <div class="history-item" style="border-left:3px solid var(--green-primary);">
+        <div class="history-item-header">
+          <div>
+            <h4 style="font-size:0.9rem; font-weight:700; color:var(--green-primary);">${c.name}</h4>
+            <span style="font-size:0.72rem; color:var(--text-muted);">${c.pastor} • ${c.neighborhood || ''}</span>
+          </div>
+          ${rawPhone ? `
+            <a href="${waUrl}" target="_blank" style="padding:4px 8px; border-radius:6px; background:var(--green-light); color:var(--green-primary); font-size:0.72rem; font-weight:700; text-decoration:none;">
+              WhatsApp
+            </a>
+          ` : ''}
+        </div>
+
+        <div style="font-size:0.76rem; background:var(--bg-beige); padding:8px 10px; border-radius:8px; display:flex; flex-direction:column; gap:3px;">
+          <div><strong>Apoio:</strong> ${c.supportType || 'Cestas e Voluntários'}</div>
+          ${c.lastVisit ? `<div><strong>Visita:</strong> ${formatDateBR(c.lastVisit)}</div>` : ''}
+          ${c.notes ? `<div style="color:var(--text-muted);"><em>"${c.notes}"</em></div>` : ''}
+        </div>
+
+        <div style="display:flex; justify-content:flex-end;">
+          <button onclick="handleDeleteChurch('${c.id}')" style="background:none; border:none; color:var(--text-muted); font-size:0.72rem; cursor:pointer; font-weight:600;">
+            Remover
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openAddChurchForm() {
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalBody.innerHTML = `
+    <form id="church-add-form" onsubmit="event.preventDefault();">
+      <div class="form-group">
+        <label class="form-label">Nome da Igreja / Denominação</label>
+        <input type="text" id="chu-name" class="form-input" placeholder="Ex: Primeira Igreja Batista" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Pastor / Responsável</label>
+          <input type="text" id="chu-pastor" class="form-input" placeholder="Ex: Pr. João Silva" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp</label>
+          <input type="tel" id="chu-phone" class="form-input" placeholder="(11) 99999-9999">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Bairro</label>
+          <input type="text" id="chu-neighborhood" class="form-input" placeholder="Ex: Centro">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cidade</label>
+          <input type="text" id="chu-city" class="form-input" value="São Paulo - SP">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tipo de Apoio</label>
+        <input type="text" id="chu-support" class="form-input" placeholder="Ex: Cestas básicas, cultos mensais">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Data da Próxima Visita</label>
+        <input type="date" id="chu-visit" class="form-input">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea id="chu-notes" class="form-textarea" rows="2" placeholder="Detalhes da parceria..."></textarea>
+      </div>
+    </form>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-secondary-action" onclick="openChurchesModal()">Voltar</button>
+    <button type="button" class="btn-primary-action" onclick="handleSaveChurch()">Salvar Igreja</button>
+  `;
+}
+
+async function handleSaveChurch() {
+  const name = document.getElementById('chu-name')?.value.trim();
+  const pastor = document.getElementById('chu-pastor')?.value.trim();
+  if (!name || !pastor) {
+    showToast('Preencha o nome da igreja e pastor!', 'warning');
+    return;
+  }
+
+  const newChurch = {
+    id: 'chu_' + Date.now(),
+    name,
+    pastor,
+    phone: document.getElementById('chu-phone')?.value.trim() || '',
+    neighborhood: document.getElementById('chu-neighborhood')?.value.trim() || '',
+    city: document.getElementById('chu-city')?.value.trim() || '',
+    supportType: document.getElementById('chu-support')?.value.trim() || '',
+    lastVisit: document.getElementById('chu-visit')?.value || '',
+    notes: document.getElementById('chu-notes')?.value.trim() || ''
+  };
+
+  showLoading('Gravando...');
+  try {
+    await dbManager.saveChurch(newChurch);
+    showToast('Igreja cadastrada!', 'success');
+    openChurchesModal();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'danger');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleDeleteChurch(id) {
+  if (!confirm('Deseja remover esta igreja?')) return;
+  await dbManager.deleteChurch(id);
+  showToast('Igreja removida.', 'info');
+  renderChurchesList();
+}
+
+function formatDateBR(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}

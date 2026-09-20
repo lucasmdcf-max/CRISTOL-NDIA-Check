@@ -1,0 +1,336 @@
+/* ==========================================================================
+   CRISTOLÂNDIA CHECK - 6 BOTÕES QUADRADOS 3D CLEAN (APENAS ÍCONE E NOME)
+   Grid 3x2: 3 em cima (Missão, Macedônia, Feminina), 3 embaixo (Estoque, Relatórios, Cadastrar Igreja)
+   Paleta Estrita: Dourado, Bege e Verde. Tipografia Century Gothic.
+   Ícones de linha simples com alto contraste e legibilidade impecável.
+   ========================================================================== */
+
+.main-actions-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 2px 0 0 0;
+}
+
+.section-label-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-surface-translucent);
+  border: 1px solid var(--border-beige);
+  color: var(--green-primary);
+  font-family: var(--font-gothic);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+/* Grid Central com 3 botões em cima e 3 embaixo */
+.buttons-grid-3x2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  width: 100%;
+}
+
+@media (max-width: 360px) {
+  .buttons-grid-3x2 {
+    gap: 7px;
+  }
+}
+
+/* Base do Botão Quadrado com Bordas Arredondadas */
+.btn-card-3d {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  border: 1.5px solid var(--border-beige);
+  background: var(--bg-surface);
+  user-select: none;
+  -webkit-user-select: none;
+  gap: 5px;
+  
+  /* Efeito Tridimensional Limpo e Tátil */
+  box-shadow: 
+    0 4px 0 var(--border-beige),
+    0 8px 18px rgba(30, 77, 43, 0.05);
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              box-shadow 0.14s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease;
+}
+
+/* Hover suave em desktop */
+@media (hover: hover) {
+  .btn-card-3d:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 6px 0 var(--border-beige),
+      0 12px 20px rgba(30, 77, 43, 0.08);
+  }
+}
+
+/* Pressionado / Ativo: Toque físico nativo */
+.btn-card-3d:active,
+.btn-card-3d.pressed {
+  transform: translateY(3px) !important;
+  box-shadow: 
+    0 1px 0 var(--border-beige),
+    0 3px 6px rgba(30, 77, 43, 0.04) !important;
+}
+
+/* Ícone de Linha Vetorial Simples (Monocromático, Linha Fina e Elegante) */
+.btn-icon-wrapper {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.btn-icon-wrapper svg {
+  width: 28px;
+  height: 28px;
+  stroke: var(--green-primary);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  transition: stroke 0.2s ease, transform 0.2s ease;
+}
+
+.btn-card-3d:hover .btn-icon-wrapper svg {
+  transform: scale(1.06);
+}
+
+.btn-card-3d:active .btn-icon-wrapper svg {
+  transform: scale(0.95);
+}
+
+/* Nome Principal em Century Gothic com Destaque Limpo */
+.btn-title {
+  font-family: var(--font-gothic);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.15;
+  color: var(--green-primary);
+}
+
+/* Indicador de Status Diário (Ponto Dourado Minimalista) */
+.btn-badge-today {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold-primary);
+  box-shadow: 0 0 5px var(--gold-primary);
+}
+
+/* ==========================================================================
+   ESTILOS ESPECÍFICOS DOS 6 BOTÕES (PALETA DOURADO, BEGE E VERDE)
+   - Cima (Unidades): Missão, Macedônia e Feminina com a mesma cor e ícone verde
+   - Baixo (Gestão): Estoque, Relatórios e Igrejas com ícone dourado nobre
+   ========================================================================== */
+
+/* 1. Missão (Tom Porcelana Nobre Levemente Mais Escuro que o Fundo Branco) */
+.btn-card-3d.btn-missao {
+  background: linear-gradient(145deg, #F5F1E8, #EBE5D8);
+  border-color: #D9D1BF;
+  box-shadow: 
+    0 4px 0 #CFC6B0,
+    0 8px 18px rgba(30, 77, 43, 0.07);
+}
+
+.btn-card-3d.btn-missao:hover {
+  box-shadow: 
+    0 6px 0 #CFC6B0,
+    0 12px 20px rgba(30, 77, 43, 0.1);
+}
+
+.btn-card-3d.btn-missao:active,
+.btn-card-3d.btn-missao.pressed {
+  box-shadow: 
+    0 1px 0 #CFC6B0,
+    0 3px 6px rgba(30, 77, 43, 0.05) !important;
+}
+
+.btn-card-3d.btn-missao .btn-icon-wrapper svg {
+  stroke: var(--green-primary);
+}
+
+.btn-card-3d.btn-missao .btn-title {
+  color: var(--green-primary);
+}
+
+/* 2. Macedônia (Tom Porcelana Nobre Levemente Mais Escuro que o Fundo Branco) */
+.btn-card-3d.btn-macedonia {
+  background: linear-gradient(145deg, #F5F1E8, #EBE5D8);
+  border-color: #D9D1BF;
+  box-shadow: 
+    0 4px 0 #CFC6B0,
+    0 8px 18px rgba(30, 77, 43, 0.07);
+}
+
+.btn-card-3d.btn-macedonia:hover {
+  box-shadow: 
+    0 6px 0 #CFC6B0,
+    0 12px 20px rgba(30, 77, 43, 0.1);
+}
+
+.btn-card-3d.btn-macedonia:active,
+.btn-card-3d.btn-macedonia.pressed {
+  box-shadow: 
+    0 1px 0 #CFC6B0,
+    0 3px 6px rgba(30, 77, 43, 0.05) !important;
+}
+
+.btn-card-3d.btn-macedonia .btn-icon-wrapper svg {
+  stroke: var(--green-primary);
+}
+
+.btn-card-3d.btn-macedonia .btn-title {
+  color: var(--green-primary);
+}
+
+/* 3. Feminina (Tom Porcelana Nobre Levemente Mais Escuro que o Fundo Branco) */
+.btn-card-3d.btn-feminina {
+  background: linear-gradient(145deg, #F5F1E8, #EBE5D8);
+  border-color: #D9D1BF;
+  box-shadow: 
+    0 4px 0 #CFC6B0,
+    0 8px 18px rgba(30, 77, 43, 0.07);
+}
+
+.btn-card-3d.btn-feminina:hover {
+  box-shadow: 
+    0 6px 0 #CFC6B0,
+    0 12px 20px rgba(30, 77, 43, 0.1);
+}
+
+.btn-card-3d.btn-feminina:active,
+.btn-card-3d.btn-feminina.pressed {
+  box-shadow: 
+    0 1px 0 #CFC6B0,
+    0 3px 6px rgba(30, 77, 43, 0.05) !important;
+}
+
+.btn-card-3d.btn-feminina .btn-icon-wrapper svg {
+  stroke: var(--green-primary);
+}
+
+.btn-card-3d.btn-feminina .btn-title {
+  color: var(--green-primary);
+}
+
+/* 4. Estoque (Fundo Verde Nobre, Ícone Dourado e Nome Branco) */
+.btn-card-3d.btn-estoque {
+  background: linear-gradient(145deg, #1E4D2B, #276237);
+  border-color: #14351D;
+  box-shadow: 
+    0 4px 0 #12321B,
+    0 8px 18px rgba(20, 53, 29, 0.22);
+}
+
+.btn-card-3d.btn-estoque:hover {
+  box-shadow: 
+    0 6px 0 #12321B,
+    0 12px 20px rgba(20, 53, 29, 0.28);
+}
+
+.btn-card-3d.btn-estoque:active,
+.btn-card-3d.btn-estoque.pressed {
+  box-shadow: 
+    0 1px 0 #12321B,
+    0 3px 6px rgba(20, 53, 29, 0.12) !important;
+}
+
+.btn-card-3d.btn-estoque .btn-icon-wrapper svg {
+  stroke: #E8AF30;
+}
+
+.btn-card-3d.btn-estoque .btn-title {
+  color: #FFFFFF;
+}
+
+/* 5. Relatórios (Fundo Cinza Claro, Ícone Dourado e Nome Branco) */
+.btn-card-3d.btn-relatorios {
+  background: linear-gradient(145deg, #86928C, #737F79);
+  border-color: #5E6963;
+  box-shadow: 
+    0 4px 0 #4E5953,
+    0 8px 18px rgba(78, 89, 83, 0.22);
+}
+
+.btn-card-3d.btn-relatorios:hover {
+  box-shadow: 
+    0 6px 0 #4E5953,
+    0 12px 20px rgba(78, 89, 83, 0.28);
+}
+
+.btn-card-3d.btn-relatorios:active,
+.btn-card-3d.btn-relatorios.pressed {
+  box-shadow: 
+    0 1px 0 #4E5953,
+    0 3px 6px rgba(78, 89, 83, 0.12) !important;
+}
+
+.btn-card-3d.btn-relatorios .btn-icon-wrapper svg {
+  stroke: #FFC93E;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.btn-card-3d.btn-relatorios .btn-title {
+  color: #FFFFFF;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  font-weight: 700;
+}
+
+/* 6. Igrejas (Fundo Dourado, Ícone Branco e Nome Verde) */
+.btn-card-3d.btn-igreja {
+  background: linear-gradient(145deg, #D49B1C, #BF8407);
+  border-color: #A16E03;
+  box-shadow: 
+    0 4px 0 #8F6002,
+    0 8px 18px rgba(197, 137, 8, 0.25);
+}
+
+.btn-card-3d.btn-igreja:hover {
+  box-shadow: 
+    0 6px 0 #8F6002,
+    0 12px 20px rgba(197, 137, 8, 0.32);
+}
+
+.btn-card-3d.btn-igreja:active,
+.btn-card-3d.btn-igreja.pressed {
+  box-shadow: 
+    0 1px 0 #8F6002,
+    0 3px 6px rgba(197, 137, 8, 0.12) !important;
+}
+
+.btn-card-3d.btn-igreja .btn-icon-wrapper svg {
+  stroke: #FFFFFF;
+}
+
+.btn-card-3d.btn-igreja .btn-title {
+  color: #12331B;
+  font-weight: 700;
+}

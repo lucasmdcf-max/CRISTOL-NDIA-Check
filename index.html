@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Cristolândia Check</title>
+  <meta name="description" content="Aplicativo PWA clean para preenchimento de relatórios diários das unidades de atendimento da Cristolândia.">
+
+  <!-- Anti-Cache para Refletir Alterações Imediatas sem Limpar Dados -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- PWA & Apple iOS Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cristolândia">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1E4D2B">
+
+  <!-- Estilos CSS com Versionamento Anti-Cache -->
+  <link rel="stylesheet" href="css/main.css?v=20260919-v11">
+  <link rel="stylesheet" href="css/buttons-3d.css?v=20260919-v11">
+</head>
+<body>
+
+  <!-- Container Central Essencial do App (Delimitado de Forma Limpa) -->
+  <main class="app-container">
+
+    <!-- Aba Superior: Logo Oficial da Pasta, Nome Discreto e Bolinha Simples de Status -->
+    <header class="top-header">
+      <div class="brand-wrapper" onclick="goToHome()" title="Ir para o Início">
+        <img src="icons/app-logo.png" alt="Logo Cristolândia Check" class="brand-logo-img">
+        <span class="brand-title-discrete">CRISTOLÂNDIA<span class="brand-title-check">Check</span></span>
+      </div>
+
+      <!-- Bolinha Verde Simples no Lado Direito para Sinalizar Conexão Online -->
+      <div class="header-status-indicator" onclick="openSettingsModal()" title="Status da Conexão (Toque para Configurações)">
+        <span id="status-dot-simple" class="status-dot-simple online"></span>
+      </div>
+    </header>
+
+    <!-- Card Compacto do Painel Diário (Altura Reduzida e Essencial) -->
+    <section class="hero-status-card compact">
+      <div class="hero-compact-top">
+        <h2 class="hero-title-compact">Painel <span class="gold-text">Diário</span></h2>
+        <span class="hero-date-pill" id="current-date-display">Carregando...</span>
+      </div>
+
+      <div class="hero-compact-metrics">
+        <div class="compact-metric">
+          <span class="compact-metric-label">Acolhidos</span>
+          <span class="compact-metric-val" id="metric-hero-acolhidos">0</span>
+        </div>
+        <div class="compact-metric-divider"></div>
+        <div class="compact-metric">
+          <span class="compact-metric-label">Refeições</span>
+          <span class="compact-metric-val" id="metric-hero-refeicoes">0</span>
+        </div>
+        <div class="compact-metric-divider"></div>
+        <div class="compact-metric">
+          <span class="compact-metric-label">Triagens</span>
+          <span class="compact-metric-val" id="metric-hero-triagens">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO CENTRAL: 6 BOTÕES QUADRADOS 3D CLEAN (APENAS ÍCONE E NOME) -->
+    <section class="main-actions-section">
+      <div class="buttons-grid-3x2">
+
+        <!-- LINHA SUPERIOR: 3 UNIDADES -->
+
+        <!-- 1. Missão -->
+        <button class="btn-card-3d btn-missao" onclick="openUnitReportModal('missao')">
+          <span id="badge-unit-missao" class="btn-badge-today" style="display:none;" title="Relatório preenchido hoje"></span>
+          <div class="btn-icon-wrapper">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 10L12 3L21 10"/>
+              <path d="M5 10V20H19V10"/>
+              <path d="M9 20V14H15V20"/>
+              <line x1="2" y1="20" x2="22" y2="20"/>
+            </svg>
+          </div>
+          <div class="btn-title">Missão</div>
+        </button>
+
+        <!-- 2. Macedônia -->
+        <button class="btn-card-3d btn-macedonia" onclick="openUnitReportModal('macedonia')">
+          <span id="badge-unit-macedonia" class="btn-badge-today" style="display:none;" title="Relatório preenchido hoje"></span>
+          <div class="btn-icon-wrapper">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 22V12"/>
+              <path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/>
+              <path d="M12 17C15 17 18 19 19 22"/>
+            </svg>
+          </div>
+          <div class="btn-title">Macedônia</div>
+        </button>
+
+        <!-- 3. Feminina (Avatar Feminino Idêntico à Referência) -->
+        <button class="btn-card-3d btn-feminina" onclick="openUnitReportModal('feminina')">
+          <span id="badge-unit-feminina" class="btn-badge-today" style="display:none;" title="Relatório preenchido hoje"></span>
+          <div class="btn-icon-wrapper">
+            <svg viewBox="0 0 24 24">
+              <path d="M8.8 13.5L5.5 14C6 8.5 8 4 12 4C16 4 18 8.5 18.5 14L15.2 13.5"/>
+              <path d="M8.2 9.5C9.5 9 11 8.2 12.5 7.5C13.8 8.5 15 9.2 15.8 9.5"/>
+              <path d="M8.2 9.5C8.2 12.8 9.8 14.2 12 14.2C14.2 14.2 15.8 12.8 15.8 9.5"/>
+              <path d="M8.8 14.5C6.5 15.2 5.5 16.5 5 20H19C18.5 16.5 17.5 15.2 15.2 14.5"/>
+              <path d="M10.2 14.8C10.5 16.8 11.2 17.8 12 17.8C12.8 17.8 13.5 16.8 13.8 14.8"/>
+            </svg>
+          </div>
+          <div class="btn-title">Feminina</div>
+        </button>
+
+        <!-- LINHA INFERIOR: ESTOQUE, RELATÓRIOS E IGREJAS -->
+
+        <!-- 4. Estoque -->
+        <button class="btn-card-3d btn-estoque" onclick="openStockModal()">
+          <div class="btn-icon-wrapper">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 8L12 3L3 8L12 13L21 8Z"/>
+              <path d="M3 8V16L12 21L21 16V8"/>
+              <line x1="12" y1="13" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <div class="btn-title">Estoque</div>
+        </button>
+
+        <!-- 5. Relatórios -->
+        <button class="btn-card-3d btn-relatorios" onclick="openReportsModal()">
+          <div class="btn-icon-wrapper">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 3H15M9 3C9 2 10 1 12 1C14 1 15 2 15 3M9 3H6C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V5C20 3.89543 19.1046 3 18 3H15"/>
+              <path d="M8 12L11 15L16 9"/>
+            </svg>
+          </div>
+          <div class="btn-title">Relatórios</div>
+        </button>
+
+        <!-- 6. Igrejas -->
+        <button class="btn-card-3d btn-igreja" onclick="openChurchesModal()">
+          <div class="btn-icon-wrapper">
+            <svg viewBox="0 0 24 24">
+              <line x1="12" y1="2" x2="12" y2="7"/>
+              <line x1="10" y1="4" x2="14" y2="4"/>
+              <path d="M12 7L4 12V22H20V12L12 7Z"/>
+              <path d="M10 22V16C10 14.9 10.9 14 12 14C13.1 14 14 14.9 14 16V22"/>
+            </svg>
+          </div>
+          <div class="btn-title">Igrejas</div>
+        </button>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Genérico Dinâmico -->
+  <div id="modal-generic" class="modal-overlay">
+    <div class="modal-sheet">
+      <div id="modal-generic-header" class="modal-header">
+        <!-- Injetado dinamicamente -->
+      </div>
+      <div id="modal-generic-body" class="modal-body">
+        <!-- Injetado dinamicamente -->
+      </div>
+      <div id="modal-generic-footer" class="modal-footer">
+        <!-- Injetado dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay Global de Loading -->
+  <div id="global-loading" class="global-loading-overlay">
+    <div class="spinner"></div>
+    <span id="loading-text" style="font-weight:700; font-size:0.9rem; letter-spacing:0.4px;">Sincronizando...</span>
+  </div>
+
+  <!-- Container de Toasts -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Firebase SDK Oficial -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Scripts da Aplicação com Versionamento Anti-Cache -->
+  <script src="js/db.js?v=20260919-v12"></script>
+  <script src="js/modules.js?v=20260919-v12"></script>
+  <script src="js/pwa.js?v=20260919-v12"></script>
+  <script src="js/app.js?v=20260919-v12"></script>
+
+</body>
+</html>
