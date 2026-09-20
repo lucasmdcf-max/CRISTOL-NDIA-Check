@@ -1,6 +1,6 @@
 {
-  "version": "1.0.13",
-  "build": "20260920_13",
+  "version": "1.0.14",
+  "build": "20260920_14",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Remoção das bolinhas douradas indicadoras dos botões das unidades Missão, Macedônia e Feminina."
+  "releaseNotes": "Notificação flutuante neon amarelo com letra verde escura ao surgir nova versão após deploy."
 }

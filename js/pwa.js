@@ -18,15 +18,18 @@ function registerServiceWorker() {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
         .then((reg) => {
-          // Força verificação imediata de nova versão no servidor a cada recarregamento
           reg.update();
+
+          if (reg.waiting) {
+            showVersionUpdateBalloon();
+          }
 
           reg.onupdatefound = () => {
             const installingWorker = reg.installing;
             if (installingWorker) {
               installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'activated') {
-                  console.log('[PWA] Nova versão ativada imediatamente.');
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  showVersionUpdateBalloon();
                 }
               };
             }
@@ -164,21 +167,88 @@ function checkIfStandalone() {
   }
 }
 
-// 3. Verificação periódica de atualização (Pilar 6.1 do Guia CUIDAR)
+// 3. Balão Flutuante Neon de Nova Versão & Verificação Anti-Cache (Pilar 6.1 do Guia CUIDAR)
+let activeVersionUpdateBuild = null;
+
+function showVersionUpdateBalloon(newBuild = null) {
+  if (document.getElementById('version-update-bubble')) return;
+
+  if (newBuild) {
+    activeVersionUpdateBuild = newBuild;
+  }
+
+  const bubble = document.createElement('div');
+  bubble.id = 'version-update-bubble';
+  bubble.className = 'version-update-bubble';
+  bubble.setAttribute('role', 'alert');
+  bubble.setAttribute('aria-live', 'assertive');
+  bubble.onclick = applyAppUpdate;
+  bubble.innerHTML = `
+    <span class="version-update-icon">⚡</span>
+    <span class="version-update-text">Nova Versão disponível! Clique para atualizar o aplicativo.</span>
+  `;
+
+  document.body.appendChild(bubble);
+
+  if (navigator.vibrate) {
+    navigator.vibrate([40, 80, 40]);
+  }
+}
+
+async function applyAppUpdate() {
+  if (navigator.vibrate) navigator.vibrate(25);
+
+  if (activeVersionUpdateBuild) {
+    localStorage.setItem('cristolandia_build_version', activeVersionUpdateBuild);
+  }
+
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        if (reg.waiting) {
+          reg.waiting.postMessage({ action: 'skipWaiting' });
+        }
+        await reg.update();
+      }
+    } catch (e) {
+      console.warn('Erro ao atualizar worker:', e);
+    }
+  }
+
+  window.location.reload(true);
+}
+
 function setupVersionChecker() {
-  setInterval(async () => {
+  const checkVersion = async () => {
     try {
       const resp = await fetch('./version.json?t=' + Date.now());
       if (resp.ok) {
         const data = await resp.json();
         const localBuild = localStorage.getItem('cristolandia_build_version');
-        if (localBuild && localBuild !== data.build) {
-          showToast(`Nova versão detectada (${data.version}). Toque para atualizar.`, 'warning');
+
+        if (!localBuild) {
+          localStorage.setItem('cristolandia_build_version', data.build);
+        } else if (localBuild !== data.build) {
+          showVersionUpdateBalloon(data.build);
         }
-        localStorage.setItem('cristolandia_build_version', data.build);
       }
     } catch (e) {
       // Offline silenciado
     }
-  }, 60000); // a cada 60s
+  };
+
+  // Checagem inicial após 2 segundos
+  setTimeout(checkVersion, 2000);
+
+  // Checagem imediata quando o usuário volta para o app
+  window.addEventListener('focus', checkVersion);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      checkVersion();
+    }
+  });
+
+  // Polling contínuo a cada 30 segundos
+  setInterval(checkVersion, 30000);
 }
