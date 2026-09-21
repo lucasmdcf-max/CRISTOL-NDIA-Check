@@ -248,9 +248,24 @@ async function handleSaveUnitReport() {
 
 // --- MÓDULO 4: ESTOQUE DAS 3 DESPENSAS (SELEÇÃO, ATUALIZAR E ANALISAR) ---
 const STOCK_UNITS = [
-  { id: 'missao', name: 'Missão', icon: '🏛️', subtitle: 'Unidade Masculina Central' },
-  { id: 'macedonia', name: 'Macedônia', icon: '🌾', subtitle: 'Unidade de Acolhimento Rural' },
-  { id: 'feminina', name: 'Feminina', icon: '👩', subtitle: 'Unidade de Acolhimento Feminino' }
+  {
+    id: 'missao',
+    name: 'Estoque Missão',
+    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10L12 3L21 10"/><path d="M5 10V20H19V10"/><path d="M9 20V14H15V20"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
+    subtitle: 'Unidade Masculina Central'
+  },
+  {
+    id: 'macedonia',
+    name: 'Estoque Macedônia',
+    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/><path d="M12 17C15 17 18 19 19 22"/></svg>`,
+    subtitle: 'Unidade de Acolhimento Rural'
+  },
+  {
+    id: 'feminina',
+    name: 'Estoque Feminina',
+    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.8 13.5L5.5 14C6 8.5 8 4 12 4C16 4 18 8.5 18.5 14L15.2 13.5"/><path d="M8.2 9.5C9.5 9 11 8.2 12.5 7.5C13.8 8.5 15 9.2 15.8 9.5"/><path d="M8.2 9.5C8.2 12.8 9.8 14.2 12 14.2C14.2 14.2 15.8 12.8 15.8 9.5"/><path d="M8.8 14.5C6.5 15.2 5.5 16.5 5 20H19C18.5 16.5 17.5 15.2 15.2 14.5"/><path d="M10.2 14.8C10.5 16.8 11.2 17.8 12 17.8C12.8 17.8 13.5 16.8 13.8 14.8"/></svg>`,
+    subtitle: 'Unidade de Acolhimento Feminino'
+  }
 ];
 
 window.currentStockUnit = window.currentStockUnit || 'missao';
@@ -300,11 +315,11 @@ function openStockModal() {
         return `
           <div class="stock-unit-card-choice" onclick="selectStockUnit('${unit.id}')">
             <div class="stock-unit-choice-left">
-              <div class="stock-unit-choice-icon" style="font-size: 1.4rem;">
+              <div class="stock-unit-choice-icon" style="color:var(--green-primary);">
                 ${unit.icon}
               </div>
               <div class="stock-unit-choice-info">
-                <h3>Unidade ${unit.name}</h3>
+                <h3>${unit.name}</h3>
                 <p>${count} itens cadastrados · Última contagem: <strong>${lastUpdate}</strong></p>
               </div>
             </div>
