@@ -400,6 +400,7 @@ function selectStockUnit(unitId) {
 // 3. MODO ATUALIZAR: LISTA DE ITENS + SALVAR COM DATA NO TOPO
 function openStockUpdateView(unitId) {
   window.currentStockUnit = unitId;
+  window._currentScreen = { type: 'stock-update', unitId };
   const unit = getStockUnitObj(unitId);
   const lastUpdate = dbManager.getStockLastUpdate(unitId);
 
@@ -660,6 +661,7 @@ async function removeStockItem(itemId, unitId) {
 
   if (dbManager.firebaseDb) {
     try {
+      dbManager._lastLocalWrite = Date.now();
       await dbManager.firebaseDb.ref(`cristolandia_check/stock/${itemId}`).remove();
     } catch (e) {
       console.warn('Erro ao remover no Firebase:', e);
@@ -673,6 +675,7 @@ async function removeStockItem(itemId, unitId) {
 // 4. MODO ANALISAR: GRÁFICO EM BARRAS HORIZONTAL COM ESCALA ADAPTATIVA
 function openStockAnalyticsView(unitId, filterCat = 'todas') {
   window.currentStockUnit = unitId;
+  window._currentScreen = { type: 'stock-analytics', unitId, filterCat };
   const unit = getStockUnitObj(unitId);
   const allItems = dbManager.getStock(unitId);
   const items = filterCat === 'todas' ? allItems : allItems.filter(i => i.category === filterCat);
@@ -875,6 +878,7 @@ function openStockItemOscillationModal(itemId, unitId) {
 
 // --- MÓDULO 5: RELATÓRIOS CONSOLIDADOS CLEAN ---
 function openReportsModal() {
+  window._currentScreen = { type: 'reports-history' };
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
@@ -1101,6 +1105,7 @@ function openInstituicoesModal() {
 // ---- ATIVIDADES ----
 
 function openAtividadesView(filterInstId = '') {
+  window._currentScreen = { type: 'activities', filterInstId };
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
@@ -1298,6 +1303,7 @@ async function handleDeleteAtividade(id) {
 // ---- CADASTROS DE INSTITUIÇÕES ----
 
 function openCadastrosInstituicoes() {
+  window._currentScreen = { type: 'instituicoes-list' };
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');

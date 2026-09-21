@@ -192,6 +192,9 @@ class CristolandiaDB {
     this.firebaseDb = null;
     this.isFirebaseConnected = false;
     this.onStatusChangeCallbacks = [];
+    // Controle de sincronização em tempo real (Pilar 1 Motor CUIDAR)
+    this._realtimeListenersActive = false;
+    this._lastLocalWrite = 0; // Timestamp da última escrita local — suprime toast em eco
   }
 
   // Sanitização anti-undefined conforme Pilar 1.4 do Guia CUIDAR
@@ -270,7 +273,7 @@ class CristolandiaDB {
           this.isFirebaseConnected = (snap.val() === true);
           if (this.isFirebaseConnected) {
             this.notifyStatus('online', 'Nuvem Conectada');
-            this.syncDownFromFirebase();
+            this.startRealtimeListeners(); // Pilar 1: listeners persistentes
           } else {
             this.notifyStatus(navigator.onLine ? 'connecting' : 'offline', navigator.onLine ? 'Conectando...' : 'Offline');
           }
@@ -282,21 +285,53 @@ class CristolandiaDB {
     }
   }
 
-  // Sincronização da nuvem para o LocalStorage
-  async syncDownFromFirebase() {
-    if (!this.firebaseDb) return;
-    try {
-      const snap = await this.firebaseDb.ref('cristolandia_check').once('value');
+  // PILAR 1 — Sincronização WebSocket Nativa em Tempo Real
+  // Substitui o antigo once('value') por listeners persistentes .on('value')
+  // Qualquer gravação em qualquer dispositivo propaga para todos em < 150ms
+  startRealtimeListeners() {
+    if (!this.firebaseDb || this._realtimeListenersActive) return;
+    this._realtimeListenersActive = true;
+
+    // Converte objeto Firebase (keyed by id) de volta para array
+    const toArray = (obj) => {
+      if (!obj) return [];
+      if (Array.isArray(obj)) return obj;
+      return Object.values(obj).filter(v => v !== null && v !== undefined);
+    };
+
+    let isFirstFire = true;
+
+    this.firebaseDb.ref('cristolandia_check').on('value', (snap) => {
       const data = snap.val();
-      if (data) {
-        if (data.reports) localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify(data.reports));
-        if (data.stock) localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(data.stock));
-        if (data.churches) localStorage.setItem(DB_KEYS.CHURCHES, JSON.stringify(data.churches));
-        window.dispatchEvent(new CustomEvent('db:cloud-synced'));
+      if (!data) return;
+
+      // Atualiza cada coleção no localStorage a partir do Firebase
+      if (data.reports)    localStorage.setItem(DB_KEYS.REPORTS,    JSON.stringify(toArray(data.reports)));
+      if (data.stock)      localStorage.setItem(DB_KEYS.STOCK,      JSON.stringify(toArray(data.stock)));
+      if (data.churches)   localStorage.setItem(DB_KEYS.CHURCHES,   JSON.stringify(toArray(data.churches)));
+      if (data.activities) localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify(toArray(data.activities)));
+
+      // Atualiza timestamps de last_update por unidade
+      if (data.stock_last_update) {
+        Object.keys(data.stock_last_update).forEach(unitId => {
+          if (data.stock_last_update[unitId]) {
+            localStorage.setItem(`cristolandia_stock_last_update_${unitId}`, data.stock_last_update[unitId]);
+          }
+        });
       }
-    } catch (e) {
-      console.warn('Erro ao sincronizar com nuvem:', e);
-    }
+
+      const firstLoad = isFirstFire;
+      isFirstFire = false;
+
+      // Detecta eco de escrita local (< 3s após última gravação deste dispositivo)
+      const isLocalWrite = !firstLoad && (Date.now() - this._lastLocalWrite) < 3000;
+
+      window.dispatchEvent(new CustomEvent('db:cloud-synced', {
+        detail: { firstLoad, isLocalWrite }
+      }));
+    }, (err) => {
+      console.warn('[CUIDAR] Erro no listener em tempo real:', err);
+    });
   }
 
   // --- MÉTODOS DE RELATÓRIOS ---
@@ -330,6 +365,7 @@ class CristolandiaDB {
     // 2. Despacha para o Firebase caso conectado
     if (this.firebaseDb) {
       try {
+        this._lastLocalWrite = Date.now();
         await this.firebaseDb.ref(`cristolandia_check/reports/${sanitized.id}`).set(sanitized);
       } catch (e) {
         console.warn('Firebase pendente (salvo localmente):', e);
@@ -368,6 +404,7 @@ class CristolandiaDB {
 
     if (this.firebaseDb) {
       try {
+        this._lastLocalWrite = Date.now();
         await this.firebaseDb.ref(`cristolandia_check/stock/${sanitized.id}`).set(sanitized);
       } catch (e) {
         console.warn('Firebase pendente:', e);
@@ -423,6 +460,7 @@ class CristolandiaDB {
 
     if (this.firebaseDb) {
       try {
+        this._lastLocalWrite = Date.now();
         await this.firebaseDb.ref(`cristolandia_check/stock_last_update/${unitId || 'missao'}`).set(dateStr);
       } catch (e) {
         console.warn('Firebase pendente:', e);
@@ -493,6 +531,7 @@ class CristolandiaDB {
 
     if (this.firebaseDb) {
       try {
+        this._lastLocalWrite = Date.now();
         await this.firebaseDb.ref(`cristolandia_check/churches/${sanitized.id}`).set(sanitized);
       } catch (e) {
         console.warn('Firebase pendente:', e);
@@ -509,6 +548,7 @@ class CristolandiaDB {
 
     if (this.firebaseDb) {
       try {
+        this._lastLocalWrite = Date.now();
         await this.firebaseDb.ref(`cristolandia_check/churches/${id}`).remove();
       } catch (e) {
         console.warn('Erro ao remover no Firebase:', e);
@@ -538,6 +578,7 @@ class CristolandiaDB {
     localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify(activities));
     if (this.firebaseDb) {
       try {
+        this._lastLocalWrite = Date.now();
         await this.firebaseDb.ref(`cristolandia_check/activities/${sanitized.id}`).set(sanitized);
       } catch (e) {
         console.warn('Firebase pendente:', e);
@@ -552,6 +593,7 @@ class CristolandiaDB {
     localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify(activities));
     if (this.firebaseDb) {
       try {
+        this._lastLocalWrite = Date.now();
         await this.firebaseDb.ref(`cristolandia_check/activities/${id}`).remove();
       } catch (e) {
         console.warn('Erro ao remover no Firebase:', e);

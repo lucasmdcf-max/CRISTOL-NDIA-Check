@@ -37,12 +37,64 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Monitoramento de inatividade (30 minutos)
   setupInactivityWatcher();
 
-  // Ouvinte de sincronização remota
-  window.addEventListener('db:cloud-synced', () => {
+  // Ouvinte de sincronização remota em tempo real (Motor CUIDAR Pilar 1)
+  window.addEventListener('db:cloud-synced', (e) => {
     updateHeroMetrics();
-    showToast('Dados sincronizados com a nuvem!', 'info');
+    const detail = (e && e.detail) || {};
+    if (detail.firstLoad) {
+      // Primeira carga: silenciosa
+      return;
+    }
+    if (detail.isLocalWrite) {
+      // Gravação deste mesmo dispositivo: atualiza tela silenciosamente (já exibiu toast ao salvar)
+      refreshCurrentScreen();
+      return;
+    }
+    // Gravação vinda de outro dispositivo: atualiza a tela ativa e notifica o usuário
+    refreshCurrentScreen();
+    showToast('📡 Dados sincronizados em tempo real!', 'info');
   });
 });
+
+// Rastreamento global de tela ativa para atualização reativa
+window._currentScreen = null;
+
+function refreshCurrentScreen() {
+  const genericModal = document.getElementById('modal-generic');
+  if (!genericModal || !genericModal.classList.contains('active')) {
+    window._currentScreen = null;
+    return;
+  }
+  const screen = window._currentScreen;
+  if (!screen) return;
+
+  if (screen.type === 'stock-update') {
+    if (typeof renderStockList === 'function') {
+      const bannerVal = document.getElementById('stock-last-update-banner-val');
+      if (bannerVal && typeof dbManager !== 'undefined') {
+        const lastUp = dbManager.getStockLastUpdate(screen.unitId);
+        bannerVal.textContent = `🗓️ ${lastUp}`;
+      }
+      renderStockList();
+    }
+  } else if (screen.type === 'stock-analytics') {
+    if (typeof renderStockBars === 'function') {
+      renderStockBars(screen.filterCat || 'todas');
+    }
+  } else if (screen.type === 'activities') {
+    if (typeof renderAtividadesList === 'function') {
+      renderAtividadesList(screen.filterInstId || '');
+    }
+  } else if (screen.type === 'instituicoes-list') {
+    if (typeof renderInstituicoesList === 'function') {
+      renderInstituicoesList();
+    }
+  } else if (screen.type === 'reports-history') {
+    if (typeof renderReportsHistory === 'function') {
+      renderReportsHistory();
+    }
+  }
+}
 
 // Renderização da Data por extenso em Português
 function renderCurrentDate() {
@@ -166,6 +218,9 @@ function closeModal(modalId) {
   if (!modal) return;
   modal.classList.remove('active');
   document.body.style.overflow = '';
+  if (modalId === 'modal-generic') {
+    window._currentScreen = null;
+  }
 }
 
 // Fechamento ao clicar fora da folha do modal
@@ -173,6 +228,7 @@ window.addEventListener('click', (e) => {
   if (e.target.classList.contains('modal-overlay')) {
     e.target.classList.remove('active');
     document.body.style.overflow = '';
+    window._currentScreen = null;
   }
 });
 
