@@ -7,6 +7,7 @@ const DB_KEYS = {
   REPORTS: 'cristolandia_check_reports_v1',
   STOCK: 'cristolandia_check_stock_v1',
   CHURCHES: 'cristolandia_check_churches_v1',
+  ACTIVITIES: 'cristolandia_check_activities_v1',
   FIREBASE_CONFIG: 'cristolandia_check_firebase_cfg_v1',
   APP_CONFIG: 'cristolandia_check_app_cfg_v1'
 };
@@ -515,6 +516,49 @@ class CristolandiaDB {
     }
   }
 
+  // --- MÉTODOS DE ATIVIDADES ---
+  getActivities() {
+    try {
+      const raw = localStorage.getItem(DB_KEYS.ACTIVITIES);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async saveActivity(activityData) {
+    const activities = this.getActivities();
+    const sanitized = this.sanitize(activityData);
+    const index = activities.findIndex(a => a.id === sanitized.id);
+    if (index >= 0) {
+      activities[index] = sanitized;
+    } else {
+      activities.unshift(sanitized);
+    }
+    localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify(activities));
+    if (this.firebaseDb) {
+      try {
+        await this.firebaseDb.ref(`cristolandia_check/activities/${sanitized.id}`).set(sanitized);
+      } catch (e) {
+        console.warn('Firebase pendente:', e);
+      }
+    }
+    return sanitized;
+  }
+
+  async deleteActivity(id) {
+    let activities = this.getActivities();
+    activities = activities.filter(a => a.id !== id);
+    localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify(activities));
+    if (this.firebaseDb) {
+      try {
+        await this.firebaseDb.ref(`cristolandia_check/activities/${id}`).remove();
+      } catch (e) {
+        console.warn('Erro ao remover no Firebase:', e);
+      }
+    }
+  }
+
   // Configuração do Firebase
   setFirebaseConfig(config) {
     localStorage.setItem(DB_KEYS.FIREBASE_CONFIG, JSON.stringify(config));
@@ -534,6 +578,7 @@ class CristolandiaDB {
     localStorage.removeItem(DB_KEYS.REPORTS);
     localStorage.removeItem(DB_KEYS.STOCK);
     localStorage.removeItem(DB_KEYS.CHURCHES);
+    localStorage.removeItem(DB_KEYS.ACTIVITIES);
     this.ensureLocalSeed();
   }
 }

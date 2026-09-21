@@ -356,7 +356,7 @@ function selectStockUnit(unitId) {
         <span style="font-size: 1.2rem;">${unit.icon}</span>
       </div>
       <div>
-        <h2>Unidade ${unit.name}</h2>
+        <h2>${unit.name}</h2>
         <p style="font-size:0.75rem; color:var(--text-muted);">Última atualização: ${lastUpdate}</p>
       </div>
     </div>
@@ -415,7 +415,7 @@ function openStockUpdateView(unitId) {
       </div>
       <div>
         <h2>Atualizar Estoque</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">Unidade ${unit.name}</p>
+        <p style="font-size:0.75rem; color:var(--text-muted);">${unit.name}</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -425,7 +425,7 @@ function openStockUpdateView(unitId) {
     <!-- Banner Oficial com Data da Última Atualização no Topo -->
     <div style="background: linear-gradient(135deg, #1E4D2B, #276036); border-radius: 12px; padding: 10px 14px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30,77,43,0.18);">
       <div>
-        <div style="font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px;">Unidade ${unit.name}</div>
+        <div style="font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px;">${unit.name}</div>
         <div style="font-size: 0.68rem; color: #E8D8A0; font-weight: 700; text-transform: uppercase; margin-top: 1px;">ÚLTIMA ATUALIZAÇÃO</div>
       </div>
       <div style="text-align: right; background: rgba(0,0,0,0.28); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.35);">
@@ -689,7 +689,7 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
       </div>
       <div>
         <h2>Análise de Estoque</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">Unidade ${unit.name} (${items.length} itens)</p>
+        <p style="font-size:0.75rem; color:var(--text-muted);">${unit.name} (${items.length} itens)</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -734,8 +734,10 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
           const barH = getScaledHeight(item.quantity || 0);
           return `
             <div class="stock-chart-bar-col" onclick="openStockItemOscillationModal('${item.id}', '${unitId}')" title="${item.name}: ${item.quantity} ${item.unit || 'und'} (Toque para oscilação mensal)">
-              <div class="stock-chart-badge">${item.quantity} ${item.unit || 'und'}</div>
-              <div class="stock-chart-bar" style="height: ${barH}px;"></div>
+              <div class="stock-chart-bar-zone">
+                <div class="stock-chart-badge">${item.quantity} ${item.unit || 'und'}</div>
+                <div class="stock-chart-bar" style="height: ${barH}px;"></div>
+              </div>
               <div class="stock-chart-label">${item.name}</div>
             </div>
           `;
@@ -743,9 +745,9 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
       </div>
     </div>
 
-    <div style="text-align: center; margin-top: 6px;">
-      <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">
-        💡 Escala balanceada aplicada: valores reais exibidos abaixo de cada barra. Toque em qualquer item para ver o histórico.
+    <div style="text-align: center; margin-top: 10px;">
+      <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700;">
+        Clique em qualquer item para ver o consumo médio
       </span>
     </div>
   `;
@@ -778,7 +780,7 @@ function openStockItemOscillationModal(itemId, unitId) {
       </div>
       <div>
         <h2>Oscilação do Item</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">${item.name} · Unidade ${unit.name}</p>
+        <p style="font-size:0.75rem; color:var(--text-muted);">${item.name} · ${unit.name}</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -1028,7 +1030,14 @@ function shareReportsWhatsApp() {
 }
 
 // --- MÓDULO 6: CADASTRAR IGREJA CLEAN ---
-function openChurchesModal() {
+// Alias de compatibilidade
+function openChurchesModal() { openInstituicoesModal(); }
+
+// ============================================================
+// MÓDULO 7: INSTITUIÇÕES (HUB: ATIVIDADES + CADASTROS)
+// ============================================================
+
+function openInstituicoesModal() {
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
@@ -1044,174 +1053,234 @@ function openChurchesModal() {
         </svg>
       </div>
       <div>
-        <h2>Igrejas Parceiras</h2>
-        <p>Parcerias, mantenedores e visitas</p>
+        <h2>Instituições</h2>
+        <p style="font-size:0.75rem; color:var(--text-muted);">Parcerias, atividades e cadastros</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   modalBody.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
-      <input type="text" id="church-search-input" class="form-input" placeholder="Buscar igreja ou pastor..." oninput="renderChurchesList()">
-      <button class="btn-primary-action" style="padding:10px 14px; flex:none; font-size:0.78rem;" onclick="openAddChurchForm()">
-        + Nova
-      </button>
-    </div>
+    <div class="stock-actions-choice-grid">
+      <div class="stock-action-choice-card" onclick="openAtividadesView()">
+        <div class="stock-action-icon-box update">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+          </svg>
+        </div>
+        <div class="stock-action-title">Atividades</div>
+        <div class="stock-action-desc">Histórico de atividades realizadas por igrejas e instituições parceiras</div>
+      </div>
 
-    <div id="churches-list-container" style="display:flex; flex-direction:column; gap:8px;">
-      <!-- Lista de igrejas -->
+      <div class="stock-action-choice-card" onclick="openCadastrosInstituicoes()">
+        <div class="stock-action-icon-box analytics">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="stock-action-title">Cadastros</div>
+        <div class="stock-action-desc">Gerenciar igrejas e instituições parceiras cadastradas</div>
+      </div>
     </div>
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="closeModal('modal-generic')">Fechar</button>
+    <button type="button" class="btn-primary-action" style="width:100%; background:var(--bg-surface); color:var(--text-main); border:1.5px solid var(--border-beige);" onclick="closeModal('modal-generic')">Fechar</button>
   `;
 
-  renderChurchesList();
   openModal('modal-generic');
 }
 
-function renderChurchesList() {
-  const container = document.getElementById('churches-list-container');
-  if (!container) return;
+// ---- ATIVIDADES ----
 
-  const query = (document.getElementById('church-search-input')?.value || '').toLowerCase();
-  let churches = dbManager.getChurches();
-
-  if (query) {
-    churches = churches.filter(c => 
-      c.name.toLowerCase().includes(query) || 
-      (c.pastor && c.pastor.toLowerCase().includes(query)) ||
-      (c.neighborhood && c.neighborhood.toLowerCase().includes(query))
-    );
-  }
-
-  if (churches.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding:30px; color:var(--text-muted);">
-        <p style="font-weight:600;">Nenhuma igreja cadastrada.</p>
-        <p style="font-size:0.76rem;">Cadastre as congregações parceiras e voluntárias.</p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = churches.map(c => {
-    const rawPhone = (c.phone || '').replace(/\D/g, '');
-    const waUrl = rawPhone ? `https://wa.me/55${rawPhone}?text=Olá%20${encodeURIComponent(c.pastor || '')},%20paz%20do%20Senhor!%20Mensagem%20da%20Cristolândia:` : '#';
-
-    return `
-      <div class="history-item" style="border-left:3px solid var(--green-primary);">
-        <div class="history-item-header">
-          <div>
-            <h4 style="font-size:0.9rem; font-weight:700; color:var(--green-primary);">${c.name}</h4>
-            <span style="font-size:0.72rem; color:var(--text-muted);">${c.pastor} • ${c.neighborhood || ''}</span>
-          </div>
-          ${rawPhone ? `
-            <a href="${waUrl}" target="_blank" style="padding:4px 8px; border-radius:6px; background:var(--green-light); color:var(--green-primary); font-size:0.72rem; font-weight:700; text-decoration:none;">
-              WhatsApp
-            </a>
-          ` : ''}
-        </div>
-
-        <div style="font-size:0.76rem; background:var(--bg-beige); padding:8px 10px; border-radius:8px; display:flex; flex-direction:column; gap:3px;">
-          <div><strong>Apoio:</strong> ${c.supportType || 'Cestas e Voluntários'}</div>
-          ${c.lastVisit ? `<div><strong>Visita:</strong> ${formatDateBR(c.lastVisit)}</div>` : ''}
-          ${c.notes ? `<div style="color:var(--text-muted);"><em>"${c.notes}"</em></div>` : ''}
-        </div>
-
-        <div style="display:flex; justify-content:flex-end;">
-          <button onclick="handleDeleteChurch('${c.id}')" style="background:none; border:none; color:var(--text-muted); font-size:0.72rem; cursor:pointer; font-weight:600;">
-            Remover
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function openAddChurchForm() {
+function openAtividadesView(filterInstId = '') {
   const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  const institutions = dbManager.getChurches();
+  const all = dbManager.getActivities();
+  const filtered = filterInstId ? all.filter(a => a.institutionId === filterInstId) : all;
+  // Ordena cronológico decrescente
+  filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openInstituicoesModal()" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Atividades</h2>
+        <p style="font-size:0.75rem;color:var(--text-muted);">Histórico cronológico</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  const filterOptions = institutions.map(i =>
+    `<option value="${i.id}" ${filterInstId === i.id ? 'selected' : ''}>${i.name}</option>`
+  ).join('');
+
+  const listHtml = filtered.length === 0
+    ? `<div style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-weight:600;">Nenhuma atividade registrada.</p><p style="font-size:0.76rem;">Registre atividades realizadas com as instituições parceiras.</p></div>`
+    : filtered.map(a => {
+        const instName = a.institutionName || '—';
+        const unitLabel = { missao: 'Missão', macedonia: 'Macedônia', feminina: 'Feminina' }[a.unitId] || a.unitId || '—';
+        return `
+          <div class="history-item" style="border-left:3px solid var(--gold-primary);">
+            <div class="history-item-header">
+              <div>
+                <h4 style="font-size:0.85rem;font-weight:700;color:var(--green-primary);">${instName}</h4>
+                <span style="font-size:0.72rem;color:var(--text-muted);">${formatDateBR(a.date)} · ${unitLabel}</span>
+              </div>
+              <button onclick="handleDeleteAtividade('${a.id}')" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-weight:600;">Remover</button>
+            </div>
+            ${a.description ? `<p style="font-size:0.78rem;color:var(--text-main);margin-top:4px;line-height:1.4;">${a.description}</p>` : ''}
+          </div>
+        `;
+      }).join('');
+
   modalBody.innerHTML = `
-    <form id="church-add-form" onsubmit="event.preventDefault();">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+      <select id="atividades-filter-inst" class="form-input" style="flex:1;" onchange="openAtividadesView(this.value)">
+        <option value="">Todas as instituições</option>
+        ${filterOptions}
+      </select>
+      <button class="btn-primary-action" style="padding:10px 14px;flex:none;font-size:0.8rem;font-weight:800;white-space:nowrap;" onclick="openNovaAtividadeForm({})">
+        Nova +
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${listHtml}
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-primary-action" style="width:100%;background:var(--bg-surface);color:var(--text-main);border:1.5px solid var(--border-beige);" onclick="openInstituicoesModal()">← Voltar</button>
+  `;
+}
+
+function openNovaAtividadeForm(pending) {
+  // pending = { date, unitId, institutionId, description } — preservado ao retornar do cadastro
+  const p = pending || {};
+  const institutions = dbManager.getChurches();
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  const today = new Date().toISOString().split('T')[0];
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openAtividadesView()" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="background:#EBF3EC;color:var(--green-primary);border-color:#D9D1BF;">
+        <span style="font-size:1.1rem;">📝</span>
+      </div>
+      <div>
+        <h2>Nova Atividade</h2>
+        <p style="font-size:0.75rem;color:var(--text-muted);">Registrar atividade realizada</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  const instOptions = [
+    `<option value="__cadastrar__">+ Cadastrar nova instituição</option>`,
+    `<option value="" disabled>────────────────</option>`,
+    ...institutions.map(i =>
+      `<option value="${i.id}" ${p.institutionId === i.id ? 'selected' : ''}>${i.name}</option>`
+    )
+  ].join('');
+
+  modalBody.innerHTML = `
+    <form id="nova-atividade-form" onsubmit="event.preventDefault();">
       <div class="form-group">
-        <label class="form-label">Nome da Igreja / Denominação</label>
-        <input type="text" id="chu-name" class="form-input" placeholder="Ex: Primeira Igreja Batista" required>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Pastor / Responsável</label>
-          <input type="text" id="chu-pastor" class="form-input" placeholder="Ex: Pr. João Silva" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">WhatsApp</label>
-          <input type="tel" id="chu-phone" class="form-input" placeholder="(11) 99999-9999">
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Bairro</label>
-          <input type="text" id="chu-neighborhood" class="form-input" placeholder="Ex: Centro">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Cidade</label>
-          <input type="text" id="chu-city" class="form-input" value="São Paulo - SP">
-        </div>
+        <label class="form-label">Data da Atividade</label>
+        <input type="date" id="atv-date" class="form-input" value="${p.date || today}" required>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Tipo de Apoio</label>
-        <input type="text" id="chu-support" class="form-input" placeholder="Ex: Cestas básicas, cultos mensais">
+        <label class="form-label">Unidade</label>
+        <select id="atv-unit" class="form-input">
+          <option value="missao" ${(p.unitId === 'missao' || !p.unitId) ? 'selected' : ''}>Missão</option>
+          <option value="macedonia" ${p.unitId === 'macedonia' ? 'selected' : ''}>Macedônia</option>
+          <option value="feminina" ${p.unitId === 'feminina' ? 'selected' : ''}>Feminina</option>
+        </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Data da Próxima Visita</label>
-        <input type="date" id="chu-visit" class="form-input">
+        <label class="form-label">Instituição</label>
+        <select id="atv-institution" class="form-input" onchange="handleInstituicaoSelectChange(this.value)">
+          <option value="">Selecione uma instituição...</option>
+          ${instOptions}
+        </select>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Observações</label>
-        <textarea id="chu-notes" class="form-textarea" rows="2" placeholder="Detalhes da parceria..."></textarea>
+        <label class="form-label">Descrição da Atividade</label>
+        <textarea id="atv-description" class="form-textarea" rows="4" placeholder="Descreva a atividade realizada, quantidade de pessoas, materiais entregues...">${p.description || ''}</textarea>
       </div>
     </form>
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-secondary-action" onclick="openChurchesModal()">Voltar</button>
-    <button type="button" class="btn-primary-action" onclick="handleSaveChurch()">Salvar Igreja</button>
+    <div style="display:flex;gap:8px;width:100%;">
+      <button type="button" class="btn-primary-action" style="background:var(--bg-surface);color:var(--text-main);border:1.5px solid var(--border-beige);" onclick="openAtividadesView()">Cancelar</button>
+      <button type="button" class="btn-primary-action" style="flex:1;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveAtividade()">💾 Salvar Atividade</button>
+    </div>
   `;
 }
 
-async function handleSaveChurch() {
-  const name = document.getElementById('chu-name')?.value.trim();
-  const pastor = document.getElementById('chu-pastor')?.value.trim();
-  if (!name || !pastor) {
-    showToast('Preencha o nome da igreja e pastor!', 'warning');
-    return;
-  }
+function handleInstituicaoSelectChange(val) {
+  if (val !== '__cadastrar__') return;
+  // Coleta dados parciais do formulário antes de navegar
+  const pending = {
+    date: document.getElementById('atv-date')?.value || '',
+    unitId: document.getElementById('atv-unit')?.value || 'missao',
+    institutionId: '',
+    description: document.getElementById('atv-description')?.value || ''
+  };
+  openCadastroInstituicaoForm(pending);
+}
 
-  const newChurch = {
-    id: 'chu_' + Date.now(),
-    name,
-    pastor,
-    phone: document.getElementById('chu-phone')?.value.trim() || '',
-    neighborhood: document.getElementById('chu-neighborhood')?.value.trim() || '',
-    city: document.getElementById('chu-city')?.value.trim() || '',
-    supportType: document.getElementById('chu-support')?.value.trim() || '',
-    lastVisit: document.getElementById('chu-visit')?.value || '',
-    notes: document.getElementById('chu-notes')?.value.trim() || ''
+async function handleSaveAtividade() {
+  const institutionId = document.getElementById('atv-institution')?.value;
+  const date = document.getElementById('atv-date')?.value;
+  const unitId = document.getElementById('atv-unit')?.value;
+  const description = document.getElementById('atv-description')?.value.trim();
+
+  if (!institutionId || institutionId === '__cadastrar__') {
+    showToast('Selecione uma instituição!', 'warning'); return;
+  }
+  if (!date) { showToast('Informe a data da atividade!', 'warning'); return; }
+  if (!description) { showToast('Descreva a atividade!', 'warning'); return; }
+
+  const institution = dbManager.getChurches().find(i => i.id === institutionId);
+
+  const newActivity = {
+    id: 'act_' + Date.now(),
+    date,
+    unitId,
+    institutionId,
+    institutionName: institution?.name || '',
+    description
   };
 
-  showLoading('Gravando...');
+  showLoading('Gravando atividade...');
   try {
-    await dbManager.saveChurch(newChurch);
-    showToast('Igreja cadastrada!', 'success');
-    openChurchesModal();
+    await dbManager.saveActivity(newActivity);
+    showToast('Atividade registrada!', 'success');
+    openAtividadesView();
   } catch (e) {
     showToast('Erro: ' + e.message, 'danger');
   } finally {
@@ -1219,18 +1288,211 @@ async function handleSaveChurch() {
   }
 }
 
-async function handleDeleteChurch(id) {
-  if (!confirm('Deseja remover esta igreja?')) return;
+async function handleDeleteAtividade(id) {
+  if (!confirm('Deseja remover esta atividade?')) return;
+  await dbManager.deleteActivity(id);
+  showToast('Atividade removida.', 'info');
+  openAtividadesView();
+}
+
+// ---- CADASTROS DE INSTITUIÇÕES ----
+
+function openCadastrosInstituicoes() {
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openInstituicoesModal()" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="background:#EBF3EC;color:var(--green-primary);border-color:#D9D1BF;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Cadastros</h2>
+        <p style="font-size:0.75rem;color:var(--text-muted);">Instituições parceiras</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
+      <input type="text" id="inst-search-input" class="form-input" placeholder="Buscar instituição..." oninput="renderInstituicoesList()">
+      <button class="btn-primary-action" style="padding:10px 14px;flex:none;font-size:0.78rem;" onclick="openCadastroInstituicaoForm(null)">
+        + Nova
+      </button>
+    </div>
+    <div id="instituicoes-list-container" style="display:flex;flex-direction:column;gap:8px;"></div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-primary-action" style="width:100%;background:var(--bg-surface);color:var(--text-main);border:1.5px solid var(--border-beige);" onclick="openInstituicoesModal()">← Voltar</button>
+  `;
+
+  renderInstituicoesList();
+}
+
+function renderInstituicoesList() {
+  const container = document.getElementById('instituicoes-list-container');
+  if (!container) return;
+
+  const query = (document.getElementById('inst-search-input')?.value || '').toLowerCase();
+  let institutions = dbManager.getChurches();
+
+  if (query) {
+    institutions = institutions.filter(c =>
+      c.name.toLowerCase().includes(query) ||
+      (c.pastor && c.pastor.toLowerCase().includes(query)) ||
+      (c.address && c.address.toLowerCase().includes(query))
+    );
+  }
+
+  if (institutions.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:30px;color:var(--text-muted);">
+        <p style="font-weight:600;">Nenhuma instituição cadastrada.</p>
+        <p style="font-size:0.76rem;">Cadastre igrejas e instituições parceiras.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = institutions.map(c => {
+    const rawPhone = (c.phone || '').replace(/\D/g, '');
+    const waUrl = rawPhone ? `https://wa.me/55${rawPhone}?text=Olá%20${encodeURIComponent(c.pastor || '')},%20paz%20do%20Senhor!%20Mensagem%20da%20Cristolândia:` : '#';
+    return `
+      <div class="history-item" style="border-left:3px solid var(--green-primary);">
+        <div class="history-item-header">
+          <div>
+            <h4 style="font-size:0.9rem;font-weight:700;color:var(--green-primary);">${c.name}</h4>
+            <span style="font-size:0.72rem;color:var(--text-muted);">${c.pastor || ''}${c.address ? ' · ' + c.address : ''}</span>
+          </div>
+          ${rawPhone ? `<a href="${waUrl}" target="_blank" style="padding:4px 8px;border-radius:6px;background:var(--green-light);color:var(--green-primary);font-size:0.72rem;font-weight:700;text-decoration:none;">WhatsApp</a>` : ''}
+        </div>
+        <div style="font-size:0.76rem;background:var(--bg-beige);padding:8px 10px;border-radius:8px;display:flex;flex-direction:column;gap:3px;">
+          ${c.phone ? `<div><strong>Telefone:</strong> ${c.phone}</div>` : ''}
+          ${c.instagram ? `<div><strong>Instagram/Site:</strong> ${c.instagram}</div>` : ''}
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button onclick="handleDeleteInstituicao('${c.id}')" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-weight:600;">Remover</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openCadastroInstituicaoForm(pendingActivityData) {
+  // pendingActivityData: se vier de openNovaAtividadeForm, guarda os dados parciais
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  const fromActivity = pendingActivityData !== null && pendingActivityData !== undefined;
+  const pendingJson = fromActivity ? encodeURIComponent(JSON.stringify(pendingActivityData)) : 'null';
+
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="${fromActivity ? `openNovaAtividadeForm(JSON.parse(decodeURIComponent('${pendingJson}')))` : 'openCadastrosInstituicoes()'}" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="background:#EBF3EC;color:var(--green-primary);border-color:#D9D1BF;">
+        <span style="font-size:1.1rem;">🏛️</span>
+      </div>
+      <div>
+        <h2>Nova Instituição</h2>
+        <p style="font-size:0.75rem;color:var(--text-muted);">${fromActivity ? 'Cadastrar e retornar ao registro de atividade' : 'Cadastrar instituição parceira'}</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <form id="inst-add-form" onsubmit="event.preventDefault();">
+      ${fromActivity ? `<div style="background:var(--bg-beige);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:0.78rem;color:var(--text-muted);border-left:3px solid var(--gold-primary);">💡 Após salvar, você será redirecionado de volta ao registro de atividade com esta instituição já selecionada.</div>` : ''}
+
+      <div class="form-group">
+        <label class="form-label">Nome da Instituição *</label>
+        <input type="text" id="inst-name" class="form-input" placeholder="Ex: Igreja Batista Central, ONG Abraço" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Endereço</label>
+        <input type="text" id="inst-address" class="form-input" placeholder="Ex: Rua das Flores, 123 - Centro">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Presidente / Responsável</label>
+          <input type="text" id="inst-pastor" class="form-input" placeholder="Ex: Pastor João">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input type="tel" id="inst-phone" class="form-input" placeholder="(11) 99999-9999">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Instagram ou Site</label>
+        <input type="text" id="inst-instagram" class="form-input" placeholder="Ex: @nome_instagram ou https://...">
+      </div>
+    </form>
+  `;
+
+  modalFooter.innerHTML = `
+    <div style="display:flex;gap:8px;width:100%;">
+      <button type="button" class="btn-primary-action" style="background:var(--bg-surface);color:var(--text-main);border:1.5px solid var(--border-beige);" onclick="${fromActivity ? `openNovaAtividadeForm(JSON.parse(decodeURIComponent('${pendingJson}')))` : 'openCadastrosInstituicoes()'}">Cancelar</button>
+      <button type="button" class="btn-primary-action" style="flex:1;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveInstituicao(${fromActivity ? `JSON.parse(decodeURIComponent('${pendingJson}'))` : 'null'})">💾 Salvar</button>
+    </div>
+  `;
+}
+
+async function handleSaveInstituicao(pendingActivityData) {
+  const name = document.getElementById('inst-name')?.value.trim();
+  if (!name) { showToast('Informe o nome da instituição!', 'warning'); return; }
+
+  const newInstitution = {
+    id: 'chu_' + Date.now(),
+    name,
+    address: document.getElementById('inst-address')?.value.trim() || '',
+    pastor: document.getElementById('inst-pastor')?.value.trim() || '',
+    phone: document.getElementById('inst-phone')?.value.trim() || '',
+    instagram: document.getElementById('inst-instagram')?.value.trim() || '',
+    city: '',
+    neighborhood: '',
+    supportType: '',
+    lastVisit: '',
+    notes: ''
+  };
+
+  showLoading('Cadastrando instituição...');
+  try {
+    await dbManager.saveChurch(newInstitution);
+    showToast(`"${name}" cadastrada!`, 'success');
+    if (pendingActivityData !== null && pendingActivityData !== undefined) {
+      // Retorna ao formulário de atividade com instituição já selecionada
+      const updated = { ...pendingActivityData, institutionId: newInstitution.id };
+      openNovaAtividadeForm(updated);
+    } else {
+      openCadastrosInstituicoes();
+    }
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'danger');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function handleDeleteInstituicao(id) {
+  if (!confirm('Deseja remover esta instituição?')) return;
   await dbManager.deleteChurch(id);
-  showToast('Igreja removida.', 'info');
-  renderChurchesList();
+  showToast('Instituição removida.', 'info');
+  renderInstituicoesList();
 }
 
 function formatDateBR(dateStr) {
   if (!dateStr) return '';
   const parts = dateStr.split('-');
-  if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
-  }
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
   return dateStr;
 }

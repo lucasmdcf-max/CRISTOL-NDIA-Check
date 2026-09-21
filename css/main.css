@@ -890,7 +890,7 @@ body {
   gap: 12px;
   min-width: max-content;
   height: 220px;
-  padding-bottom: 30px;
+  padding-bottom: 0;
   border-bottom: 2px solid var(--border-beige);
   position: relative;
 }
@@ -899,12 +899,21 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
   width: 54px;
   height: 100%;
   cursor: pointer;
-  position: relative;
   transition: transform 0.15s ease;
+}
+
+/* Zona superior: badge + barra crescem de baixo para cima */
+.stock-chart-bar-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  padding-bottom: 4px;
 }
 
 .stock-chart-bar-col:hover {
@@ -941,9 +950,8 @@ body {
 }
 
 .stock-chart-label {
-  position: absolute;
-  bottom: 4px;
   width: 54px;
+  height: 26px;
   font-size: 0.62rem;
   font-weight: 700;
   color: var(--text-main);
@@ -951,6 +959,12 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-beige);
+  margin-top: 2px;
 }
 
 /* --- MODAL E GRÁFICO DE OSCILAÇÃO MENSAL --- */

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.17",
-  "build": "20260921_17",
+  "version": "1.0.18",
+  "build": "20260921_18",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Ícones dos cards de estoque atualizados para SVGs idênticos aos botões da tela inicial; nomes renomeados para Estoque Missão, Estoque Macedônia e Estoque Feminina."
+  "releaseNotes": "Gráfico labels abaixo das barras; remoção de 'Unidade' dos títulos; frase rodapé atualizada; botão Igrejas renomeado para Instituições com módulo completo de Atividades e Cadastros com fluxo de navegação preservado."
 }
