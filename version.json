@@ -1,6 +1,6 @@
 {
-  "version": "1.0.19",
-  "build": "20260921_19",
+  "version": "1.0.20",
+  "build": "20260921_20",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Sincronização bidirecional em tempo real nativa via WebSocket (Motor CUIDAR Pilar 1): listeners persistentes .on('value'), atualização reativa instantânea entre celular e computador, supressão de eco local e notificações reativas de rede."
+  "releaseNotes": "Ativação da instância oficial do Firebase Realtime Database na nuvem (cristolandia-check-app-default-rtdb), deploy das regras de segurança autorizando exclusão e sincronização bidirecional em tempo real nativa embarcada sem necessidade de configuração manual."
 }

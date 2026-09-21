@@ -12,6 +12,17 @@ const DB_KEYS = {
   APP_CONFIG: 'cristolandia_check_app_cfg_v1'
 };
 
+// Configuração Oficial Nativa do Firebase (Provisionada e Integrada)
+const OFFICIAL_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBCoSFxtSYEXAaU-4JbHhFNT84CEFYjjTw",
+  authDomain: "cristolandia-check-app.firebaseapp.com",
+  databaseURL: "https://cristolandia-check-app-default-rtdb.firebaseio.com",
+  projectId: "cristolandia-check-app",
+  storageBucket: "cristolandia-check-app.firebasestorage.app",
+  messagingSenderId: "346049139190",
+  appId: "1:346049139190:web:0152b706e2ce6f23aef7d7"
+};
+
 // Dados Iniciais Demonstrativos de Alta Qualidade
 const STOCK_ITEMS_TEMPLATE = [
   // ALIMENTOS GROSSOS 🫘
@@ -251,19 +262,13 @@ class CristolandiaDB {
 
   // Configuração e Conexão Firebase
   tryInitFirebase() {
-    const rawConfig = localStorage.getItem(DB_KEYS.FIREBASE_CONFIG);
-    if (!rawConfig) {
-      this.notifyStatus(navigator.onLine ? 'online' : 'offline', navigator.onLine ? 'Local Sincronizado' : 'Offline');
+    const config = this.getFirebaseConfig();
+    if (!config || !config.apiKey || !config.databaseURL) {
+      this.notifyStatus(navigator.onLine ? 'online' : 'offline', 'Local');
       return;
     }
 
     try {
-      const config = JSON.parse(rawConfig);
-      if (!config.apiKey || !config.databaseURL) {
-        this.notifyStatus(navigator.onLine ? 'online' : 'offline', 'Local');
-        return;
-      }
-
       if (window.firebase && !window.firebase.apps.length) {
         this.firebaseApp = window.firebase.initializeApp(config);
         this.firebaseDb = window.firebase.database();
@@ -301,15 +306,36 @@ class CristolandiaDB {
 
     let isFirstFire = true;
 
-    this.firebaseDb.ref('cristolandia_check').on('value', (snap) => {
+    this.firebaseDb.ref('cristolandia_check').on('value', async (snap) => {
       const data = snap.val();
-      if (!data) return;
+
+      // Se a nuvem estiver completamente vazia, inicializa com os dados locais
+      if (!data) {
+        if (isFirstFire) {
+          isFirstFire = false;
+          await this.pushLocalToFirebase();
+        }
+        return;
+      }
 
       // Atualiza cada coleção no localStorage a partir do Firebase
-      if (data.reports)    localStorage.setItem(DB_KEYS.REPORTS,    JSON.stringify(toArray(data.reports)));
-      if (data.stock)      localStorage.setItem(DB_KEYS.STOCK,      JSON.stringify(toArray(data.stock)));
-      if (data.churches)   localStorage.setItem(DB_KEYS.CHURCHES,   JSON.stringify(toArray(data.churches)));
-      if (data.activities) localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify(toArray(data.activities)));
+      // SEMPRE atualiza para refletir exclusões (se nó apagado na nuvem, reflete array vazio)
+      if (data.reports !== undefined) {
+        localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify(toArray(data.reports)));
+      }
+      if (data.stock !== undefined) {
+        localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(toArray(data.stock)));
+      }
+      if (data.churches !== undefined) {
+        localStorage.setItem(DB_KEYS.CHURCHES, JSON.stringify(toArray(data.churches)));
+      } else {
+        localStorage.setItem(DB_KEYS.CHURCHES, JSON.stringify([]));
+      }
+      if (data.activities !== undefined) {
+        localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify(toArray(data.activities)));
+      } else {
+        localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify([]));
+      }
 
       // Atualiza timestamps de last_update por unidade
       if (data.stock_last_update) {
@@ -332,6 +358,35 @@ class CristolandiaDB {
     }, (err) => {
       console.warn('[CUIDAR] Erro no listener em tempo real:', err);
     });
+  }
+
+  // Upload inicial dos dados locais para a nuvem caso banco esteja vazio
+  async pushLocalToFirebase() {
+    if (!this.firebaseDb) return;
+    try {
+      const reports = this.getReports();
+      const stock = this.getStock();
+      const churches = this.getChurches();
+      const activities = this.getActivities();
+
+      const payload = {
+        reports: {},
+        stock: {},
+        churches: {},
+        activities: {}
+      };
+
+      reports.forEach(r => { if (r && r.id) payload.reports[r.id] = this.sanitize(r); });
+      stock.forEach(s => { if (s && s.id) payload.stock[s.id] = this.sanitize(s); });
+      churches.forEach(c => { if (c && c.id) payload.churches[c.id] = this.sanitize(c); });
+      activities.forEach(a => { if (a && a.id) payload.activities[a.id] = this.sanitize(a); });
+
+      this._lastLocalWrite = Date.now();
+      await this.firebaseDb.ref('cristolandia_check').set(payload);
+      console.log('[CUIDAR] Banco em nuvem inicializado com dados locais.');
+    } catch (e) {
+      console.warn('Erro ao inicializar dados na nuvem:', e);
+    }
   }
 
   // --- MÉTODOS DE RELATÓRIOS ---
@@ -610,10 +665,16 @@ class CristolandiaDB {
   getFirebaseConfig() {
     try {
       const raw = localStorage.getItem(DB_KEYS.FIREBASE_CONFIG);
-      return raw ? JSON.parse(raw) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.apiKey && parsed.databaseURL) {
+          return parsed;
+        }
+      }
     } catch {
-      return null;
+      // Falha no parse, recorre à oficial
     }
+    return OFFICIAL_FIREBASE_CONFIG;
   }
 
   resetAllData() {

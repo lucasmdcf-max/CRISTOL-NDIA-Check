@@ -1295,9 +1295,16 @@ async function handleSaveAtividade() {
 
 async function handleDeleteAtividade(id) {
   if (!confirm('Deseja remover esta atividade?')) return;
-  await dbManager.deleteActivity(id);
-  showToast('Atividade removida.', 'info');
-  openAtividadesView();
+  showLoading('Removendo...');
+  try {
+    await dbManager.deleteActivity(id);
+    showToast('Atividade removida.', 'info');
+    openAtividadesView();
+  } catch (e) {
+    showToast('Erro ao remover: ' + e.message, 'danger');
+  } finally {
+    hideLoading();
+  }
 }
 
 // ---- CADASTROS DE INSTITUIÇÕES ----
@@ -1491,9 +1498,16 @@ async function handleSaveInstituicao(pendingActivityData) {
 
 async function handleDeleteInstituicao(id) {
   if (!confirm('Deseja remover esta instituição?')) return;
-  await dbManager.deleteChurch(id);
-  showToast('Instituição removida.', 'info');
-  renderInstituicoesList();
+  showLoading('Removendo...');
+  try {
+    await dbManager.deleteChurch(id);
+    showToast('Instituição removida.', 'info');
+    renderInstituicoesList();
+  } catch (e) {
+    showToast('Erro ao remover: ' + e.message, 'danger');
+  } finally {
+    hideLoading();
+  }
 }
 
 function formatDateBR(dateStr) {
