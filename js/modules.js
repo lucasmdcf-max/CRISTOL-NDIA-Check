@@ -57,6 +57,7 @@ function openUnitReportModal(unitId) {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <div class="modal-unit-icon">
@@ -176,8 +177,7 @@ function openUnitReportModal(unitId) {
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-secondary-action" onclick="closeModal('modal-generic')">Cancelar</button>
-    <button type="button" id="btn-save-unit-report" class="btn-primary-action" onclick="handleSaveUnitReport()">
+    <button type="button" id="btn-save-unit-report" class="btn-primary-action" style="width:100%;" onclick="handleSaveUnitReport()">
       Salvar Relatório
     </button>
   `;
@@ -290,9 +290,10 @@ function openStockModal() {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header theme-estoque';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
-      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 8L12 3L3 8L12 13L21 8Z"/>
           <path d="M3 8V16L12 21L21 16V8"/>
@@ -301,7 +302,7 @@ function openStockModal() {
       </div>
       <div>
         <h2>Despensas de Alimentos</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">Selecione qual estoque deseja acessar</p>
+        <p style="font-size:0.75rem;">Selecione qual estoque deseja acessar</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -330,11 +331,7 @@ function openStockModal() {
     </div>
   `;
 
-  modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%;" onclick="closeModal('modal-generic')">
-      Fechar
-    </button>
-  `;
+  modalFooter.innerHTML = '';
 
   openModal('modal-generic');
 }
@@ -349,26 +346,22 @@ function selectStockUnit(unitId) {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header theme-estoque';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="openStockModal()" title="Voltar para seleção de unidades" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <span style="font-size: 1.2rem;">${unit.icon}</span>
       </div>
       <div>
         <h2>${unit.name}</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">Última atualização: ${lastUpdate}</p>
+        <p style="font-size:0.75rem;">Última atualização: ${lastUpdate}</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   modalBody.innerHTML = `
-    <div style="background: linear-gradient(135deg, #1E4D2B, #276036); border-radius: 12px; padding: 12px 16px; color: #FFFFFF; box-shadow: 0 4px 12px rgba(30,77,43,0.18); margin-bottom: 12px;">
-      <div style="font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px;">DESPENSA ${unit.name.toUpperCase()}</div>
-      <div style="font-size: 0.76rem; color: #E8D8A0; margin-top: 3px;">Selecione o modo de acesso desejado:</div>
-    </div>
-
     <div class="stock-actions-choice-grid">
       <!-- 1. Atualizar Estoque -->
       <div class="stock-action-choice-card" onclick="openStockUpdateView('${unitId}')">
@@ -390,11 +383,7 @@ function selectStockUnit(unitId) {
     </div>
   `;
 
-  modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%; background:var(--bg-surface); color:var(--text-main); border:1.5px solid var(--border-beige);" onclick="openStockModal()">
-      ← Escolher Outra Unidade
-    </button>
-  `;
+  modalFooter.innerHTML = '';
 }
 
 // 3. MODO ATUALIZAR: LISTA DE ITENS + SALVAR COM DATA NO TOPO
@@ -408,32 +397,22 @@ function openStockUpdateView(unitId) {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header theme-estoque';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="selectStockUnit('${unitId}')" title="Voltar" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <span style="font-size: 1.2rem;">${unit.icon}</span>
       </div>
       <div>
         <h2>Atualizar Estoque</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">${unit.name}</p>
+        <p style="font-size:0.75rem;">${unit.name} · <span id="stock-last-update-banner-val">🗓️ ${lastUpdate}</span></p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   modalBody.innerHTML = `
-    <!-- Banner Oficial com Data da Última Atualização no Topo -->
-    <div style="background: linear-gradient(135deg, #1E4D2B, #276036); border-radius: 12px; padding: 10px 14px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30,77,43,0.18);">
-      <div>
-        <div style="font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px;">${unit.name}</div>
-        <div style="font-size: 0.68rem; color: #E8D8A0; font-weight: 700; text-transform: uppercase; margin-top: 1px;">ÚLTIMA ATUALIZAÇÃO</div>
-      </div>
-      <div style="text-align: right; background: rgba(0,0,0,0.28); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.35);">
-        <div id="stock-last-update-banner-val" style="font-size: 0.8rem; font-weight: 800; color: #FFFFFF;">🗓️ ${lastUpdate}</div>
-      </div>
-    </div>
-
     <!-- Controles Fixos no Topo: Busca, Tags e Ação de Adicionar Item -->
     <div class="stock-sticky-controls">
       <div style="display: flex; gap: 8px;">
@@ -462,14 +441,9 @@ function openStockUpdateView(unitId) {
   `;
 
   modalFooter.innerHTML = `
-    <div style="display: flex; gap: 8px; width: 100%;">
-      <button type="button" class="btn-primary-action" style="flex:1; background:linear-gradient(135deg, #1E4D2B, #2E6A3B); color:#FFFFFF; font-weight:800; box-shadow: 0 4px 12px rgba(30,77,43,0.3);" onclick="saveStockUpdate('${unitId}', this)">
-        💾 Salvar Alterações
-      </button>
-      <button type="button" class="btn-primary-action" style="width:auto; padding:0 16px; background:var(--bg-surface); color:var(--text-main); border:1.5px solid var(--border-beige);" onclick="selectStockUnit('${unitId}')">
-        Voltar
-      </button>
-    </div>
+    <button type="button" class="btn-primary-action" style="width:100%; background:linear-gradient(135deg, #1E4D2B, #2E6A3B); color:#FFFFFF; font-weight:800; box-shadow: 0 4px 12px rgba(30,77,43,0.3);" onclick="saveStockUpdate('${unitId}', this)">
+      💾 Salvar Alterações
+    </button>
   `;
 
   renderStockList();
@@ -684,15 +658,16 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header theme-estoque';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="selectStockUnit('${unitId}')" title="Voltar para ações" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <span style="font-size: 1.2rem;">📊</span>
       </div>
       <div>
         <h2>Análise de Estoque</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">${unit.name} (${items.length} itens)</p>
+        <p style="font-size:0.75rem;">${unit.name} (${items.length} itens)</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -711,17 +686,8 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
   }
 
   modalBody.innerHTML = `
-    <!-- Banner Informativo da Análise -->
-    <div style="background: linear-gradient(135deg, #1E4D2B, #276036); border-radius: 12px; padding: 10px 14px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(30,77,43,0.18);">
-      <div>
-        <div style="font-size: 0.95rem; font-weight: 800; letter-spacing: 0.3px;">GRÁFICO DA DESPENSA ${unit.name.toUpperCase()}</div>
-        <div style="font-size: 0.7rem; color: #E8D8A0; margin-top: 1px;">Deslize para os lados ⇄ Toque na barra para oscilação mensal</div>
-      </div>
-      <div style="font-size: 1.3rem;">📈</div>
-    </div>
-
-    <!-- Filtros de Categorias para o Gráfico -->
-    <div class="stock-tags-scroll" style="margin-top: 6px;">
+    <!-- Filtros de Categorias para o Gráfico (Todas Juntas sem Scroll Lock) -->
+    <div class="stock-tags-wrap">
       ${STOCK_CATEGORIES_INFO.map(cat => `
         <button type="button" class="chip-filter ${cat.id === filterCat ? 'active' : ''}" onclick="openStockAnalyticsView('${unitId}', '${cat.id}')">
           <span style="font-size:0.95rem;">${cat.icon}</span>
@@ -755,11 +721,7 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
     </div>
   `;
 
-  modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%; background:var(--bg-surface); color:var(--text-main); border:1.5px solid var(--border-beige);" onclick="selectStockUnit('${unitId}')">
-      ← Voltar às Ações
-    </button>
-  `;
+  modalFooter.innerHTML = '';
 }
 
 // 5. MODAL DE OSCILAÇÃO MENSAL E CONSUMO MÉDIO DO ITEM ESPECÍFICO
@@ -775,15 +737,16 @@ function openStockItemOscillationModal(itemId, unitId) {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header theme-estoque';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="openStockAnalyticsView('${unitId}')" title="Voltar ao gráfico geral" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <span style="font-size: 1.2rem;">📈</span>
       </div>
       <div>
         <h2>Oscilação do Item</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">${item.name} · ${unit.name}</p>
+        <p style="font-size:0.75rem;">${item.name} · ${unit.name}</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -863,17 +826,13 @@ function openStockItemOscillationModal(itemId, unitId) {
         <div class="avg-consumption-label">Consumo Médio Mensal do Item</div>
         <div class="avg-consumption-val">${history.avgConsumption} ${history.unit || 'und'} / mês</div>
         <div class="avg-consumption-sub">
-          Média calculada com base na rotina de preparo das refeições e atendimento da Unidade ${unit.name}.
+          Média calculada com base na rotina de preparo das refeições e atendimento de ${unit.name}.
         </div>
       </div>
     </div>
   `;
 
-  modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%;" onclick="openStockAnalyticsView('${unitId}')">
-      ← Voltar ao Gráfico Geral
-    </button>
-  `;
+  modalFooter.innerHTML = '';
 }
 
 // --- MÓDULO 5: RELATÓRIOS CONSOLIDADOS CLEAN ---
@@ -883,6 +842,7 @@ function openReportsModal() {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header theme-relatorios';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <div class="modal-unit-icon">
@@ -893,7 +853,7 @@ function openReportsModal() {
       </div>
       <div>
         <h2>Relatórios Consolidados</h2>
-        <p>Visão geral de atendimento das unidades</p>
+        <p style="font-size:0.75rem;">Visão geral de atendimento das unidades</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -925,8 +885,7 @@ function openReportsModal() {
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-secondary-action" onclick="window.print()">Imprimir / PDF</button>
-    <button type="button" class="btn-primary-action" onclick="closeModal('modal-generic')">Fechar</button>
+    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
   `;
 
   renderReportsHistory();
@@ -1046,6 +1005,7 @@ function openInstituicoesModal() {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header theme-instituicoes';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <div class="modal-unit-icon">
@@ -1058,7 +1018,7 @@ function openInstituicoesModal() {
       </div>
       <div>
         <h2>Instituições</h2>
-        <p style="font-size:0.75rem; color:var(--text-muted);">Parcerias, atividades e cadastros</p>
+        <p style="font-size:0.75rem;">Parcerias, atividades e cadastros</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -1095,9 +1055,7 @@ function openInstituicoesModal() {
     </div>
   `;
 
-  modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%; background:var(--bg-surface); color:var(--text-main); border:1.5px solid var(--border-beige);" onclick="closeModal('modal-generic')">Fechar</button>
-  `;
+  modalFooter.innerHTML = '';
 
   openModal('modal-generic');
 }
@@ -1116,17 +1074,18 @@ function openAtividadesView(filterInstId = '') {
   // Ordena cronológico decrescente
   filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
+  modalHeader.className = 'modal-header theme-instituicoes';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="openInstituicoesModal()" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="background:#EBF3EC; color:var(--green-primary); border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
       </div>
       <div>
         <h2>Atividades</h2>
-        <p style="font-size:0.75rem;color:var(--text-muted);">Histórico cronológico</p>
+        <p style="font-size:0.75rem;">Histórico cronológico</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -1170,9 +1129,7 @@ function openAtividadesView(filterInstId = '') {
     </div>
   `;
 
-  modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%;background:var(--bg-surface);color:var(--text-main);border:1.5px solid var(--border-beige);" onclick="openInstituicoesModal()">← Voltar</button>
-  `;
+  modalFooter.innerHTML = '';
 }
 
 function openNovaAtividadeForm(pending) {
@@ -1185,15 +1142,16 @@ function openNovaAtividadeForm(pending) {
 
   const today = new Date().toISOString().split('T')[0];
 
+  modalHeader.className = 'modal-header theme-instituicoes';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="openAtividadesView()" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="background:#EBF3EC;color:var(--green-primary);border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <span style="font-size:1.1rem;">📝</span>
       </div>
       <div>
         <h2>Nova Atividade</h2>
-        <p style="font-size:0.75rem;color:var(--text-muted);">Registrar atividade realizada</p>
+        <p style="font-size:0.75rem;">Registrar atividade realizada</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -1239,10 +1197,7 @@ function openNovaAtividadeForm(pending) {
   `;
 
   modalFooter.innerHTML = `
-    <div style="display:flex;gap:8px;width:100%;">
-      <button type="button" class="btn-primary-action" style="background:var(--bg-surface);color:var(--text-main);border:1.5px solid var(--border-beige);" onclick="openAtividadesView()">Cancelar</button>
-      <button type="button" class="btn-primary-action" style="flex:1;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveAtividade()">💾 Salvar Atividade</button>
-    </div>
+    <button type="button" class="btn-primary-action" style="width:100%;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveAtividade()">💾 Salvar Atividade</button>
   `;
 }
 
@@ -1315,17 +1270,18 @@ function openCadastrosInstituicoes() {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  modalHeader.className = 'modal-header theme-instituicoes';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="openInstituicoesModal()" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="background:#EBF3EC;color:var(--green-primary);border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
       </div>
       <div>
         <h2>Cadastros</h2>
-        <p style="font-size:0.75rem;color:var(--text-muted);">Instituições parceiras</p>
+        <p style="font-size:0.75rem;">Instituições parceiras</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -1341,9 +1297,7 @@ function openCadastrosInstituicoes() {
     <div id="instituicoes-list-container" style="display:flex;flex-direction:column;gap:8px;"></div>
   `;
 
-  modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%;background:var(--bg-surface);color:var(--text-main);border:1.5px solid var(--border-beige);" onclick="openInstituicoesModal()">← Voltar</button>
-  `;
+  modalFooter.innerHTML = '';
 
   renderInstituicoesList();
 }
@@ -1406,15 +1360,16 @@ function openCadastroInstituicaoForm(pendingActivityData) {
   const fromActivity = pendingActivityData !== null && pendingActivityData !== undefined;
   const pendingJson = fromActivity ? encodeURIComponent(JSON.stringify(pendingActivityData)) : 'null';
 
+  modalHeader.className = 'modal-header theme-instituicoes';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="${fromActivity ? `openNovaAtividadeForm(JSON.parse(decodeURIComponent('${pendingJson}')))` : 'openCadastrosInstituicoes()'}" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="background:#EBF3EC;color:var(--green-primary);border-color:#D9D1BF;">
+      <div class="modal-unit-icon">
         <span style="font-size:1.1rem;">🏛️</span>
       </div>
       <div>
         <h2>Nova Instituição</h2>
-        <p style="font-size:0.75rem;color:var(--text-muted);">${fromActivity ? 'Cadastrar e retornar ao registro de atividade' : 'Cadastrar instituição parceira'}</p>
+        <p style="font-size:0.75rem;">${fromActivity ? 'Cadastrar e retornar ao registro de atividade' : 'Cadastrar instituição parceira'}</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -1453,10 +1408,7 @@ function openCadastroInstituicaoForm(pendingActivityData) {
   `;
 
   modalFooter.innerHTML = `
-    <div style="display:flex;gap:8px;width:100%;">
-      <button type="button" class="btn-primary-action" style="background:var(--bg-surface);color:var(--text-main);border:1.5px solid var(--border-beige);" onclick="${fromActivity ? `openNovaAtividadeForm(JSON.parse(decodeURIComponent('${pendingJson}')))` : 'openCadastrosInstituicoes()'}">Cancelar</button>
-      <button type="button" class="btn-primary-action" style="flex:1;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveInstituicao(${fromActivity ? `JSON.parse(decodeURIComponent('${pendingJson}'))` : 'null'})">💾 Salvar</button>
-    </div>
+    <button type="button" class="btn-primary-action" style="width:100%;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveInstituicao(${fromActivity ? `JSON.parse(decodeURIComponent('${pendingJson}'))` : 'null'})">💾 Salvar Instituição</button>
   `;
 }
 

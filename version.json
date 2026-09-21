@@ -1,6 +1,6 @@
 {
-  "version": "1.0.20",
-  "build": "20260921_20",
+  "version": "1.0.21",
+  "build": "20260921_21",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Ativação da instância oficial do Firebase Realtime Database na nuvem (cristolandia-check-app-default-rtdb), deploy das regras de segurança autorizando exclusão e sincronização bidirecional em tempo real nativa embarcada sem necessidade de configuração manual."
+  "releaseNotes": "Harmonização de identidade visual nos cabeçalhos dos modais (temas Estoque, Relatórios e Instituições sincronizados com os botões da Home); remoção de balões verdes dispensáveis; data no topo de atualização de estoque; reorganização das tags em wrap sem scroll lock e eliminação de botões inferiores redundantes."
 }

@@ -416,6 +416,109 @@ body {
   gap: 8px;
 }
 
+.modal-footer:empty {
+  display: none !important;
+  padding: 0 !important;
+  border-top: none !important;
+}
+
+/* ==========================================================================
+   TEMAS DE IDENTIDADE VISUAL PARA OS CABEÇALHOS DOS MODAIS
+   Sincronizados com as cores dos 6 botões 3D da tela inicial
+   ========================================================================== */
+
+/* 1. TEMA ESTOQUE: Fundo Verde Nobre, Título Branco e Ícone Dourado */
+.modal-header.theme-estoque {
+  background: linear-gradient(135deg, #1E4D2B, #276237);
+  border-bottom: 1px solid #153A20;
+}
+.modal-header.theme-estoque h2 {
+  color: #FFFFFF !important;
+}
+.modal-header.theme-estoque p {
+  color: #E8D8A0 !important;
+}
+.modal-header.theme-estoque .modal-unit-icon {
+  background: rgba(0, 0, 0, 0.28) !important;
+  border-color: rgba(232, 175, 48, 0.45) !important;
+  color: #E8AF30 !important;
+}
+.modal-header.theme-estoque .modal-unit-icon svg {
+  stroke: #E8AF30 !important;
+}
+.modal-header.theme-estoque .btn-close-modal,
+.modal-header.theme-estoque .btn-step {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  color: #FFFFFF !important;
+}
+.modal-header.theme-estoque .btn-close-modal:hover,
+.modal-header.theme-estoque .btn-step:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 2. TEMA RELATÓRIOS: Fundo Cinza Nobre, Título Branco e Ícone Dourado */
+.modal-header.theme-relatorios {
+  background: linear-gradient(135deg, #86928C, #737F79);
+  border-bottom: 1px solid #58635D;
+}
+.modal-header.theme-relatorios h2 {
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.modal-header.theme-relatorios p {
+  color: #F0EAD6 !important;
+}
+.modal-header.theme-relatorios .modal-unit-icon {
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-color: rgba(255, 201, 62, 0.5) !important;
+  color: #FFC93E !important;
+}
+.modal-header.theme-relatorios .modal-unit-icon svg {
+  stroke: #FFC93E !important;
+}
+.modal-header.theme-relatorios .btn-close-modal,
+.modal-header.theme-relatorios .btn-step {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.32) !important;
+  color: #FFFFFF !important;
+}
+.modal-header.theme-relatorios .btn-close-modal:hover,
+.modal-header.theme-relatorios .btn-step:hover {
+  background: rgba(255, 255, 255, 0.32) !important;
+}
+
+/* 3. TEMA INSTITUIÇÕES: Fundo Dourado Ouro Nobre, Título e Ícone Brancos */
+.modal-header.theme-instituicoes {
+  background: linear-gradient(135deg, #D49B1C, #BF8407);
+  border-bottom: 1px solid #996802;
+}
+.modal-header.theme-instituicoes h2 {
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.modal-header.theme-instituicoes p {
+  color: #FFF6E0 !important;
+}
+.modal-header.theme-instituicoes .modal-unit-icon {
+  background: rgba(0, 0, 0, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #FFFFFF !important;
+}
+.modal-header.theme-instituicoes .modal-unit-icon svg {
+  stroke: #FFFFFF !important;
+}
+.modal-header.theme-instituicoes .btn-close-modal,
+.modal-header.theme-instituicoes .btn-step {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+}
+.modal-header.theme-instituicoes .btn-close-modal:hover,
+.modal-header.theme-instituicoes .btn-step:hover {
+  background: rgba(0, 0, 0, 0.25) !important;
+}
+
 /* Formulários */
 .form-section-title {
   font-size: 0.72rem;
@@ -593,6 +696,23 @@ body {
 .stock-tags-scroll::-webkit-scrollbar-thumb {
   background: var(--border-beige);
   border-radius: 4px;
+}
+
+/* Tags de Categorias Agrupadas sem Scroll Lock (Análise de Estoque) */
+.stock-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 0 8px 0;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.stock-tags-wrap .chip-filter {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 4px 10px !important;
+  font-size: 0.74rem !important;
 }
 
 /* Chips Clean & Tags de Categoria Fixas */

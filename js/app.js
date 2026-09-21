@@ -220,6 +220,10 @@ function closeModal(modalId) {
   document.body.style.overflow = '';
   if (modalId === 'modal-generic') {
     window._currentScreen = null;
+    const header = document.getElementById('modal-generic-header');
+    if (header) header.className = 'modal-header';
+    const footer = document.getElementById('modal-generic-footer');
+    if (footer) footer.innerHTML = '';
   }
 }
 
@@ -229,6 +233,10 @@ window.addEventListener('click', (e) => {
     e.target.classList.remove('active');
     document.body.style.overflow = '';
     window._currentScreen = null;
+    const header = document.getElementById('modal-generic-header');
+    if (header) header.className = 'modal-header';
+    const footer = document.getElementById('modal-generic-footer');
+    if (footer) footer.innerHTML = '';
   }
 });
 
@@ -334,9 +342,7 @@ function openSettingsModal() {
     </div>
   `;
 
-  modalFooter.innerHTML = `
-    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="closeModal('modal-generic')">Fechar</button>
-  `;
+  modalFooter.innerHTML = '';
 
   openModal('modal-generic');
 }
