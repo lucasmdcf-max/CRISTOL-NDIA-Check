@@ -1,6 +1,6 @@
 {
-  "version": "1.0.35",
-  "build": "20260922_35",
+  "version": "1.0.36",
+  "build": "20260922_36",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Ajuste de layout e refinamento visual dos Avisos do dia: balão com altura e tamanho fixos (comportando até 4 linhas sem oscilar), fundo dourado com 20% de opacidade, textos na cor cinza em fonte Century fina, elevação da linha de bolinhas indicadoras neon e centralização perfeita dos 6 botões no espaço entre o Painel Diário e a seção de avisos."
+  "releaseNotes": "Ajuste na seção de Avisos do dia: elevação de posição equivalente à metade da altura da caixa (-50px) para máxima harmonia visual e ampliação do tamanho da fonte dos avisos (0.88rem) na fonte Century fina."
 }
