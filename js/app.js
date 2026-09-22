@@ -125,34 +125,39 @@ function updateMissaoDots() {
     return;
   }
 
+  const ans = missaoReport.answeredQuestions || {};
+  const hasAnsFlags = !!missaoReport.answeredQuestions;
+
   // 1. Pessoas atendidas
   const pTotal = missaoReport.pessoasAtendidas?.total ?? missaoReport.acolhidosPresentes ?? 0;
-  if (pTotal > 0) dots[0].classList.add('active'); else dots[0].classList.remove('active');
+  const pActive = hasAnsFlags ? !!ans.pessoas : (pTotal > 0);
+  if (pActive) dots[0].classList.add('active'); else dots[0].classList.remove('active');
 
   // 2. Refeições
   const ref = missaoReport.refeicoes || {};
   const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0);
-  if (totalRef > 0) dots[1].classList.add('active'); else dots[1].classList.remove('active');
+  const rActive = hasAnsFlags ? !!ans.refeicoes : (totalRef > 0);
+  if (rActive) dots[1].classList.add('active'); else dots[1].classList.remove('active');
 
   // 3. Banhos
-  const banhos = missaoReport.banhos || 0;
-  if (banhos > 0) dots[2].classList.add('active'); else dots[2].classList.remove('active');
+  const banhosActive = hasAnsFlags ? !!ans.banhos : ((missaoReport.banhos || 0) > 0);
+  if (banhosActive) dots[2].classList.add('active'); else dots[2].classList.remove('active');
 
   // 4. Corte de cabelo
-  const cabelo = missaoReport.cortesCabelo || 0;
-  if (cabelo > 0) dots[3].classList.add('active'); else dots[3].classList.remove('active');
+  const cortesActive = hasAnsFlags ? !!ans.cortes : ((missaoReport.cortesCabelo || 0) > 0);
+  if (cortesActive) dots[3].classList.add('active'); else dots[3].classList.remove('active');
 
   // 5. Cultos
-  const cultos = missaoReport.cultos || 0;
-  if (cultos > 0) dots[4].classList.add('active'); else dots[4].classList.remove('active');
+  const cultosActive = hasAnsFlags ? !!ans.cultos : ((missaoReport.cultos || 0) > 0);
+  if (cultosActive) dots[4].classList.add('active'); else dots[4].classList.remove('active');
 
   // 6. Pessoas na busca ativa
-  const buscaAtiva = missaoReport.buscaAtivaPessoas || (missaoReport.pessoasAtendidas?.buscaAtiva || 0);
-  if (buscaAtiva > 0) dots[5].classList.add('active'); else dots[5].classList.remove('active');
+  const buscaActive = hasAnsFlags ? !!ans.buscaAtiva : (((missaoReport.buscaAtivaPessoas || 0) > 0) || ((missaoReport.pessoasAtendidas?.buscaAtiva || 0) > 0));
+  if (buscaActive) dots[5].classList.add('active'); else dots[5].classList.remove('active');
 
   // 7. Decisões por Cristo
-  const decisoes = missaoReport.decisoesCristo || 0;
-  if (decisoes > 0) dots[6].classList.add('active'); else dots[6].classList.remove('active');
+  const decisoesActive = hasAnsFlags ? !!ans.decisoes : ((missaoReport.decisoesCristo || 0) > 0);
+  if (decisoesActive) dots[6].classList.add('active'); else dots[6].classList.remove('active');
 }
 if (typeof window !== 'undefined') {
   window.updateMissaoDots = updateMissaoDots;

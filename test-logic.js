@@ -123,26 +123,24 @@ assert.strictEqual(res3.acolhidos, 90, 'Acolhidos deve ser 0 + 60 + 30 = 90 quan
 assert.strictEqual(res3.refeicoes, 0, 'Refeições de hoje deve ser 0');
 assert.strictEqual(res3.triagens, 0, 'Triagens de hoje deve ser 0');
 
-// Teste de cálculo das 7 bolinhas neon da Missão
+// Teste de cálculo das 7 bolinhas neon da Missão (com suporte a answeredQuestions e valor 0)
 function calculateMissaoDots(report) {
   if (!report) return [false, false, false, false, false, false, false];
+  const ans = report.answeredQuestions || {};
+  const hasAnsFlags = !!report.answeredQuestions;
+
   const pTotal = report.pessoasAtendidas?.total ?? report.acolhidosPresentes ?? 0;
   const ref = report.refeicoes || {};
   const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0);
-  const banhos = report.banhos || 0;
-  const cortes = report.cortesCabelo || 0;
-  const cultos = report.cultos || 0;
-  const buscaAtiva = report.buscaAtivaPessoas || (report.pessoasAtendidas?.buscaAtiva || 0);
-  const decisoes = report.decisoesCristo || 0;
 
   return [
-    pTotal > 0,
-    totalRef > 0,
-    banhos > 0,
-    cortes > 0,
-    cultos > 0,
-    buscaAtiva > 0,
-    decisoes > 0
+    hasAnsFlags ? !!ans.pessoas : (pTotal > 0),
+    hasAnsFlags ? !!ans.refeicoes : (totalRef > 0),
+    hasAnsFlags ? !!ans.banhos : ((report.banhos || 0) > 0),
+    hasAnsFlags ? !!ans.cortes : ((report.cortesCabelo || 0) > 0),
+    hasAnsFlags ? !!ans.cultos : ((report.cultos || 0) > 0),
+    hasAnsFlags ? !!ans.buscaAtiva : (((report.buscaAtivaPessoas || 0) > 0) || ((report.pessoasAtendidas?.buscaAtiva || 0) > 0)),
+    hasAnsFlags ? !!ans.decisoes : ((report.decisoesCristo || 0) > 0)
   ];
 }
 
@@ -158,16 +156,26 @@ const mockMissaoCompleta = {
 const dotsCompleta = calculateMissaoDots(mockMissaoCompleta);
 assert.deepStrictEqual(dotsCompleta, [true, true, true, true, true, true, true], 'Todas as 7 bolinhas devem acender');
 
-const mockMissaoParcial = {
-  pessoasAtendidas: { total: 30, rua: 10, unidade: 20, buscaAtiva: 0 },
-  refeicoes: { cafe: 20, almoco: 30, lanche: 20, jantar: 20, buscaAtiva: 0 },
+// Teste com answeredQuestions ativados mesmo com valor 0
+const mockMissaoComZeroRespondido = {
+  pessoasAtendidas: { total: 0, rua: 0, unidade: 0, buscaAtiva: 0 },
+  refeicoes: { cafe: 0, almoco: 0, lanche: 0, jantar: 0, buscaAtiva: 0 },
   banhos: 0,
   cortesCabelo: 0,
   cultos: 1,
   buscaAtivaPessoas: 0,
-  decisoesCristo: 0
+  decisoesCristo: 0,
+  answeredQuestions: {
+    pessoas: true, // Ativado mesmo sendo 0
+    refeicoes: true, // Ativado mesmo sendo 0
+    banhos: true, // Ativado mesmo sendo 0
+    cortes: false, // NÃO ativado
+    cultos: true,
+    buscaAtiva: false, // NÃO ativado
+    decisoes: true // Ativado mesmo sendo 0
+  }
 };
-const dotsParcial = calculateMissaoDots(mockMissaoParcial);
-assert.deepStrictEqual(dotsParcial, [true, true, false, false, true, false, false], 'Apenas pessoas, refeições e cultos devem acender');
+const dotsComZero = calculateMissaoDots(mockMissaoComZeroRespondido);
+assert.deepStrictEqual(dotsComZero, [true, true, true, false, true, false, true], 'Perguntas ativadas devem acender bolinhas mesmo se o valor for 0');
 
 console.log('✅ Todos os testes de lógica de sanitização e dados passaram com 100% de sucesso!');

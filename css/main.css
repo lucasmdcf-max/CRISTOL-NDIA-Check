@@ -1653,12 +1653,33 @@ body {
   text-align: center;
   font-family: var(--font-gothic);
   font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--green-primary);
+  font-weight: 700;
+  color: #8E8E93; /* Inativo por padrão: cinza */
   border: 1.5px solid var(--border-beige);
   border-radius: 8px;
   background: var(--bg-cream);
   padding: 2px 4px;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.missao-step-input.active-val,
+.missao-step-input:focus {
+  color: var(--green-primary) !important; /* Ativado: verde nobre */
+  border-color: var(--green-primary) !important;
+  background: #FFFFFF !important;
+  font-weight: 800;
+}
+
+.missao-total-val {
+  font-family: var(--font-gothic);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #8E8E93; /* Inativo: cinza */
+  transition: color 0.2s ease;
+}
+
+.missao-total-val.active-val {
+  color: var(--green-primary) !important; /* Ativado: verde nobre */
 }
 
 .missao-sub-grid {

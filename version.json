@@ -1,6 +1,6 @@
 {
-  "version": "1.0.24",
-  "build": "20260922_24",
+  "version": "1.0.25",
+  "build": "20260922_25",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Módulo exclusivo da Unidade Missão: menu inicial com opções Histórico e Novo Relatório; calendário mensal interativo com dias preenchidos em verde escuro e dias sem relatório em cinza; visualização e edição de relatórios por data; formulário oficial completo com os 9 campos (Data com seletor e padrão Hoje, Missionário, Pessoas Atendidas na rua/unidade/busca ativa, Refeições nos 5 períodos, Banhos, Corte de Cabelo, Cultos, Busca Ativa e Decisões por Cristo) com ícones verdes de traço fino; e indicador de 7 bolinhas neon no topo do botão Missão na tela inicial."
+  "releaseNotes": "Ajustes no formulário da Missão: valores iniciam na cor cinza e passam para verde nobre ao serem ativados (clique em +/-, foco ou digitação), permitindo que respostas com valor zero (0) sejam registradas e acendam as bolinhas neon no botão da Missão; remoção da numeração nos enunciados de todos os campos; remoção do subtítulo no campo Missionário."
 }

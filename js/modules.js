@@ -437,27 +437,37 @@ function openMissaoForm(targetDate, isEdit) {
   // Valores pré-carregados
   const reporter = existing ? (r_name => r_name || 'Pr. Marcos Lima')(existing.reporterName) : 'Pr. Marcos Lima';
   
-  // Pergunta 3: Pessoas atendidas
-  const pRua = existing?.pessoasAtendidas?.rua ?? (existing ? 0 : 15);
-  const pUnidade = existing?.pessoasAtendidas?.unidade ?? (existing?.acolhidosPresentes ?? 45);
-  const pBusca = existing?.pessoasAtendidas?.buscaAtiva ?? (existing ? 0 : 20);
+  // Detecção de status de ativação prévio
+  const ans = existing?.answeredQuestions || {};
+  const hasAns = !!existing?.answeredQuestions;
+
+  const isPessoasActive = hasAns ? !!ans.pessoas : (!!existing && ((existing.pessoasAtendidas?.total ?? 0) > 0 || (existing.acolhidosPresentes ?? 0) > 0));
+  const isRefeicoesActive = hasAns ? !!ans.refeicoes : (!!existing && (((existing.refeicoes?.cafe || 0) + (existing.refeicoes?.almoco || 0)) > 0));
+  const isBanhosActive = hasAns ? !!ans.banhos : (!!existing && typeof existing.banhos === 'number');
+  const isCortesActive = hasAns ? !!ans.cortes : (!!existing && typeof existing.cortesCabelo === 'number');
+  const isCultosActive = hasAns ? !!ans.cultos : (!!existing && typeof existing.cultos === 'number');
+  const isBuscaActive = hasAns ? !!ans.buscaAtiva : (!!existing && (typeof existing.buscaAtivaPessoas === 'number' || typeof existing.pessoasAtendidas?.buscaAtiva === 'number'));
+  const isDecisoesActive = hasAns ? !!ans.decisoes : (!!existing && typeof existing.decisoesCristo === 'number');
+
+  // Valores das perguntas (0 por padrão em novos relatórios)
+  const pRua = existing?.pessoasAtendidas?.rua ?? 0;
+  const pUnidade = existing?.pessoasAtendidas?.unidade ?? (existing?.acolhidosPresentes ?? 0);
+  const pBusca = existing?.pessoasAtendidas?.buscaAtiva ?? 0;
   const pTotal = pRua + pUnidade + pBusca;
 
-  // Pergunta 4: Refeições servidas
   const ref = existing?.refeicoes || {};
-  const rCafe = ref.cafe ?? 45;
-  const rAlmoco = ref.almoco ?? 49;
-  const rLanche = ref.lanche ?? 45;
-  const rJantar = ref.jantar ?? 45;
-  const rBusca = ref.buscaAtiva ?? 20;
+  const rCafe = ref.cafe ?? 0;
+  const rAlmoco = ref.almoco ?? 0;
+  const rLanche = ref.lanche ?? 0;
+  const rJantar = ref.jantar ?? 0;
+  const rBusca = ref.buscaAtiva ?? 0;
   const rTotal = rCafe + rAlmoco + rLanche + rJantar + rBusca;
 
-  // Perguntas 5 a 9
-  const banhos = existing?.banhos ?? (existing ? 0 : 25);
-  const cortes = existing?.cortesCabelo ?? (existing ? 0 : 8);
-  const cultos = existing?.cultos ?? (existing ? 0 : 2);
+  const banhos = existing?.banhos ?? 0;
+  const cortes = existing?.cortesCabelo ?? 0;
+  const cultos = existing?.cultos ?? 0;
   const buscaAtivaPessoas = existing?.buscaAtivaPessoas ?? pBusca;
-  const decisoes = existing?.decisoesCristo ?? (existing ? 0 : 3);
+  const decisoes = existing?.decisoesCristo ?? 0;
 
   modalHeader.className = 'modal-header';
   modalHeader.innerHTML = `
@@ -486,12 +496,12 @@ function openMissaoForm(targetDate, isEdit) {
     <form id="missao-report-form" onsubmit="event.preventDefault();">
       <input type="hidden" id="missao-rep-id" value="${existing ? existing.id : ''}">
 
-      <!-- 1. DATA DO RELATÓRIO -->
+      <!-- DATA -->
       <div class="missao-q-card">
         <div class="missao-q-header">
           <div class="missao-q-icon">${MISSAO_ICONS.data}</div>
           <div class="missao-q-title-box">
-            <div class="missao-q-title">1. Data do Relatório</div>
+            <div class="missao-q-title">Data</div>
             <div class="missao-q-sub">Padrão "Hoje" ou toque no calendário para alterar</div>
           </div>
         </div>
@@ -505,29 +515,28 @@ function openMissaoForm(targetDate, isEdit) {
         </div>
       </div>
 
-      <!-- 2. MISSIONÁRIO -->
+      <!-- MISSIONÁRIO -->
       <div class="missao-q-card">
         <div class="missao-q-header">
           <div class="missao-q-icon">${MISSAO_ICONS.missionario}</div>
           <div class="missao-q-title-box">
-            <div class="missao-q-title">2. Missionário Responsável</div>
-            <div class="missao-q-sub">Nome do responsável pelo plantão</div>
+            <div class="missao-q-title">Missionário</div>
           </div>
         </div>
         <input type="text" id="missao-rep-reporter" class="form-input" value="${reporter}" placeholder="Ex: Pr. Marcos Lima" required>
       </div>
 
-      <!-- 3. PESSOAS ATENDIDAS PELA MISSÃO -->
+      <!-- Nº DE PESSOAS ATENDIDAS PELA MISSÃO -->
       <div class="missao-q-card">
         <div class="missao-q-header">
           <div class="missao-q-icon">${MISSAO_ICONS.pessoas}</div>
           <div class="missao-q-title-box">
-            <div class="missao-q-title">3. Nº de Pessoas Atendidas pela Missão</div>
-            <div class="missao-q-sub">Na rua, na unidade e nas ações de busca ativa</div>
+            <div class="missao-q-title">Nº de Pessoas atendidas pela Missão</div>
+            <div class="missao-q-sub">Na rua, na unidade e na busca ativa</div>
           </div>
           <div style="text-align:right;">
             <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
-            <div style="font-family:var(--font-gothic); font-size:1.15rem; font-weight:800; color:var(--green-primary);" id="missao-total-pessoas">${pTotal}</div>
+            <div class="missao-total-val ${isPessoasActive ? 'active-val' : ''}" id="missao-total-pessoas">${pTotal}</div>
           </div>
         </div>
 
@@ -538,7 +547,7 @@ function openMissaoForm(targetDate, isEdit) {
             </div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-rua', -1, 'pessoas')">-</button>
-              <input type="number" id="missao-p-rua" class="missao-step-input" value="${pRua}" oninput="recalcMissaoTotal('pessoas')">
+              <input type="number" id="missao-p-rua" class="missao-step-input ${isPessoasActive ? 'active-val' : ''}" data-activated="${isPessoasActive ? 'true' : 'false'}" value="${pRua}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-rua', 1, 'pessoas')">+</button>
             </div>
           </div>
@@ -549,7 +558,7 @@ function openMissaoForm(targetDate, isEdit) {
             </div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-unidade', -1, 'pessoas')">-</button>
-              <input type="number" id="missao-p-unidade" class="missao-step-input" value="${pUnidade}" oninput="recalcMissaoTotal('pessoas')">
+              <input type="number" id="missao-p-unidade" class="missao-step-input ${isPessoasActive ? 'active-val' : ''}" data-activated="${isPessoasActive ? 'true' : 'false'}" value="${pUnidade}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-unidade', 1, 'pessoas')">+</button>
             </div>
           </div>
@@ -560,24 +569,24 @@ function openMissaoForm(targetDate, isEdit) {
             </div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-busca', -1, 'pessoas')">-</button>
-              <input type="number" id="missao-p-busca" class="missao-step-input" value="${pBusca}" oninput="recalcMissaoTotal('pessoas')">
+              <input type="number" id="missao-p-busca" class="missao-step-input ${isPessoasActive ? 'active-val' : ''}" data-activated="${isPessoasActive ? 'true' : 'false'}" value="${pBusca}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-busca', 1, 'pessoas')">+</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 4. REFEIÇÕES SERVIDAS -->
+      <!-- Nº DE REFEIÇÕES SERVIDAS -->
       <div class="missao-q-card">
         <div class="missao-q-header">
           <div class="missao-q-icon">${MISSAO_ICONS.refeicoes}</div>
           <div class="missao-q-title-box">
-            <div class="missao-q-title">4. Nº de Refeições Servidas</div>
-            <div class="missao-q-sub">Considerar usuários, equipe e voluntários</div>
+            <div class="missao-q-title">Nº de Refeições servidas</div>
+            <div class="missao-q-sub">Café da manhã, almoço, café da tarde, jantar e busca ativa (usuários, equipe e voluntários)</div>
           </div>
           <div style="text-align:right;">
             <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
-            <div style="font-family:var(--font-gothic); font-size:1.15rem; font-weight:800; color:var(--gold-primary);" id="missao-total-refeicoes">${rTotal}</div>
+            <div class="missao-total-val ${isRefeicoesActive ? 'active-val' : ''}" id="missao-total-refeicoes">${rTotal}</div>
           </div>
         </div>
 
@@ -586,7 +595,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Café da Manhã</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-cafe', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-cafe" class="missao-step-input" value="${rCafe}" oninput="recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-cafe" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rCafe}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-cafe', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -595,7 +604,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Almoço</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-almoco', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-almoco" class="missao-step-input" value="${rAlmoco}" oninput="recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-almoco" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rAlmoco}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-almoco', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -604,7 +613,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Café da Tarde</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-lanche', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-lanche" class="missao-step-input" value="${rLanche}" oninput="recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-lanche" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rLanche}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-lanche', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -613,7 +622,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Jantar</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-jantar', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-jantar" class="missao-step-input" value="${rJantar}" oninput="recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-jantar" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rJantar}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-jantar', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -622,98 +631,98 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Nas Ações de Busca Ativa</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-busca', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-busca" class="missao-step-input" value="${rBusca}" oninput="recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-busca" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rBusca}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-busca', 1, 'refeicoes')">+</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 5. BANHOS -->
+      <!-- Nº DE BANHOS -->
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
             <div class="missao-q-icon">${MISSAO_ICONS.banhos}</div>
             <div>
-              <div class="missao-q-title">5. Nº de Banhos</div>
-              <div class="missao-q-sub">Não considerar os da equipe</div>
+              <div class="missao-q-title">Nº de Banhos</div>
+              <div class="missao-q-sub">Não considerar da equipe</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-banhos', -1)">-</button>
-            <input type="number" id="missao-rep-banhos" class="missao-step-input" value="${banhos}">
+            <input type="number" id="missao-rep-banhos" class="missao-step-input ${isBanhosActive ? 'active-val' : ''}" data-activated="${isBanhosActive ? 'true' : 'false'}" value="${banhos}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-banhos', 1)">+</button>
           </div>
         </div>
       </div>
 
-      <!-- 6. CORTE DE CABELO -->
+      <!-- Nº DE CORTE DE CABELO -->
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
             <div class="missao-q-icon">${MISSAO_ICONS.cortes}</div>
             <div>
-              <div class="missao-q-title">6. Nº de Corte de Cabelo</div>
-              <div class="missao-q-sub">Não considerar os da equipe</div>
+              <div class="missao-q-title">Nº de Corte de Cabelo</div>
+              <div class="missao-q-sub">Não considerar da equipe</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cortes', -1)">-</button>
-            <input type="number" id="missao-rep-cortes" class="missao-step-input" value="${cortes}">
+            <input type="number" id="missao-rep-cortes" class="missao-step-input ${isCortesActive ? 'active-val' : ''}" data-activated="${isCortesActive ? 'true' : 'false'}" value="${cortes}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cortes', 1)">+</button>
           </div>
         </div>
       </div>
 
-      <!-- 7. CULTOS REALIZADOS -->
+      <!-- Nº DE CULTOS REALIZADOS -->
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
             <div class="missao-q-icon">${MISSAO_ICONS.cultos}</div>
             <div>
-              <div class="missao-q-title">7. Nº de Cultos Realizados</div>
+              <div class="missao-q-title">Nº de Cultos realizados</div>
               <div class="missao-q-sub">Cultos, devocionais e ministrações</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cultos', -1)">-</button>
-            <input type="number" id="missao-rep-cultos" class="missao-step-input" value="${cultos}">
+            <input type="number" id="missao-rep-cultos" class="missao-step-input ${isCultosActive ? 'active-val' : ''}" data-activated="${isCultosActive ? 'true' : 'false'}" value="${cultos}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cultos', 1)">+</button>
           </div>
         </div>
       </div>
 
-      <!-- 8. BUSCA ATIVA (PESSOAS ATENDIDAS) -->
+      <!-- Nº DE PESSOAS ATENDIDAS NAS AÇÕES DE BUSCA ATIVA -->
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
             <div class="missao-q-icon">${MISSAO_ICONS.buscaAtiva}</div>
             <div>
-              <div class="missao-q-title">8. Pessoas na Busca Ativa</div>
+              <div class="missao-q-title">Nº de pessoas atendidas nas ações de Busca Ativa</div>
               <div class="missao-q-sub">Atendidas nas ações externas</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-busca-pessoas', -1)">-</button>
-            <input type="number" id="missao-rep-busca-pessoas" class="missao-step-input" value="${buscaAtivaPessoas}">
+            <input type="number" id="missao-rep-busca-pessoas" class="missao-step-input ${isBuscaActive ? 'active-val' : ''}" data-activated="${isBuscaActive ? 'true' : 'false'}" value="${buscaAtivaPessoas}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-busca-pessoas', 1)">+</button>
           </div>
         </div>
       </div>
 
-      <!-- 9. DECISÕES POR CRISTO -->
+      <!-- Nº DE DECISÕES POR CRISTO -->
       <div class="missao-q-card" style="border:1.5px solid var(--gold-primary); background:rgba(197, 137, 8, 0.04);">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
             <div class="missao-q-icon" style="background:var(--gold-primary); color:#FFFFFF;">${MISSAO_ICONS.decisoes}</div>
             <div>
-              <div class="missao-q-title" style="color:var(--gold-primary);">9. Nº de Decisões por Cristo</div>
+              <div class="missao-q-title" style="color:var(--gold-primary);">Nº de decisões por Cristo</div>
               <div class="missao-q-sub">Conversões e reconciliações no dia</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-decisoes', -1)">-</button>
-            <input type="number" id="missao-rep-decisoes" class="missao-step-input" value="${decisoes}" style="color:var(--gold-primary); border-color:var(--gold-primary);">
+            <input type="number" id="missao-rep-decisoes" class="missao-step-input ${isDecisoesActive ? 'active-val' : ''}" data-activated="${isDecisoesActive ? 'true' : 'false'}" value="${decisoes}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-decisoes', 1)">+</button>
           </div>
         </div>
@@ -744,9 +753,27 @@ function onMissaoDateChanged(newDate) {
 }
 window.onMissaoDateChanged = onMissaoDateChanged;
 
+// Ativação de campos numéricos (fica verde e marca data-activated="true")
+function activateMissaoInput(inputId, group) {
+  const el = document.getElementById(inputId);
+  if (el) {
+    el.classList.add('active-val');
+    el.setAttribute('data-activated', 'true');
+  }
+  if (group === 'pessoas') {
+    const totalEl = document.getElementById('missao-total-pessoas');
+    if (totalEl) totalEl.classList.add('active-val');
+  } else if (group === 'refeicoes') {
+    const totalEl = document.getElementById('missao-total-refeicoes');
+    if (totalEl) totalEl.classList.add('active-val');
+  }
+}
+window.activateMissaoInput = activateMissaoInput;
+
 function adjustMissaoStep(inputId, delta, group) {
   const el = document.getElementById(inputId);
   if (!el) return;
+  activateMissaoInput(inputId, group);
   let val = parseInt(el.value, 10);
   if (isNaN(val)) val = 0;
   val = Math.max(0, val + delta);
@@ -803,6 +830,33 @@ async function handleSaveMissaoReport() {
   const reporter = document.getElementById('missao-rep-reporter')?.value.trim() || 'Pr. Marcos Lima';
   const repId = document.getElementById('missao-rep-id')?.value;
 
+  // Perguntas respondidas/ativadas pelo usuário (mesmo com valor 0)
+  const isPessoasActive = (document.getElementById('missao-p-rua')?.getAttribute('data-activated') === 'true') ||
+                          (document.getElementById('missao-p-unidade')?.getAttribute('data-activated') === 'true') ||
+                          (document.getElementById('missao-p-busca')?.getAttribute('data-activated') === 'true');
+
+  const isRefeicoesActive = (document.getElementById('missao-r-cafe')?.getAttribute('data-activated') === 'true') ||
+                            (document.getElementById('missao-r-almoco')?.getAttribute('data-activated') === 'true') ||
+                            (document.getElementById('missao-r-lanche')?.getAttribute('data-activated') === 'true') ||
+                            (document.getElementById('missao-r-jantar')?.getAttribute('data-activated') === 'true') ||
+                            (document.getElementById('missao-r-busca')?.getAttribute('data-activated') === 'true');
+
+  const isBanhosActive = document.getElementById('missao-rep-banhos')?.getAttribute('data-activated') === 'true';
+  const isCortesActive = document.getElementById('missao-rep-cortes')?.getAttribute('data-activated') === 'true';
+  const isCultosActive = document.getElementById('missao-rep-cultos')?.getAttribute('data-activated') === 'true';
+  const isBuscaActive = document.getElementById('missao-rep-busca-pessoas')?.getAttribute('data-activated') === 'true';
+  const isDecisoesActive = document.getElementById('missao-rep-decisoes')?.getAttribute('data-activated') === 'true';
+
+  const answeredQuestions = {
+    pessoas: isPessoasActive,
+    refeicoes: isRefeicoesActive,
+    banhos: isBanhosActive,
+    cortes: isCortesActive,
+    cultos: isCultosActive,
+    buscaAtiva: isBuscaActive,
+    decisoes: isDecisoesActive
+  };
+
   const reportData = {
     id: repId || `rep_missao_${dateVal}`,
     unitId: 'missao',
@@ -831,6 +885,7 @@ async function handleSaveMissaoReport() {
     cultos: cultos,
     buscaAtivaPessoas: buscaAtivaPessoas,
     decisoesCristo: decisoes,
+    answeredQuestions: answeredQuestions,
     status: 'concluido'
   };
 
