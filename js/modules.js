@@ -1620,7 +1620,11 @@ async function promptAddNewStockItem(unitId) {
 
   showLoading('Cadastrando alimento...');
   try {
-    await dbManager.addStockItem(newItem);
+    if (typeof dbManager.addStockItem === 'function') {
+      await dbManager.addStockItem(newItem);
+    } else if (typeof dbManager.saveStockItem === 'function') {
+      await dbManager.saveStockItem(newItem);
+    }
     showToast(`"${name.trim()}" adicionado com sucesso!`, 'success');
     renderStockList();
   } catch (e) {
@@ -1640,7 +1644,16 @@ async function removeStockItem(itemId, unitId) {
 
   showLoading('Removendo alimento...');
   try {
-    await dbManager.deleteStockItem(itemId);
+    if (typeof dbManager.deleteStockItem === 'function') {
+      await dbManager.deleteStockItem(itemId);
+    } else {
+      const stock = dbManager.getStock();
+      const filtered = stock.filter(s => s.id !== itemId);
+      localStorage.setItem('cristolandia_stock_items', JSON.stringify(filtered));
+      if (dbManager.firebaseDb) {
+        await dbManager.firebaseDb.ref(`cristolandia_check/stock/${itemId}`).remove();
+      }
+    }
     showToast(`"${item.name}" removido do estoque.`, 'info');
     renderStockList();
   } catch (e) {

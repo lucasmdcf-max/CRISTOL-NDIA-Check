@@ -499,6 +499,26 @@ class CristolandiaDB {
     return sanitized;
   }
 
+  async addStockItem(itemData) {
+    return await this.saveStockItem(itemData);
+  }
+
+  async deleteStockItem(itemId) {
+    const stock = this.getStock();
+    const filtered = stock.filter(s => s.id !== itemId);
+    localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(filtered));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/stock/${itemId}`).remove();
+      } catch (e) {
+        console.warn('Firebase pendente (removido localmente):', e);
+      }
+    }
+    return true;
+  }
+
   async adjustStockQuantity(itemId, delta) {
     const stock = this.getStock();
     const item = stock.find(s => s.id === itemId);

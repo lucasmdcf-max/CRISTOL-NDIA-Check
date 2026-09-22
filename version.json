@@ -1,6 +1,6 @@
 {
-  "version": "1.0.27",
-  "build": "20260922_27",
+  "version": "1.0.28",
+  "build": "20260922_28",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Bloqueio de datas futuras no calendário e formulários; reset automático das 7 bolinhas neon e contadores na virada do dia; ícones 'Atualizar' e 'Analisar' do estoque atualizados para linhas simples no padrão do app; remoção de emojis das tags e categorias do estoque (somente texto); edição intuitiva de cadastros de instituições e atividades ao clicar diretamente nos cards com opção de salvar alterações."
+  "releaseNotes": "Correção no cadastro e remoção de alimentos nas despensas do estoque: adição dos métodos addStockItem e deleteStockItem ao DBManager com fallback resiliente para saveStockItem, garantindo salvamento em memória, localStorage e sincronização no Firebase."
 }
