@@ -36,6 +36,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateMacedoniaDots();
   updateFemininaDots();
 
+  // Renderizar Avisos do dia! (balão dourado 50%, letras verdes) e ativar navegação touch
+  renderDailyNotices();
+  setupNoticesTouchSwipe();
+
   // Ativar efeitos 3D táteis e micro-animações nos 6 botões
   setup3DButtonsInteractions();
 
@@ -51,6 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateMissaoDots();
     updateMacedoniaDots();
     updateFemininaDots();
+    renderDailyNotices();
     const detail = (e && e.detail) || {};
     if (detail.firstLoad) {
       // Primeira carga: silenciosa
@@ -282,74 +287,58 @@ function renderCurrentDate() {
 }
 
 // Atualização resiliente das métricas do card de resumo (Painel Diário)
+// 1. Pessoas assistidas (soma de banhos, cortes, busca ativa, encaminhamentos sociais, saúde, psicologia, jurídico e sons da missão)
+// 2. Refeições (soma de todas as refeições das 3 unidades no dia)
+// 3. Triagens (soma das triagens das 3 unidades)
 function updateHeroMetrics() {
   const reports = dbManager.getReports();
   const todayStr = getLocalDateStr();
-
-  // 1. CENSO ATIVO DE ACOLHIDOS RESIDENTES (3 Despensas/Unidades)
-  // Em comunidades de acolhimento, o censo é residencial contínuo.
-  // Para cada unidade, obtém o número de acolhidos do dia de hoje;
-  // se ainda não preenchido hoje, herda do último relatório registrado salvo daquela unidade.
-  const unitDefaults = { missao: 45, macedonia: 60, feminina: 30 };
-  const unitIds = ['missao', 'macedonia', 'feminina'];
-
-  let acolhidos = 0;
-  unitIds.forEach(uId => {
-    // 1º: Se já existe relatório salvo hoje para a unidade, usa o valor exato registrado pelo usuário (inclusive 0)
-    const repToday = reports.find(r => r.unitId === uId && r.date === todayStr);
-    if (repToday && typeof repToday.acolhidosPresentes === 'number') {
-      acolhidos += repToday.acolhidosPresentes;
-      return;
-    }
-    // 2º: Se ainda não há relatório salvo hoje, busca o relatório mais recente cadastrado para a unidade
-    const unitReports = reports
-      .filter(r => r.unitId === uId)
-      .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.updatedAt || 0) - (a.updatedAt || 0));
-    
-    const latestRep = unitReports[0];
-    if (latestRep && typeof latestRep.acolhidosPresentes === 'number') {
-      acolhidos += latestRep.acolhidosPresentes;
-    } else {
-      acolhidos += unitDefaults[uId] || 0;
-    }
-  });
-
-  // 2. REFEIÇÕES E TRIAGENS DO DIA
   const todayReports = reports.filter(r => r.date === todayStr);
 
+  let pessoasAssistidas = 0;
   let refeicoes = 0;
   let triagens = 0;
 
-  if (todayReports.length > 0) {
-    todayReports.forEach(r => {
-      triagens += (r.novasTriagens || 0) + (r.encaminhamentosSociais || 0);
-      const ref = r.refeicoes || {};
-      refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
-    });
-  } else {
-    // Caso hoje ainda não haja fechamento salvo, consolida do dia mais recente com registros
-    const sortedDates = [...new Set(reports.map(r => r.date).filter(Boolean))].sort().reverse();
-    const mostRecentDate = sortedDates[0];
-    if (mostRecentDate) {
-      const recentReports = reports.filter(r => r.date === mostRecentDate);
-      recentReports.forEach(r => {
-        triagens += (r.novasTriagens || 0) + (r.encaminhamentosSociais || 0);
-        const ref = r.refeicoes || {};
-        refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
-      });
-    }
-  }
+  // Se houver relatórios hoje, soma deles; se ainda não houver nenhum hoje,
+  // consolida do dia mais recente com fechamento salvo
+  const targetReports = todayReports.length > 0 
+    ? todayReports 
+    : (() => {
+        const sortedDates = [...new Set(reports.map(r => r.date).filter(Boolean))].sort().reverse();
+        return sortedDates[0] ? reports.filter(r => r.date === sortedDates[0]) : [];
+      })();
 
-  state.totalAcolhidosHoje = acolhidos;
+  targetReports.forEach(r => {
+    // Pessoas assistidas
+    const banhos = r.banhos || 0;
+    const cortes = r.cortesCabelo || 0;
+    const buscaAtiva = r.buscaAtivaPessoas || (r.pessoasAtendidas && r.pessoasAtendidas.buscaAtiva) || 0;
+    const sociais = r.encaminhamentosSociais || 0;
+    const saude = r.encaminhamentosSaude || 0;
+    const psicologicos = r.atendimentosPsicologicos || 0;
+    const juridicas = r.demandasJuridicas || 0;
+    const musica = r.sonsDaMissao || 0;
+
+    pessoasAssistidas += (banhos + cortes + buscaAtiva + sociais + saude + psicologicos + juridicas + musica);
+
+    // Refeições (soma de todas as refeições de todas as unidades)
+    const ref = r.refeicoes || {};
+    refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+
+    // Triagens (soma das triagens)
+    triagens += (r.novasTriagens || 0);
+  });
+
+  state.totalPessoasAssistidasHoje = pessoasAssistidas;
   state.totalRefeicoesHoje = refeicoes;
   state.novasTriagensHoje = triagens;
 
-  const elAcolhidos = document.getElementById('metric-hero-acolhidos');
+  const elAssistidos = document.getElementById('metric-hero-acolhidos');
   const elRefeicoes = document.getElementById('metric-hero-refeicoes');
   const elTriagens = document.getElementById('metric-hero-triagens');
   const elRelatoriosCount = document.getElementById('metric-hero-reports-count');
 
-  if (elAcolhidos) elAcolhidos.textContent = acolhidos;
+  if (elAssistidos) elAssistidos.textContent = pessoasAssistidas;
   if (elRefeicoes) elRefeicoes.textContent = refeicoes;
   if (elTriagens) elTriagens.textContent = triagens;
   if (elRelatoriosCount) elRelatoriosCount.textContent = `${todayReports.length}/3`;
@@ -649,6 +638,7 @@ function checkDayTransition() {
     if (typeof updateMissaoDots === 'function') updateMissaoDots();
     if (typeof updateMacedoniaDots === 'function') updateMacedoniaDots();
     if (typeof updateFemininaDots === 'function') updateFemininaDots();
+    if (typeof renderDailyNotices === 'function') renderDailyNotices();
   }
 }
 
@@ -664,5 +654,251 @@ function setupDayTransitionWatcher() {
   if (typeof window !== 'undefined') {
     window.addEventListener('focus', checkDayTransition);
   }
+}
+
+// ==========================================================================
+// SEÇÃO AVISOS DO DIA (BALÃO DOURADO 50%, LETRAS VERDES, 24H, BOLINHAS NEON)
+// ==========================================================================
+let _currentNoticeIndex = 0;
+
+function formatNoticeTime(timestamp) {
+  if (!timestamp) return '';
+  const d = new Date(timestamp);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  
+  if (isToday) {
+    return `Hoje às ${hours}:${minutes}`;
+  }
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month} às ${hours}:${minutes}`;
+}
+
+function renderDailyNotices() {
+  const container = document.getElementById('notice-balloon-content');
+  const dotsContainer = document.getElementById('notice-dots-container');
+  const prevBtn = document.getElementById('notice-nav-prev');
+  const nextBtn = document.getElementById('notice-nav-next');
+  if (!container || !dotsContainer) return;
+
+  const notices = (typeof dbManager !== 'undefined' && dbManager.getNotices) 
+    ? dbManager.getNotices(true) 
+    : [];
+
+  // Se não houver avisos nas últimas 24h
+  if (notices.length === 0) {
+    _currentNoticeIndex = 0;
+    container.innerHTML = `
+      <div class="notice-empty-state">
+        <div class="notice-empty-title">Nenhum aviso no momento</div>
+        <div class="notice-empty-sub">Toque no botão <strong style="color:var(--green-primary); font-size:1rem;">+</strong> acima para registrar um aviso para as unidades.</div>
+      </div>
+    `;
+    if (prevBtn) prevBtn.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'none';
+    dotsContainer.innerHTML = '';
+    return;
+  }
+
+  // Ajusta índice aos limites
+  if (_currentNoticeIndex >= notices.length) {
+    _currentNoticeIndex = notices.length - 1;
+  }
+  if (_currentNoticeIndex < 0) {
+    _currentNoticeIndex = 0;
+  }
+
+  const activeNotice = notices[_currentNoticeIndex];
+
+  // Renderiza o balão dourado com 50% de opacidade e letras verdes
+  const safeText = (typeof escapeHtml === 'function') ? escapeHtml(activeNotice.text || '') : (activeNotice.text || '');
+  const safeAuthor = (typeof escapeHtml === 'function') ? escapeHtml(activeNotice.author || 'Coordenação') : (activeNotice.author || 'Coordenação');
+
+  container.innerHTML = `
+    <div class="notice-balloon-text">${safeText}</div>
+    <div class="notice-balloon-meta">
+      <span class="notice-meta-author">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        ${safeAuthor}
+      </span>
+      <span class="notice-meta-time">
+        ${formatNoticeTime(activeNotice.createdAt)}
+      </span>
+    </div>
+  `;
+
+  // Configuração das setas de navegação
+  if (notices.length > 1) {
+    if (prevBtn) prevBtn.style.display = 'flex';
+    if (nextBtn) nextBtn.style.display = 'flex';
+  } else {
+    if (prevBtn) prevBtn.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'none';
+  }
+
+  // Fileira com bolinhas douradas e indicador neon da mensagem ativa
+  let dotsHtml = '';
+  for (let i = 0; i < notices.length; i++) {
+    const isActive = (i === _currentNoticeIndex);
+    dotsHtml += `<div class="notice-dot ${isActive ? 'active' : ''}" onclick="goToNotice(${i})" title="Aviso ${i + 1} de ${notices.length}"></div>`;
+  }
+  dotsContainer.innerHTML = dotsHtml;
+}
+
+function navNotice(delta) {
+  const notices = (typeof dbManager !== 'undefined' && dbManager.getNotices) ? dbManager.getNotices(true) : [];
+  if (notices.length <= 1) return;
+
+  const balloon = document.getElementById('notice-balloon-content');
+  if (balloon) balloon.classList.add('animating');
+
+  _currentNoticeIndex = (_currentNoticeIndex + delta + notices.length) % notices.length;
+
+  setTimeout(() => {
+    renderDailyNotices();
+    if (balloon) balloon.classList.remove('animating');
+  }, 120);
+}
+
+function goToNotice(index) {
+  _currentNoticeIndex = index;
+  renderDailyNotices();
+}
+
+// Suporte a swipe touch (deslizar para o lado em telas sensíveis ao toque)
+function setupNoticesTouchSwipe() {
+  const wrapper = document.getElementById('notice-balloon-wrapper');
+  if (!wrapper) return;
+
+  let startX = 0;
+  let startY = 0;
+
+  wrapper.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length > 0) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  wrapper.addEventListener('touchend', (e) => {
+    if (!e.changedTouches || e.changedTouches.length === 0) return;
+    const diffX = e.changedTouches[0].clientX - startX;
+    const diffY = e.changedTouches[0].clientY - startY;
+
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
+      if (diffX < 0) {
+        navNotice(1); // Deslizou para esquerda -> próximo
+      } else {
+        navNotice(-1); // Deslizou para direita -> anterior
+      }
+    }
+  }, { passive: true });
+}
+
+// Modal para adicionar novo aviso
+function openAddNoticeModal() {
+  const modal = document.getElementById('modal-generic');
+  const header = document.getElementById('modal-generic-header');
+  const body = document.getElementById('modal-generic-body');
+  const footer = document.getElementById('modal-generic-footer');
+  if (!modal || !header || !body || !footer) return;
+
+  header.className = 'modal-header';
+  header.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon" style="background:rgba(197, 137, 8, 0.15); color:var(--gold-primary);">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Novo Aviso do Dia</h2>
+        <p style="margin-bottom:0;">Mensagem visível por 24 horas</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  body.innerHTML = `
+    <form id="notice-form" onsubmit="event.preventDefault(); handleSaveNotice();">
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-family:var(--font-gothic); font-weight:800; font-size:0.86rem; color:var(--text-main); margin-bottom:6px;">
+          Seu Nome ou Função
+        </label>
+        <input type="text" id="notice-input-author" class="form-input" placeholder="Ex: Missionário Carlos, Pr. Marcos, Coordenação..." required style="width:100%;">
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-family:var(--font-gothic); font-weight:800; font-size:0.86rem; color:var(--text-main); margin-bottom:6px;">
+          Mensagem do Aviso
+        </label>
+        <textarea id="notice-input-text" class="form-input" rows="4" placeholder="Escreva o aviso importante do dia aqui..." required style="width:100%; resize:vertical; line-height:1.45;"></textarea>
+      </div>
+    </form>
+  `;
+
+  footer.className = 'modal-footer';
+  footer.innerHTML = `
+    <button type="button" class="btn-secondary-action" style="flex:1;" onclick="closeModal('modal-generic')">Cancelar</button>
+    <button type="button" id="btn-save-notice-action" class="btn-primary-action" style="flex:1;" onclick="handleSaveNotice()">Salvar Aviso</button>
+  `;
+
+  openModal('modal-generic');
+  setTimeout(() => {
+    const input = document.getElementById('notice-input-author');
+    if (input) input.focus();
+  }, 200);
+}
+
+async function handleSaveNotice() {
+  const authorInput = document.getElementById('notice-input-author');
+  const textInput = document.getElementById('notice-input-text');
+  const btn = document.getElementById('btn-save-notice-action');
+
+  const author = (authorInput?.value || '').trim();
+  const text = (textInput?.value || '').trim();
+
+  if (!author) {
+    showToast('Por favor, informe seu nome ou cargo.', 'warning');
+    if (authorInput) authorInput.focus();
+    return;
+  }
+  if (!text) {
+    showToast('Por favor, escreva a mensagem do aviso.', 'warning');
+    if (textInput) textInput.focus();
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  showLoading('Publicando aviso...');
+
+  try {
+    await dbManager.saveNotice({ author, text });
+    closeModal('modal-generic');
+    _currentNoticeIndex = 0; // Exibe o recém criado
+    renderDailyNotices();
+    showToast('Aviso do dia publicado com sucesso!', 'success');
+    if (navigator.vibrate) navigator.vibrate([15, 30, 15]);
+  } catch (err) {
+    showToast('Erro ao publicar aviso: ' + err.message, 'danger');
+  } finally {
+    hideLoading();
+    if (btn) btn.disabled = false;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.renderDailyNotices = renderDailyNotices;
+  window.navNotice = navNotice;
+  window.goToNotice = goToNotice;
+  window.openAddNoticeModal = openAddNoticeModal;
+  window.handleSaveNotice = handleSaveNotice;
 }
 

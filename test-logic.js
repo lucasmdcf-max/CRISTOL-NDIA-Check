@@ -42,86 +42,102 @@ function formatDateBR(dateStr) {
 
 assert.strictEqual(formatDateBR('2026-09-18'), '18/09/2026');
 
-// Teste de cálculo de métricas com censo residencial contínuo
+// Teste de cálculo de métricas do Painel Diário (Pessoas assistidas, Refeições e Triagens)
 function calculateHeroMetrics(reports, todayStr) {
-  const unitDefaults = { missao: 45, macedonia: 60, feminina: 30 };
-  const unitIds = ['missao', 'macedonia', 'feminina'];
-
-  let acolhidos = 0;
-  unitIds.forEach(uId => {
-    const repToday = reports.find(r => r.unitId === uId && r.date === todayStr);
-    if (repToday && typeof repToday.acolhidosPresentes === 'number') {
-      acolhidos += repToday.acolhidosPresentes;
-      return;
-    }
-    const unitReports = reports
-      .filter(r => r.unitId === uId)
-      .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.updatedAt || 0) - (a.updatedAt || 0));
-    
-    const latestRep = unitReports[0];
-    if (latestRep && typeof latestRep.acolhidosPresentes === 'number') {
-      acolhidos += latestRep.acolhidosPresentes;
-    } else {
-      acolhidos += unitDefaults[uId] || 0;
-    }
-  });
-
   const todayReports = reports.filter(r => r.date === todayStr);
+  const targetReports = todayReports.length > 0 
+    ? todayReports 
+    : (() => {
+        const sortedDates = [...new Set(reports.map(r => r.date).filter(Boolean))].sort().reverse();
+        return sortedDates[0] ? reports.filter(r => r.date === sortedDates[0]) : [];
+      })();
+
+  let pessoasAssistidas = 0;
   let refeicoes = 0;
   let triagens = 0;
 
-  if (todayReports.length > 0) {
-    todayReports.forEach(r => {
-      triagens += (r.novasTriagens || 0);
-      const ref = r.refeicoes || {};
-      refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
-    });
-  } else {
-    const sortedDates = [...new Set(reports.map(r => r.date).filter(Boolean))].sort().reverse();
-    const mostRecentDate = sortedDates[0];
-    if (mostRecentDate) {
-      const recentReports = reports.filter(r => r.date === mostRecentDate);
-      recentReports.forEach(r => {
-        triagens += (r.novasTriagens || 0);
-        const ref = r.refeicoes || {};
-        refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
-      });
-    }
-  }
+  targetReports.forEach(r => {
+    // Pessoas assistidas: banhos + cortes + busca ativa + sociais + saude + psico + juridico + sons da missao
+    const banhos = r.banhos || 0;
+    const cortes = r.cortesCabelo || 0;
+    const buscaAtiva = r.buscaAtivaPessoas || (r.pessoasAtendidas && r.pessoasAtendidas.buscaAtiva) || 0;
+    const sociais = r.encaminhamentosSociais || 0;
+    const saude = r.encaminhamentosSaude || 0;
+    const psicologicos = r.atendimentosPsicologicos || 0;
+    const juridicas = r.demandasJuridicas || 0;
+    const musica = r.sonsDaMissao || 0;
 
-  return { acolhidos, refeicoes, triagens };
+    pessoasAssistidas += (banhos + cortes + buscaAtiva + sociais + saude + psicologicos + juridicas + musica);
+
+    const ref = r.refeicoes || {};
+    refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+
+    triagens += (r.novasTriagens || 0);
+  });
+
+  return { pessoasAssistidas, refeicoes, triagens };
 }
 
-// Caso 1: relatórios salvos ontem, nenhum hoje -> censo contínuo ativo
-const mockReportsPast = [
-  { id: '1', unitId: 'missao', date: '2026-09-21', acolhidosPresentes: 45, novasTriagens: 2, refeicoes: { cafe: 45, almoco: 49, lanche: 45, jantar: 45 } },
-  { id: '2', unitId: 'macedonia', date: '2026-09-21', acolhidosPresentes: 60, novasTriagens: 2, refeicoes: { cafe: 60, almoco: 62, lanche: 60, jantar: 60 } },
-  { id: '3', unitId: 'feminina', date: '2026-09-21', acolhidosPresentes: 30, novasTriagens: 1, refeicoes: { cafe: 30, almoco: 32, lanche: 30, jantar: 30 } }
-];
-const res1 = calculateHeroMetrics(mockReportsPast, '2026-09-22');
-assert.strictEqual(res1.acolhidos, 135, 'Total acolhidos residentes deve ser 135');
-assert.strictEqual(res1.refeicoes, 548, 'Total refeicoes do fechamento anterior deve ser 548');
-assert.strictEqual(res1.triagens, 5, 'Total triagens do fechamento anterior deve ser 5');
-
-// Caso 2: Missão salvou hoje com 46 acolhidos e 1 triagem
+// Caso 1: relatórios salvos hoje nas 3 unidades
 const mockReportsToday = [
-  ...mockReportsPast,
-  { id: '4', unitId: 'missao', date: '2026-09-22', acolhidosPresentes: 46, novasTriagens: 1, refeicoes: { cafe: 46, almoco: 48, lanche: 46, jantar: 46 } }
+  { 
+    id: '1', unitId: 'missao', date: '2026-09-22', 
+    banhos: 15, cortesCabelo: 5, buscaAtivaPessoas: 20, 
+    novasTriagens: 3, 
+    refeicoes: { cafe: 45, almoco: 50, lanche: 45, jantar: 45, buscaAtiva: 30 } 
+  },
+  { 
+    id: '2', unitId: 'macedonia', date: '2026-09-22', 
+    encaminhamentosSociais: 4, encaminhamentosSaude: 6, atendimentosPsicologicos: 8, demandasJuridicas: 2, sonsDaMissao: 12,
+    novasTriagens: 2, 
+    refeicoes: { cafe: 60, almoco: 65, jantar: 60, abordagens: 15, eventosEspeciais: 10 } 
+  },
+  { 
+    id: '3', unitId: 'feminina', date: '2026-09-22', 
+    encaminhamentosSociais: 3, encaminhamentosSaude: 4, atendimentosPsicologicos: 5, demandasJuridicas: 1, sonsDaMissao: 8,
+    novasTriagens: 1, 
+    refeicoes: { cafe: 30, almoco: 35, jantar: 30, abordagens: 0, eventosEspeciais: 0 } 
+  }
 ];
-const res2 = calculateHeroMetrics(mockReportsToday, '2026-09-22');
-assert.strictEqual(res2.acolhidos, 136, 'Acolhidos deve atualizar para 46 + 60 + 30 = 136');
-assert.strictEqual(res2.refeicoes, 186, 'Refeições de hoje deve ser apenas as lançadas hoje na Missão (186)');
-assert.strictEqual(res2.triagens, 1, 'Triagens de hoje deve ser 1');
 
-// Caso 3: Missão alterada para 0 acolhidos presentes pelo usuário
-const mockReportsZero = [
-  ...mockReportsPast,
-  { id: '5', unitId: 'missao', date: '2026-09-22', acolhidosPresentes: 0, novasTriagens: 0, refeicoes: { cafe: 0, almoco: 0, lanche: 0, jantar: 0 } }
+const resToday = calculateHeroMetrics(mockReportsToday, '2026-09-22');
+// Pessoas assistidas Missão: 15 + 5 + 20 = 40
+// Pessoas assistidas Macedônia: 4 + 6 + 8 + 2 + 12 = 32
+// Pessoas assistidas Feminina: 3 + 4 + 5 + 1 + 8 = 21
+// Total Pessoas Assistidas: 40 + 32 + 21 = 93
+assert.strictEqual(resToday.pessoasAssistidas, 93, 'Total pessoas assistidas deve ser 93');
+// Refeições: (45+50+45+45+30=215) + (60+65+60+15+10=210) + (30+35+30=95) = 520
+assert.strictEqual(resToday.refeicoes, 520, 'Total refeições das 3 unidades deve ser 520');
+// Triagens: 3 + 2 + 1 = 6
+assert.strictEqual(resToday.triagens, 6, 'Total triagens deve ser 6');
+
+// Teste de expiração de 24 horas dos Avisos do dia!
+function filterActiveNotices(notices, currentTime = Date.now()) {
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+  return notices.filter(n => n && typeof n.createdAt === 'number' && (currentTime - n.createdAt) <= TWENTY_FOUR_HOURS);
+}
+
+const nowTimestamp = 1790100000000;
+const mockNotices = [
+  { id: 'n1', text: 'Culto especial hoje às 19h', author: 'Pr. Marcos', createdAt: nowTimestamp - (2 * 60 * 60 * 1000) }, // 2h atrás -> ativo
+  { id: 'n2', text: 'Doação de alimentos recebida', author: 'Coordenação', createdAt: nowTimestamp - (23 * 60 * 60 * 1000) }, // 23h atrás -> ativo
+  { id: 'n3', text: 'Reunião de ontem', author: 'Missionário Carlos', createdAt: nowTimestamp - (25 * 60 * 60 * 1000) }, // 25h atrás -> expirado (> 24h)
+  { id: 'n4', text: 'Aviso antigo', author: 'Sarah', createdAt: nowTimestamp - (48 * 60 * 60 * 1000) } // 48h atrás -> expirado (> 24h)
 ];
-const res3 = calculateHeroMetrics(mockReportsZero, '2026-09-22');
-assert.strictEqual(res3.acolhidos, 90, 'Acolhidos deve ser 0 + 60 + 30 = 90 quando Missão for zerada');
-assert.strictEqual(res3.refeicoes, 0, 'Refeições de hoje deve ser 0');
-assert.strictEqual(res3.triagens, 0, 'Triagens de hoje deve ser 0');
+
+const activeNotices = filterActiveNotices(mockNotices, nowTimestamp);
+assert.strictEqual(activeNotices.length, 2, 'Apenas 2 avisos com menos de 24h devem permanecer ativos');
+assert.strictEqual(activeNotices[0].id, 'n1');
+assert.strictEqual(activeNotices[1].id, 'n2');
+
+// Caso 2: Dia com valores explicitamente zerados
+const mockReportsZero = [
+  { id: '5', unitId: 'missao', date: '2026-09-22', banhos: 0, cortesCabelo: 0, buscaAtivaPessoas: 0, novasTriagens: 0, refeicoes: { cafe: 0, almoco: 0, lanche: 0, jantar: 0 } }
+];
+const resZero = calculateHeroMetrics(mockReportsZero, '2026-09-22');
+assert.strictEqual(resZero.pessoasAssistidas, 0, 'Pessoas assistidas deve ser 0');
+assert.strictEqual(resZero.refeicoes, 0, 'Refeições de hoje deve ser 0');
+assert.strictEqual(resZero.triagens, 0, 'Triagens de hoje deve ser 0');
 
 // Teste de cálculo das 7 bolinhas neon da Missão (com suporte a answeredQuestions e valor 0)
 function calculateMissaoDots(report) {

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.33",
-  "build": "20260922_33",
+  "version": "1.0.34",
+  "build": "20260922_34",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Acrescentadas 4 novas perguntas ao relatório da Unidade Macedônia (Sons da Missão, Ensaios do Coro, Atividades Físicas Realizadas e Participantes) totalizando as 12 perguntas oficiais. Relatório integralmente reproduzido na Unidade Feminina com Histórico, Calendário Mensal com bloqueio de datas futuras, visualização com botão editar, novo formulário com ativação dinâmica de caixas cinza para verde ao clique, 12 bolinhas neon nos botões e persistência de dupla camada."
+  "releaseNotes": "Painel Diário atualizado com nova métrica 'Pessoas Assistidas' (soma consolidada de banhos, cortes, busca ativa, encaminhamentos sociais, saúde, psicologia, jurídico e sons da missão), 'Refeições' (soma das 3 unidades) e 'Triagens'. Nova seção 'Avisos do dia!' na tela inicial com balão dourado com 50% de opacidade e letras verdes, autoria, expiração de 24 horas, carrossel navegável e fileira de bolinhas douradas com bolinha neon ativa."
 }

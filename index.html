@@ -22,8 +22,8 @@
   <meta name="theme-color" content="#1E4D2B">
 
   <!-- Estilos CSS com Versionamento Anti-Cache -->
-  <link rel="stylesheet" href="css/main.css?v=20260922-v33">
-  <link rel="stylesheet" href="css/buttons-3d.css?v=20260922-v33">
+  <link rel="stylesheet" href="css/main.css?v=20260922-v34">
+  <link rel="stylesheet" href="css/buttons-3d.css?v=20260922-v34">
 </head>
 <body>
 
@@ -52,7 +52,7 @@
 
       <div class="hero-compact-metrics">
         <div class="compact-metric">
-          <span class="compact-metric-label">Acolhidos</span>
+          <span class="compact-metric-label">Pessoas Assistidas</span>
           <span class="compact-metric-val" id="metric-hero-acolhidos">0</span>
         </div>
         <div class="compact-metric-divider"></div>
@@ -194,6 +194,40 @@
       </div>
     </section>
 
+    <!-- SEÇÃO INFERIOR: AVISOS DO DIA! (BALÃO DOURADO 50%, LETRAS VERDES, CARROSSEL E BOLINHAS NEON) -->
+    <section class="daily-notices-section">
+      <div class="daily-notices-header">
+        <div class="daily-notices-title-wrapper">
+          <svg class="daily-notices-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <h3 class="daily-notices-title">Avisos do dia!</h3>
+        </div>
+        <button type="button" class="btn-add-notice" onclick="openAddNoticeModal()" title="Adicionar Aviso">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Balão Dourado com Fundo de 50% de Opacidade e Letras Verdes -->
+      <div class="notice-balloon-wrapper" id="notice-balloon-wrapper">
+        <div class="notice-balloon" id="notice-balloon-content">
+          <!-- Injetado dinamicamente -->
+        </div>
+        <!-- Botões discretos de navegação lateral para facilidade universal -->
+        <button type="button" class="notice-nav-arrow prev" id="notice-nav-prev" onclick="navNotice(-1)" aria-label="Aviso anterior">&#8249;</button>
+        <button type="button" class="notice-nav-arrow next" id="notice-nav-next" onclick="navNotice(1)" aria-label="Próximo aviso">&#8250;</button>
+      </div>
+
+      <!-- Fileira de Bolinhas Douradas com Indicador Neon da Mensagem Ativa -->
+      <div class="notice-dots-container" id="notice-dots-container">
+        <!-- Injetado dinamicamente -->
+      </div>
+    </section>
+
   </main>
 
   <!-- Modal Genérico Dinâmico -->
@@ -225,10 +259,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- Scripts da Aplicação com Versionamento Anti-Cache -->
-  <script src="js/db.js?v=20260922-v33"></script>
-  <script src="js/modules.js?v=20260922-v33"></script>
-  <script src="js/pwa.js?v=20260922-v33"></script>
-  <script src="js/app.js?v=20260922-v33"></script>
+  <script src="js/db.js?v=20260922-v34"></script>
+  <script src="js/modules.js?v=20260922-v34"></script>
+  <script src="js/pwa.js?v=20260922-v34"></script>
+  <script src="js/app.js?v=20260922-v34"></script>
 
 </body>
 </html>

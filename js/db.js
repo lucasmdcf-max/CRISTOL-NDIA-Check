@@ -8,6 +8,7 @@ const DB_KEYS = {
   STOCK: 'cristolandia_check_stock_v1',
   CHURCHES: 'cristolandia_check_churches_v1',
   ACTIVITIES: 'cristolandia_check_activities_v1',
+  NOTICES: 'cristolandia_check_notices_v1',
   FIREBASE_CONFIG: 'cristolandia_check_firebase_cfg_v1',
   APP_CONFIG: 'cristolandia_check_app_cfg_v1'
 };
@@ -406,6 +407,11 @@ class CristolandiaDB {
       } else {
         localStorage.setItem(DB_KEYS.ACTIVITIES, JSON.stringify([]));
       }
+      if (data.notices !== undefined) {
+        localStorage.setItem(DB_KEYS.NOTICES, JSON.stringify(toArray(data.notices)));
+      } else {
+        localStorage.setItem(DB_KEYS.NOTICES, JSON.stringify([]));
+      }
 
       // Atualiza timestamps de last_update por unidade
       if (data.stock_last_update) {
@@ -438,18 +444,21 @@ class CristolandiaDB {
       const stock = this.getStock();
       const churches = this.getChurches();
       const activities = this.getActivities();
+      const notices = this.getNotices(false); // todos incluindo recentes
 
       const payload = {
         reports: {},
         stock: {},
         churches: {},
-        activities: {}
+        activities: {},
+        notices: {}
       };
 
       reports.forEach(r => { if (r && r.id) payload.reports[r.id] = this.sanitize(r); });
       stock.forEach(s => { if (s && s.id) payload.stock[s.id] = this.sanitize(s); });
       churches.forEach(c => { if (c && c.id) payload.churches[c.id] = this.sanitize(c); });
       activities.forEach(a => { if (a && a.id) payload.activities[a.id] = this.sanitize(a); });
+      notices.forEach(n => { if (n && n.id) payload.notices[n.id] = this.sanitize(n); });
 
       this._lastLocalWrite = Date.now();
       await this.firebaseDb.ref('cristolandia_check').set(payload);
@@ -770,6 +779,74 @@ class CristolandiaDB {
     }
   }
 
+  // --- MÉTODOS DE AVISOS DO DIA (DURAÇÃO DE 24 HORAS) ---
+  getNotices(onlyActiveLast24h = true) {
+    try {
+      const raw = localStorage.getItem(DB_KEYS.NOTICES);
+      const list = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(list)) return [];
+      
+      const now = Date.now();
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
+      // Filtra por padrão os avisos com menos de 24h
+      const filtered = onlyActiveLast24h 
+        ? list.filter(n => n && typeof n.createdAt === 'number' && (now - n.createdAt) <= TWENTY_FOUR_HOURS)
+        : list;
+
+      // Ordena por data decrescente (mais recente primeiro)
+      return filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    } catch {
+      return [];
+    }
+  }
+
+  async saveNotice(noticeData) {
+    const notices = this.getNotices(false);
+    const finalId = noticeData.id || `not_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const sanitized = this.sanitize({
+      ...noticeData,
+      id: finalId,
+      createdAt: noticeData.createdAt || Date.now(),
+      updatedAt: Date.now()
+    });
+
+    const index = notices.findIndex(n => n.id === sanitized.id);
+    if (index >= 0) {
+      notices[index] = sanitized;
+    } else {
+      notices.unshift(sanitized);
+    }
+
+    localStorage.setItem(DB_KEYS.NOTICES, JSON.stringify(notices));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/notices/${sanitized.id}`).set(sanitized);
+      } catch (e) {
+        console.warn('Firebase pendente (aviso salvo localmente):', e);
+      }
+    }
+
+    return sanitized;
+  }
+
+  async deleteNotice(id) {
+    let notices = this.getNotices(false);
+    notices = notices.filter(n => n.id !== id);
+    localStorage.setItem(DB_KEYS.NOTICES, JSON.stringify(notices));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/notices/${id}`).remove();
+      } catch (e) {
+        console.warn('Erro ao remover aviso no Firebase:', e);
+      }
+    }
+  }
+
   // Configuração do Firebase
   setFirebaseConfig(config) {
     localStorage.setItem(DB_KEYS.FIREBASE_CONFIG, JSON.stringify(config));
@@ -796,6 +873,7 @@ class CristolandiaDB {
     localStorage.removeItem(DB_KEYS.STOCK);
     localStorage.removeItem(DB_KEYS.CHURCHES);
     localStorage.removeItem(DB_KEYS.ACTIVITIES);
+    localStorage.removeItem(DB_KEYS.NOTICES);
     this.ensureLocalSeed();
   }
 }
