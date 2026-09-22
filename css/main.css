@@ -2536,6 +2536,50 @@ body::before {
   box-shadow: 0 2px 6px rgba(30, 77, 43, 0.25);
 }
 
+/* ==========================================================================
+   ESTILOS DO MÓDULO DE ESTUDOS (FUNDO PRETO 80%, LETRAS DOURADAS E BRANCAS)
+   ========================================================================== */
+.modal-header.modal-header-estudos {
+  background: linear-gradient(145deg, rgba(28, 28, 28, 0.96), rgba(14, 14, 14, 0.98)) !important;
+  border-bottom: 1.5px solid rgba(197, 137, 8, 0.5) !important;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.modal-header.modal-header-estudos .btn-close-modal {
+  color: #F1D28A !important;
+  font-size: 1.6rem;
+}
+
+.modal-header.modal-header-estudos .btn-close-modal:hover {
+  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Abas de Fases de Estudos */
+.btn-estudo-tab {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  font-family: var(--font-gothic) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn-estudo-tab:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+}
+
+.btn-estudo-tab.active {
+  background: #000000 !important;
+  color: #F1D28A !important;
+  border: 1.5px solid #F1D28A !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 10px rgba(197, 137, 8, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+
 
 
 

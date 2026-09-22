@@ -5248,6 +5248,19 @@ function formatDateBR(dateStr) {
   return dateStr;
 }
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+if (typeof window !== 'undefined') {
+  window.escapeHtml = escapeHtml;
+}
+
 /* ==========================================================================
    MÓDULO DE ESTUDOS BÍBLICOS & DISCIPULADO (TRIAGEM, 1ª FASE E 2ª FASE)
    ========================================================================== */
@@ -5412,11 +5425,11 @@ function openEstudosModal(faseAtiva = 'triagem') {
   const footer = document.getElementById('modal-generic-footer');
   if (!modal || !header || !body || !footer) return;
 
-  header.className = 'modal-header';
+  header.className = 'modal-header modal-header-estudos';
   header.innerHTML = `
     <div class="modal-header-title">
-      <div class="modal-unit-icon" style="background:rgba(20, 20, 20, 0.88); color:#F1D28A; border:1px solid rgba(197, 137, 8, 0.4);">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <div class="modal-unit-icon" style="background:#000000; color:#FFFFFF; border:1.5px solid #F1D28A;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
           <line x1="12" y1="6" x2="12" y2="12"/>
@@ -5424,11 +5437,11 @@ function openEstudosModal(faseAtiva = 'triagem') {
         </svg>
       </div>
       <div>
-        <h2>Estudos Bíblicos & Discipulado</h2>
-        <p style="margin-bottom:0;">Cristolândia • Formação e Edificação Espiritual</p>
+        <h2 style="color:#F1D28A; font-family:var(--font-gothic); font-weight:800; margin:0; letter-spacing:0.2px;">Estudos Bíblicos & Discipulado</h2>
+        <p style="color:#FFFFFF; opacity:0.92; margin:0; font-size:0.75rem;">Cristolândia • Formação e Edificação Espiritual</p>
       </div>
     </div>
-    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+    <button class="btn-close-modal" style="color:#F1D28A;" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   renderEstudosMainContent(body);
@@ -5481,15 +5494,15 @@ function renderEstudosMainContent(container) {
   }
 
   container.innerHTML = `
-    <!-- Navegação de Abas: Triagem, Fase 1 e Fase 2 -->
-    <div style="display:flex; gap:6px; margin-bottom:14px; background:rgba(0,0,0,0.03); padding:4px; border-radius:12px; border:1px solid var(--border-beige);">
-      <button type="button" class="btn-period-pill ${_currentEstudoFase === 'triagem' ? 'active' : ''}" style="flex:1; text-align:center; padding:7px 4px; font-size:0.75rem;" onclick="selectEstudoFase('triagem')">
+    <!-- Navegação de Abas: Triagem, Fase 1 e Fase 2 com identidade Preto 80% e Dourado/Branco -->
+    <div style="display:flex; gap:6px; margin-bottom:14px; background:rgba(20, 20, 20, 0.90); padding:5px; border-radius:14px; border:1.5px solid rgba(197, 137, 8, 0.45); box-shadow:0 3px 10px rgba(0,0,0,0.25);">
+      <button type="button" class="btn-period-pill btn-estudo-tab ${_currentEstudoFase === 'triagem' ? 'active' : ''}" style="flex:1; text-align:center; padding:8px 4px; font-size:0.76rem;" onclick="selectEstudoFase('triagem')">
         Triagem
       </button>
-      <button type="button" class="btn-period-pill ${_currentEstudoFase === 'fase1' ? 'active' : ''}" style="flex:1; text-align:center; padding:7px 4px; font-size:0.75rem;" onclick="selectEstudoFase('fase1')">
+      <button type="button" class="btn-period-pill btn-estudo-tab ${_currentEstudoFase === 'fase1' ? 'active' : ''}" style="flex:1; text-align:center; padding:8px 4px; font-size:0.76rem;" onclick="selectEstudoFase('fase1')">
         1ª Fase
       </button>
-      <button type="button" class="btn-period-pill ${_currentEstudoFase === 'fase2' ? 'active' : ''}" style="flex:1; text-align:center; padding:7px 4px; font-size:0.75rem;" onclick="selectEstudoFase('fase2')">
+      <button type="button" class="btn-period-pill btn-estudo-tab ${_currentEstudoFase === 'fase2' ? 'active' : ''}" style="flex:1; text-align:center; padding:8px 4px; font-size:0.76rem;" onclick="selectEstudoFase('fase2')">
         2ª Fase
       </button>
     </div>
@@ -5592,11 +5605,11 @@ function openNovoEstudoModal(faseSugerida = 'triagem', estudoParaEditar = null) 
   const initialEncPsico = estudoParaEditar ? !!estudoParaEditar.encaminhamentoPsicologo : false;
   const initialEncPastoral = estudoParaEditar ? !!estudoParaEditar.encaminhamentoPastoral : false;
 
-  header.className = 'modal-header';
+  header.className = 'modal-header modal-header-estudos';
   header.innerHTML = `
     <div class="modal-header-title">
-      <div class="modal-unit-icon" style="background:rgba(20, 20, 20, 0.88); color:#F1D28A;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="modal-unit-icon" style="background:#000000; color:#FFFFFF; border:1.5px solid #F1D28A;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
           <line x1="16" y1="13" x2="8" y2="13"/>
@@ -5604,11 +5617,11 @@ function openNovoEstudoModal(faseSugerida = 'triagem', estudoParaEditar = null) 
         </svg>
       </div>
       <div>
-        <h2>${isEditing ? 'Editar Relatório do Encontro' : 'Relatório do Encontro'}</h2>
-        <p style="margin-bottom:0;">Registro oficial da aplicação do estudo</p>
+        <h2 style="color:#F1D28A; font-family:var(--font-gothic); font-weight:800; margin:0; letter-spacing:0.2px;">${isEditing ? 'Editar Relatório do Encontro' : 'Relatório do Encontro'}</h2>
+        <p style="color:#FFFFFF; opacity:0.92; margin:0; font-size:0.75rem;">Registro oficial da aplicação do estudo</p>
       </div>
     </div>
-    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+    <button class="btn-close-modal" style="color:#F1D28A;" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   body.innerHTML = `
@@ -5953,21 +5966,21 @@ function openHistoricoEstudosModal(faseFiltro = 'todas') {
   const footer = document.getElementById('modal-generic-footer');
   if (!modal || !header || !body || !footer) return;
 
-  header.className = 'modal-header';
+  header.className = 'modal-header modal-header-estudos';
   header.innerHTML = `
     <div class="modal-header-title">
-      <div class="modal-unit-icon" style="background:rgba(20, 20, 20, 0.88); color:#F1D28A;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="modal-unit-icon" style="background:#000000; color:#FFFFFF; border:1.5px solid #F1D28A;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <polyline points="12 6 12 12 16 14"/>
         </svg>
       </div>
       <div>
-        <h2>Histórico de Estudos</h2>
-        <p style="margin-bottom:0;">Encontros bíblicos registrados</p>
+        <h2 style="color:#F1D28A; font-family:var(--font-gothic); font-weight:800; margin:0; letter-spacing:0.2px;">Histórico de Estudos</h2>
+        <p style="color:#FFFFFF; opacity:0.92; margin:0; font-size:0.75rem;">Encontros bíblicos registrados</p>
       </div>
     </div>
-    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+    <button class="btn-close-modal" style="color:#F1D28A;" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   body.innerHTML = `
@@ -6133,21 +6146,21 @@ function viewDetalhesEstudo(id) {
     parcialmente: 'Parcialmente'
   };
 
-  header.className = 'modal-header';
+  header.className = 'modal-header modal-header-estudos';
   header.innerHTML = `
     <div class="modal-header-title">
-      <div class="modal-unit-icon" style="background:rgba(20, 20, 20, 0.88); color:#F1D28A;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="modal-unit-icon" style="background:#000000; color:#FFFFFF; border:1.5px solid #F1D28A;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
         </svg>
       </div>
       <div>
-        <h2>Ficha do Encontro</h2>
-        <p style="margin-bottom:0;">${unitLabels[estudo.unitId] || estudo.unitId} • ${formatDateBR(estudo.date)}</p>
+        <h2 style="color:#F1D28A; font-family:var(--font-gothic); font-weight:800; margin:0; letter-spacing:0.2px;">Ficha do Encontro</h2>
+        <p style="color:#FFFFFF; opacity:0.92; margin:0; font-size:0.75rem;">${unitLabels[estudo.unitId] || estudo.unitId} • ${formatDateBR(estudo.date)}</p>
       </div>
     </div>
-    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+    <button class="btn-close-modal" style="color:#F1D28A;" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   body.innerHTML = `

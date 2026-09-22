@@ -1,6 +1,6 @@
 {
-  "version": "1.0.42",
-  "build": "20260922_42",
+  "version": "1.0.43",
+  "build": "20260922_43",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Adicionado módulo de Estudos Bíblicos e Discipulado (Triagem, Fase 1 e Fase 2), formulário de Novo Estudo com perguntas e acompanhamento individual, Histórico, novo botão Estudos em preto 80% e reposicionamento de Relatórios abaixo do Estoque."
+  "releaseNotes": "Ajustada a identidade visual da aba do topo de Estudos com fundo preto 80%, letras douradas e brancas, e corrigida a abertura do formulário de Novo Estudo com escapeHtml."
 }
