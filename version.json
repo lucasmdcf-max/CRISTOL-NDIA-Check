@@ -1,6 +1,6 @@
 {
-  "version": "1.0.44",
-  "build": "20260922_44",
+  "version": "1.0.45",
+  "build": "20260922_45",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Gráficos de oscilação de estoque com métrica real de consumo cruzando todas as entradas e saídas, com filtros dinâmicos por Dias, Semanas e Meses, e média reativa."
+  "releaseNotes": "Estudos bíblicos integrados aos relatórios das unidades (cards, PDF A4 e WhatsApp); estoque sem invenção de dados passados; remoção de relatórios e triagens de teste mantendo intacto o cadastro de instituições."
 }

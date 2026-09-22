@@ -3856,6 +3856,26 @@ function openReportsModal() {
   openModal('modal-generic');
 }
 
+function getFilteredEstudosCount(unitFilter, startIso, endIso) {
+  const all = (typeof dbManager !== 'undefined' && dbManager.getEstudos) ? dbManager.getEstudos() : [];
+  const filtered = all.filter(e => {
+    if (!e.date || e.date < startIso || e.date > endIso) return false;
+    if (unitFilter && unitFilter !== 'todas' && e.unitId !== unitFilter) return false;
+    return true;
+  });
+
+  const total = filtered.length;
+  const participantes = filtered.reduce((acc, e) => acc + (Number(e.participantes) || 0), 0);
+  const concluintes = filtered.reduce((acc, e) => acc + (Number(e.concluintes) || 0), 0);
+  const porFase = {
+    triagem: filtered.filter(e => e.fase === 'triagem').length,
+    fase1: filtered.filter(e => e.fase === 'fase1').length,
+    fase2: filtered.filter(e => e.fase === 'fase2').length
+  };
+
+  return { total, participantes, concluintes, porFase, list: filtered };
+}
+
 function getFilteredReportsData(unitFilter, periodKey) {
   const range = getReportPeriodRange(periodKey);
   const allReports = dbManager.getReports() || [];
@@ -3884,6 +3904,7 @@ function renderReportsHistory() {
 
   const unitFilter = document.getElementById('report-filter-unit')?.value || 'todas';
   const { range, matchedReports } = getFilteredReportsData(unitFilter, _selectedReportPeriod);
+  const estudosData = getFilteredEstudosCount(unitFilter, range.start, range.end);
 
   // Nome formatado da unidade
   const unitLabel = unitFilter === 'missao' ? 'Unidade Missão' :
@@ -3904,7 +3925,7 @@ function renderReportsHistory() {
   }
 
   // Estado vazio
-  if (matchedReports.length === 0) {
+  if (matchedReports.length === 0 && estudosData.total === 0) {
     container.innerHTML = `
       <div style="text-align:center; padding:35px 20px; background:var(--bg-surface); border:1px dashed var(--border-beige); border-radius:12px; color:var(--text-muted);">
         <p style="font-size:0.95rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">Nenhum relatório encontrado</p>
@@ -3926,7 +3947,6 @@ function renderReportsHistory() {
     let banhos = 0, cortes = 0, cultos = 0, buscaPessoas = 0, decisoes = 0;
 
     matchedReports.forEach(r => {
-      // Pessoas atendidas
       // Pessoas atendidas
       const p = r.pessoasAtendidas || {};
       pTotal += (p.total || (r.acolhidosPresentes || 0));
@@ -4032,9 +4052,41 @@ function renderReportsHistory() {
             <span class="report-kpi-val">${buscaPessoas}</span>
             <span class="report-kpi-lbl">Pessoas na Busca Ativa</span>
           </div>
-          <div class="report-kpi-box gold-accent">
+          <div class="report-kpi-box gold-accent" style="grid-column: 1 / -1;">
             <span class="report-kpi-val" style="color:var(--gold-primary);">${decisoes}</span>
             <span class="report-kpi-lbl">Decisões por Cristo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Estudos Bíblicos Realizados na Missão -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">📖 Estudos Bíblicos & Discipulado</span>
+          <span class="report-section-badge" style="background:rgba(197,137,8,0.15); color:var(--gold-primary); font-weight:800;">
+            ${estudosData.total} encontro(s)
+          </span>
+        </div>
+        <div class="report-subitems-grid">
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num" style="color:var(--gold-primary);">${estudosData.total}</div>
+            <div class="report-subitem-text">Estudos Realizados</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${estudosData.participantes}</div>
+            <div class="report-subitem-text">Participantes</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${estudosData.porFase.triagem}</div>
+            <div class="report-subitem-text">Triagem</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${estudosData.porFase.fase1}</div>
+            <div class="report-subitem-text">1ª Fase</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${estudosData.porFase.fase2}</div>
+            <div class="report-subitem-text">2ª Fase</div>
           </div>
         </div>
       </div>
@@ -4070,6 +4122,8 @@ function renderReportsHistory() {
       acolhidosEsportes += (r.participantesAtividadesFisicas || 0);
       decisoes += (r.decisoesCristo || 0);
     });
+
+    const totalEstudosFinal = Math.max(estudos, estudosData.total);
 
     html += `
       <!-- Card: Refeições Servidas -->
@@ -4135,7 +4189,7 @@ function renderReportsHistory() {
         </div>
         <div class="report-grid-kpis">
           <div class="report-kpi-box">
-            <span class="report-kpi-val">${estudos}</span>
+            <span class="report-kpi-val" style="color:var(--gold-primary); font-weight:800;">${totalEstudosFinal}</span>
             <span class="report-kpi-lbl">Estudos Bíblicos</span>
           </div>
           <div class="report-kpi-box">
@@ -4164,6 +4218,38 @@ function renderReportsHistory() {
           </div>
         </div>
       </div>
+
+      <!-- Card: Detalhamento de Estudos Bíblicos Realizados -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">📖 Estudos Bíblicos Registrados</span>
+          <span class="report-section-badge" style="background:rgba(197,137,8,0.15); color:var(--gold-primary); font-weight:800;">
+            ${estudosData.total} encontro(s) (${estudosData.participantes} part.)
+          </span>
+        </div>
+        <div class="report-subitems-grid">
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num" style="color:var(--gold-primary);">${estudosData.total}</div>
+            <div class="report-subitem-text">Total Encontros</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${estudosData.participantes}</div>
+            <div class="report-subitem-text">Participantes</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${estudosData.porFase.triagem}</div>
+            <div class="report-subitem-text">Triagem</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${estudosData.porFase.fase1}</div>
+            <div class="report-subitem-text">1ª Fase</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${estudosData.porFase.fase2}</div>
+            <div class="report-subitem-text">2ª Fase</div>
+          </div>
+        </div>
+      </div>
     `;
 
   } else {
@@ -4176,10 +4262,19 @@ function renderReportsHistory() {
 
     // Totais específicos para breakdown
     const unitBreakdown = {
-      missao: { count: 0, ref: 0, assist: 0, decisoes: 0 },
-      macedonia: { count: 0, ref: 0, assist: 0, decisoes: 0 },
-      feminina: { count: 0, ref: 0, assist: 0, decisoes: 0 }
+      missao: { count: 0, ref: 0, assist: 0, decisoes: 0, estudos: 0 },
+      macedonia: { count: 0, ref: 0, assist: 0, decisoes: 0, estudos: 0 },
+      feminina: { count: 0, ref: 0, assist: 0, decisoes: 0, estudos: 0 }
     };
+
+    // Preenche contagem de estudos por unidade
+    const allEstudosPeriodo = (typeof dbManager.getEstudos === 'function')
+      ? dbManager.getEstudos().filter(e => e.date >= range.start && e.date <= range.end)
+      : [];
+    allEstudosPeriodo.forEach(e => {
+      const u = e.unitId || 'missao';
+      if (unitBreakdown[u]) unitBreakdown[u].estudos++;
+    });
 
     matchedReports.forEach(r => {
       const u = r.unitId || 'missao';
@@ -4238,8 +4333,8 @@ function renderReportsHistory() {
             <span class="report-kpi-lbl">Triagens Realizadas (Geral)</span>
           </div>
           <div class="report-kpi-box">
-            <span class="report-kpi-val">${totalCultosEstudos}</span>
-            <span class="report-kpi-lbl">Cultos & Estudos Bíblicos</span>
+            <span class="report-kpi-val" style="color:var(--gold-primary); font-weight:800;">${estudosData.total}</span>
+            <span class="report-kpi-lbl">Estudos Bíblicos Realizados</span>
           </div>
           <div class="report-kpi-box gold-accent" style="grid-column: 1 / -1;">
             <span class="report-kpi-val" style="color:var(--gold-primary);">${totalDecisoes}</span>
@@ -4248,7 +4343,7 @@ function renderReportsHistory() {
         </div>
       </div>
 
-      <!-- Card: Resumo por Unidade -->
+      <!-- Card: Comparativo por Unidade -->
       <div class="report-section-card">
         <div class="report-section-header">
           <span class="report-section-title">🏢 Comparativo por Unidade</span>
@@ -4257,7 +4352,7 @@ function renderReportsHistory() {
           <div style="background:var(--bg-main); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <strong style="color:var(--green-primary); font-size:0.82rem;">Missão</strong>
-              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.missao.count} relatórios</div>
+              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.missao.count} relatórios · ${unitBreakdown.missao.estudos} estudos</div>
             </div>
             <div style="text-align:right; font-size:0.75rem;">
               <div><strong>${unitBreakdown.missao.ref}</strong> ref. | <strong>${unitBreakdown.missao.assist}</strong> assist.</div>
@@ -4268,7 +4363,7 @@ function renderReportsHistory() {
           <div style="background:var(--bg-main); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <strong style="color:var(--green-primary); font-size:0.82rem;">Macedônia</strong>
-              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.macedonia.count} relatórios</div>
+              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.macedonia.count} relatórios · ${unitBreakdown.macedonia.estudos} estudos</div>
             </div>
             <div style="text-align:right; font-size:0.75rem;">
               <div><strong>${unitBreakdown.macedonia.ref}</strong> ref. | <strong>${unitBreakdown.macedonia.assist}</strong> assist.</div>
@@ -4279,7 +4374,7 @@ function renderReportsHistory() {
           <div style="background:var(--bg-main); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
             <div>
               <strong style="color:var(--green-primary); font-size:0.82rem;">Feminina</strong>
-              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.feminina.count} relatórios</div>
+              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.feminina.count} relatórios · ${unitBreakdown.feminina.estudos} estudos</div>
             </div>
             <div style="text-align:right; font-size:0.75rem;">
               <div><strong>${unitBreakdown.feminina.ref}</strong> ref. | <strong>${unitBreakdown.feminina.assist}</strong> assist.</div>
@@ -4337,6 +4432,11 @@ async function downloadReportsPDF() {
   showLoading('Gerando PDF A4...');
 
   try {
+    // Busca dados de estudos bíblicos no período
+    const estudosPeriodo = typeof getFilteredEstudosCount === 'function' 
+      ? getFilteredEstudosCount(unitFilter, range.start, range.end)
+      : { total: 0, participantes: 0, concluintes: { triagem: 0, fase1: 0, fase2: 0 }, porFase: { triagem: 0, fase1: 0, fase2: 0 }, list: [] };
+
     // Monta o elemento HTML formatado exatamente para documento A4 vertical
     const printableArea = document.createElement('div');
     printableArea.id = 'report-pdf-printable-doc';
@@ -4438,7 +4538,7 @@ async function downloadReportsPDF() {
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
             3. Atividades & Cuidado Pessoal
           </h3>
-          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
             <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Indicador</th>
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Total</th>
@@ -4462,6 +4562,37 @@ async function downloadReportsPDF() {
             <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;">
               <td style="padding:8px 10px; border:1px solid #E2D9C8;">Decisões por Cristo (Decisões & Reconciliações)</td>
               <td style="padding:8px 10px; border:1px solid #E2D9C8; text-align:center; font-size:14px;">${decisoes}</td>
+            </tr>
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            4. Estudos Bíblicos & Discipulado na Unidade Missão
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Fase do Estudo</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Encontros Realizados</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Concluintes de Ciclo</th>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Triagem (8 Encontros Evangélicos)</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosPeriodo.porFase['triagem'] || 0}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${estudosPeriodo.concluintes['triagem'] || 0}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">1ª Fase (8 Encontros de Discipulado)</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosPeriodo.porFase['fase1'] || 0}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${estudosPeriodo.concluintes['fase1'] || 0}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">2ª Fase (8 Encontros de Maturidade)</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosPeriodo.porFase['fase2'] || 0}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${estudosPeriodo.concluintes['fase2'] || 0}</td>
+            </tr>
+            <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Total de Encontros / Participantes</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${estudosPeriodo.total} encontro(s)</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${estudosPeriodo.participantes} participante(s)</td>
             </tr>
           </table>
         </div>
@@ -4497,6 +4628,8 @@ async function downloadReportsPDF() {
         decisoes += (r.decisoesCristo || 0);
       });
 
+      const totalEstudosFinal = Math.max(estudos, estudosPeriodo.total);
+
       metricsHtml = `
         <div style="margin-bottom:18px;">
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
@@ -4531,12 +4664,12 @@ async function downloadReportsPDF() {
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
             3. Espiritualidade, Oficinas & Atividades Físicas
           </h3>
-          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
             <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Atividade</th>
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Total</th>
             </tr>
-            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Estudos Bíblicos Realizados na Unidade</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudos}</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Estudos Bíblicos Realizados na Unidade</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalEstudosFinal}</td></tr>
             <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Cultos e Vigílias Realizadas na Unidade</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${cultos}</td></tr>
             <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Participantes do Sons da Missão (Música)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${musica}</td></tr>
             <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Ensaios do Coro Realizados</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${coro}</td></tr>
@@ -4545,6 +4678,32 @@ async function downloadReportsPDF() {
             <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;">
               <td style="padding:8px 10px; border:1px solid #E2D9C8;">Decisões por Cristo (Decisões & Reconciliações)</td>
               <td style="padding:8px 10px; border:1px solid #E2D9C8; text-align:center; font-size:14px;">${decisoes}</td>
+            </tr>
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            4. Detalhamento de Estudos Bíblicos (${estudosPeriodo.participantes} participantes somados)
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Fase</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Encontros</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Concluintes</th>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Triagem</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosPeriodo.porFase['triagem'] || 0}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${estudosPeriodo.concluintes['triagem'] || 0}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">1ª Fase</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosPeriodo.porFase['fase1'] || 0}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${estudosPeriodo.concluintes['fase1'] || 0}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">2ª Fase</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosPeriodo.porFase['fase2'] || 0}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${estudosPeriodo.concluintes['fase2'] || 0}</td>
             </tr>
           </table>
         </div>
@@ -4580,6 +4739,10 @@ async function downloadReportsPDF() {
         }
       });
 
+      const estudosMissaoCount = typeof getFilteredEstudosCount === 'function' ? getFilteredEstudosCount('missao', range.start, range.end).total : 0;
+      const estudosMacedoniaCount = typeof getFilteredEstudosCount === 'function' ? getFilteredEstudosCount('macedonia', range.start, range.end).total : 0;
+      const estudosFemininaCount = typeof getFilteredEstudosCount === 'function' ? getFilteredEstudosCount('feminina', range.start, range.end).total : 0;
+
       metricsHtml = `
         <div style="margin-bottom:18px;">
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
@@ -4593,7 +4756,8 @@ async function downloadReportsPDF() {
             <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Total de Refeições Servidas</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalRefeicoes}</td></tr>
             <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Pessoas Assistidas (CUIDAR)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalAssistidas}</td></tr>
             <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Triagens Realizadas no Período (Geral)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${Math.max(totalTriagens, (typeof dbManager.getTriagens === 'function' ? dbManager.getTriagens().filter(t => t.date >= range.start && t.date <= range.end).length : 0))}</td></tr>
-            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Cultos, Vigílias & Estudos Bíblicos</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalCultos}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Estudos Bíblicos Registrados (Total)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosPeriodo.total} encontro(s) (${estudosPeriodo.participantes} part.)</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Cultos & Vigílias Realizados</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalCultos}</td></tr>
             <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;"><td style="padding:8px 10px; border:1px solid #E2D9C8;">Total de Decisões por Cristo</td><td style="padding:8px 10px; border:1px solid #E2D9C8; text-align:center; font-size:14px;">${totalDecisoes}</td></tr>
           </table>
 
@@ -4606,6 +4770,7 @@ async function downloadReportsPDF() {
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Relatórios</th>
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Refeições</th>
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Assistidos</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Estudos</th>
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Decisões</th>
             </tr>
             <tr>
@@ -4613,6 +4778,7 @@ async function downloadReportsPDF() {
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.missao.count}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.missao.ref}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.missao.assist}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosMissaoCount}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold; color:#A36F04;">${breakdown.missao.decisoes}</td>
             </tr>
             <tr style="background:#FAF8F5;">
@@ -4620,6 +4786,7 @@ async function downloadReportsPDF() {
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.count}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.ref}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.assist}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosMacedoniaCount}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold; color:#A36F04;">${breakdown.macedonia.decisoes}</td>
             </tr>
             <tr>
@@ -4627,6 +4794,7 @@ async function downloadReportsPDF() {
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.feminina.count}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.feminina.ref}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.feminina.assist}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudosFemininaCount}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold; color:#A36F04;">${breakdown.feminina.decisoes}</td>
             </tr>
           </table>
@@ -4732,6 +4900,10 @@ function shareReportsWhatsApp() {
     return;
   }
 
+  const estudosPeriodo = typeof getFilteredEstudosCount === 'function' 
+    ? getFilteredEstudosCount(unitFilter, range.start, range.end)
+    : { total: 0, participantes: 0, concluintes: { triagem: 0, fase1: 0, fase2: 0 }, porFase: { triagem: 0, fase1: 0, fase2: 0 }, list: [] };
+
   const unitLabel = unitFilter === 'missao' ? 'UNIDADE MISSÃO' :
                     unitFilter === 'macedonia' ? 'UNIDADE MACEDÔNIA' :
                     unitFilter === 'feminina' ? 'UNIDADE FEMININA' : 'TODAS AS UNIDADES (CONSOLIDADO)';
@@ -4785,6 +4957,7 @@ function shareReportsWhatsApp() {
     text += `• Cortes de Cabelo: ${cortes}\n`;
     text += `• Cultos Realizados: ${cultos}\n`;
     text += `• Pessoas na Busca Ativa: ${buscaPessoas}\n`;
+    text += `• 📖 *Estudos Bíblicos:* ${estudosPeriodo.total} encontro(s) (${estudosPeriodo.participantes} participantes)\n`;
     text += `• ✨ *Decisões por Cristo:* ${decisoes}\n\n`;
 
   } else if (unitFilter === 'macedonia' || unitFilter === 'feminina') {
@@ -4817,6 +4990,8 @@ function shareReportsWhatsApp() {
       decisoes += (r.decisoesCristo || 0);
     });
 
+    const totalEstudosFinal = Math.max(estudos, estudosPeriodo.total);
+
     text += `*1. REFEIÇÕES SERVIDAS (TOTAL: ${rTotal})*\n`;
     text += `• Café: ${rCafe} | Almoço: ${rAlmoco} | Jantar: ${rJantar}\n`;
     text += `• Abordagens de Rua: ${rAbordagens} | Eventos Especiais: ${rEventos}\n\n`;
@@ -4828,7 +5003,7 @@ function shareReportsWhatsApp() {
     text += `• Demandas Jurídicas: ${juridico}\n\n`;
 
     text += `*3. ESPIRITUALIDADE & OFICINAS*\n`;
-    text += `• Estudos Bíblicos: ${estudos}\n`;
+    text += `• 📖 *Estudos Bíblicos:* ${totalEstudosFinal} encontro(s) (${estudosPeriodo.participantes} participantes)\n`;
     text += `• Cultos e Vigílias: ${cultos}\n`;
     text += `• Sons da Missão (Música): ${musica}\n`;
     text += `• Ensaios do Coro: ${coro}\n`;
@@ -4866,17 +5041,22 @@ function shareReportsWhatsApp() {
       }
     });
 
+    const estudosMissaoCount = typeof getFilteredEstudosCount === 'function' ? getFilteredEstudosCount('missao', range.start, range.end).total : 0;
+    const estudosMacedoniaCount = typeof getFilteredEstudosCount === 'function' ? getFilteredEstudosCount('macedonia', range.start, range.end).total : 0;
+    const estudosFemininaCount = typeof getFilteredEstudosCount === 'function' ? getFilteredEstudosCount('feminina', range.start, range.end).total : 0;
+
     text += `*1. CONSOLIDADO GERAL (3 UNIDADES)*\n`;
     text += `• Total de Refeições: ${totalRefeicoes}\n`;
     text += `• Pessoas Assistidas (CUIDAR): ${totalAssistidas}\n`;
     text += `• Triagens Realizadas (Geral): ${Math.max(totalTriagens, (typeof dbManager.getTriagens === 'function' ? dbManager.getTriagens().filter(t => t.date >= range.start && t.date <= range.end).length : 0))}\n`;
-    text += `• Cultos, Vigílias e Estudos: ${totalCultos}\n`;
+    text += `• 📖 *Estudos Bíblicos Registrados:* ${estudosPeriodo.total} encontro(s) (${estudosPeriodo.participantes} part.)\n`;
+    text += `• Cultos e Vigílias: ${totalCultos}\n`;
     text += `• ✨ *Decisões por Cristo:* ${totalDecisoes}\n\n`;
 
     text += `*2. COMPARATIVO POR UNIDADE*\n`;
-    text += `• *Missão:* ${breakdown.missao.ref} ref. | ${breakdown.missao.assist} assist. | ${breakdown.missao.decisoes} decisões (${breakdown.missao.count} relatórios)\n`;
-    text += `• *Macedônia:* ${breakdown.macedonia.ref} ref. | ${breakdown.macedonia.assist} assist. | ${breakdown.macedonia.decisoes} decisões (${breakdown.macedonia.count} relatórios)\n`;
-    text += `• *Feminina:* ${breakdown.feminina.ref} ref. | ${breakdown.feminina.assist} assist. | ${breakdown.feminina.decisoes} decisões (${breakdown.feminina.count} relatórios)\n\n`;
+    text += `• *Missão:* ${breakdown.missao.ref} ref. | ${breakdown.missao.assist} assist. | ${estudosMissaoCount} estudos | ${breakdown.missao.decisoes} decisões (${breakdown.missao.count} relatórios)\n`;
+    text += `• *Macedônia:* ${breakdown.macedonia.ref} ref. | ${breakdown.macedonia.assist} assist. | ${estudosMacedoniaCount} estudos | ${breakdown.macedonia.decisoes} decisões (${breakdown.macedonia.count} relatórios)\n`;
+    text += `• *Feminina:* ${breakdown.feminina.ref} ref. | ${breakdown.feminina.assist} assist. | ${estudosFemininaCount} estudos | ${breakdown.feminina.decisoes} decisões (${breakdown.feminina.count} relatórios)\n\n`;
   }
 
   text += `_Cristolândia Check PWA • Sistema Oficial_`;

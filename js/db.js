@@ -109,71 +109,7 @@ function buildStockSeedFor3Units() {
 }
 
 const INITIAL_SEED = {
-  reports: [
-    {
-      id: 'rep_demo_01',
-      unitId: 'missao',
-      unitName: 'Missão',
-      date: getLocalDateStr(),
-      createdAt: Date.now() - 3600000 * 3,
-      reporterName: 'Pr. Marcos Lima',
-      acolhidosPresentes: 45,
-      novasTriagens: 2,
-      desligamentos: 0,
-      refeicoes: {
-        cafe: 45,
-        almoco: 49,
-        lanche: 45,
-        jantar: 45
-      },
-      atividades: 'Culto matinal de louvor e testemunhos, devocional e atendimento.',
-      saude: 'Atendimento de rotina e acompanhamento de acolhidos.',
-      necessidades: 'Reposição urgente de sabonetes e escovas de dente.',
-      status: 'concluido'
-    },
-    {
-      id: 'rep_demo_02',
-      unitId: 'macedonia',
-      unitName: 'Macedônia',
-      date: getLocalDateStr(),
-      createdAt: Date.now() - 3600000 * 5,
-      reporterName: 'Missionário Carlos Eduardo',
-      acolhidosPresentes: 60,
-      novasTriagens: 2,
-      desligamentos: 0,
-      refeicoes: {
-        cafe: 60,
-        almoco: 62,
-        lanche: 60,
-        jantar: 60
-      },
-      atividades: 'Oficina de marcenaria comunitária, horta agroecológica e discipulado bíblico nível 2.',
-      saude: 'Medicação continuada administrada pontualmente pela equipe de enfermagem.',
-      necessidades: 'Sacos de arroz e óleo para a cozinha central.',
-      status: 'concluido'
-    },
-    {
-      id: 'rep_demo_03',
-      unitId: 'feminina',
-      unitName: 'Feminina',
-      date: getLocalDateStr(),
-      createdAt: Date.now() - 3600000 * 2,
-      reporterName: 'Missionária Sarah Silva',
-      acolhidosPresentes: 30,
-      novasTriagens: 1,
-      desligamentos: 0,
-      refeicoes: {
-        cafe: 30,
-        almoco: 32,
-        lanche: 30,
-        jantar: 30
-      },
-      atividades: 'Oficina de artesanato, roda de conversa terapêutica e momento devocional.',
-      saude: 'Acompanhamento pré-natal de 1 acolhida e atendimento psicológico individual.',
-      necessidades: 'Fraldas tamanho M e kits de absorventes íntimos.',
-      status: 'concluido'
-    }
-  ],
+  reports: [],
   stock: buildStockSeedFor3Units(),
   churches: [
     {
@@ -258,6 +194,15 @@ class CristolandiaDB {
   }
 
   ensureLocalSeed() {
+    // Reset seguro para início limpo a partir de hoje (remove relatórios antigos, triagem teste e movimentações antigas)
+    const cleanFlag = 'cristolandia_clean_start_today_v45';
+    if (!localStorage.getItem(cleanFlag)) {
+      localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify([]));
+      localStorage.setItem(DB_KEYS.TRIAGENS, JSON.stringify([]));
+      localStorage.setItem(DB_KEYS.STOCK_MOVEMENTS, JSON.stringify([]));
+      localStorage.setItem(cleanFlag, 'done');
+    }
+
     if (!localStorage.getItem(DB_KEYS.REPORTS)) {
       localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify(INITIAL_SEED.reports));
     }
@@ -268,6 +213,7 @@ class CristolandiaDB {
     localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(mergedStock));
     localStorage.setItem('cristolandia_stock_seed_3_units_v3', 'yes');
 
+    // Mantém o cadastro das instituições/igrejas 100% preservado
     if (!localStorage.getItem(DB_KEYS.CHURCHES)) {
       localStorage.setItem(DB_KEYS.CHURCHES, JSON.stringify(INITIAL_SEED.churches));
     }
@@ -343,6 +289,21 @@ class CristolandiaDB {
           if (this.isFirebaseConnected) {
             this.notifyStatus('online', 'Nuvem Conectada');
             this.startRealtimeListeners(); // Pilar 1: listeners persistentes
+
+            // Limpeza na nuvem de relatórios antigos, triagens de teste e estoque anterior (mantendo instituições)
+            const cloudCleanFlag = 'cristolandia_cloud_clean_v45';
+            if (!localStorage.getItem(cloudCleanFlag) && this.firebaseDb) {
+              try {
+                this._lastLocalWrite = Date.now();
+                this.firebaseDb.ref('cristolandia_check/reports').set({});
+                this.firebaseDb.ref('cristolandia_check/triagens').set({});
+                this.firebaseDb.ref('cristolandia_check/stock_movements').set({});
+                localStorage.setItem(cloudCleanFlag, 'done');
+              } catch (e) {
+                console.warn('Aviso ao sincronizar limpeza na nuvem:', e);
+              }
+            }
+
             // Garante que o estoque na nuvem contenha todos os itens padrão
             const stock = this.mergeWithDefaultStock(this.getStock());
             this.syncStockToCloud(stock);
@@ -872,35 +833,9 @@ class CristolandiaDB {
       saidas.push(saiSum);
     });
 
-    // Se ainda não houver movimentações suficientes registradas para o item nos intervalos
-    // (ex: antes do início dos inputs diários), gera projeção coerente e suave baseada no estoque
-    if (!hasRealMovementsInAnyRange) {
-      if (periodType === 'dias') {
-        const dailyBaseConsumption = Math.max(1, Math.round(currentQty * 0.05 * 10) / 10);
-        for (let i = 0; i < labels.length; i++) {
-          const factor = [0.8, 1.1, 0.9, 1.2, 1.0, 0.9, 1.0][i % 7];
-          const simulatedCons = Math.max(1, Math.round(dailyBaseConsumption * factor * 10) / 10);
-          saidas[i] = simulatedCons;
-          entradas[i] = (i === 2 || i === 5) ? Math.round(simulatedCons * 2) : 0;
-        }
-      } else if (periodType === 'semanas') {
-        const weeklyBaseConsumption = Math.max(1, Math.round(currentQty * 0.22 * 10) / 10);
-        for (let i = 0; i < labels.length; i++) {
-          const factor = [0.9, 1.1, 0.95, 1.05][i % 4];
-          const simulatedCons = Math.max(1, Math.round(weeklyBaseConsumption * factor * 10) / 10);
-          saidas[i] = simulatedCons;
-          entradas[i] = (i === 1) ? Math.round(simulatedCons * 2.5) : 0;
-        }
-      } else {
-        const monthlyFactors = [0.65, 0.74, 0.68, 0.78, 0.70, 0.76, 0.66, 0.73, 0.71];
-        for (let i = 0; i < labels.length; i++) {
-          const f = monthlyFactors[i % monthlyFactors.length];
-          const simulatedCons = Math.max(1, Math.round(currentQty * f));
-          saidas[i] = simulatedCons;
-          entradas[i] = Math.max(0, Math.round(simulatedCons * (0.8 + (i % 3) * 0.2)));
-        }
-      }
-    }
+    // Considera estritamente os inputs reais registrados pelo usuário a partir de hoje
+    // (sem projeções ou valores inventados para datas anteriores)
+    // Se não houver movimentação registrada no período, entradas e saídas permanecem 0.
 
     // Calcula os níveis de estoque em cada ponto da série temporal
     // Retroagindo do estoque atual: Estoque_anterior = Estoque_posterior - (Entradas - Saidas)

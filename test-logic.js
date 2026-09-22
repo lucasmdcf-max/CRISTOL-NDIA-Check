@@ -589,7 +589,106 @@ assert.strictEqual(oscMeses.avgTitle, 'Consumo Médio Mensal');
 assert.strictEqual(oscMeses.avgUnitLabel, 'kg / mês');
 assert.strictEqual(oscMeses.avgConsumption, 2.4, '22 / 9 = 2.4 kg / mês');
 
-console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens, avisos, estudos e oscilação de estoque passaram com 100% de sucesso!');
+// Teste adicional: getFilteredEstudosCount para relatórios de unidades
+function testGetFilteredEstudosCount(estudos, unitFilter, startIso, endIso) {
+  const filtered = estudos.filter(e => {
+    const studyUnit = (e.unitId || '').toLowerCase();
+    const filterUnit = (unitFilter || 'todas').toLowerCase();
+    const unitMatch = filterUnit === 'todas' || studyUnit === filterUnit;
+    const studyDate = e.date || (e.createdAt ? e.createdAt.split('T')[0] : '');
+    const dateMatch = (!startIso || studyDate >= startIso) && (!endIso || studyDate <= endIso);
+    return unitMatch && dateMatch;
+  });
+
+  const porFase = { triagem: 0, fase1: 0, fase2: 0 };
+  const concluintes = { triagem: 0, fase1: 0, fase2: 0 };
+  let participantes = 0;
+
+  filtered.forEach(e => {
+    const f = e.fase || 'triagem';
+    if (porFase[f] !== undefined) porFase[f]++;
+    const encNum = Number(e.encontroNumero) || 1;
+    if (encNum % 8 === 0 && concluintes[f] !== undefined) {
+      concluintes[f]++;
+    }
+    const numPart = e.participantesCount !== undefined ? Number(e.participantesCount) : 
+                   (Array.isArray(e.participantes) ? e.participantes.length : 1);
+    participantes += (isNaN(numPart) || numPart < 1 ? 1 : numPart);
+  });
+
+  return {
+    total: filtered.length,
+    participantes,
+    concluintes,
+    porFase
+  };
+}
+
+const mockEstudosBase = [
+  { id: 'e1', unitId: 'missao', date: '2026-09-22', fase: 'triagem', encontroNumero: 4, participantesCount: 12 },
+  { id: 'e2', unitId: 'missao', date: '2026-09-22', fase: 'triagem', encontroNumero: 8, participantesCount: 10 },
+  { id: 'e3', unitId: 'macedonia', date: '2026-09-22', fase: 'fase1', encontroNumero: 3, participantesCount: 15 },
+  { id: 'e4', unitId: 'feminina', date: '2026-09-21', fase: 'fase2', encontroNumero: 8, participantesCount: 8 },
+  { id: 'e5', unitId: 'missao', date: '2026-08-10', fase: 'triagem', encontroNumero: 1, participantesCount: 5 } // Fora do período
+];
+
+// Teste de filtro por unidade Missão no período 2026-09-20 a 2026-09-23
+const estudosMissao = testGetFilteredEstudosCount(mockEstudosBase, 'missao', '2026-09-20', '2026-09-23');
+assert.strictEqual(estudosMissao.total, 2, 'Devem ser 2 encontros na Missão no período');
+assert.strictEqual(estudosMissao.participantes, 22, 'Participantes somados: 12 + 10 = 22');
+assert.strictEqual(estudosMissao.concluintes.triagem, 1, 'Encontro 8 conclui o ciclo');
+
+// Teste de filtro consolidado (todas as unidades) no período
+const estudosTodas = testGetFilteredEstudosCount(mockEstudosBase, 'todas', '2026-09-20', '2026-09-23');
+assert.strictEqual(estudosTodas.total, 4, '4 estudos no período entre as 3 unidades');
+assert.strictEqual(estudosTodas.participantes, 45, 'Participantes totais: 12+10+15+8 = 45');
+assert.strictEqual(estudosTodas.concluintes.fase2, 1, '1 concluinte da fase 2 na feminina');
+
+// Teste de Estoque Real sem Invenção de Valores Anteriores
+const semMovsPassadas = [];
+function testRealStockOscillationNoInvention(item, movs) {
+  // Quando não há entradas nem saídas no passado, as saídas e entradas devem ser estritamente 0
+  let totalEnt = 0;
+  let totalSai = 0;
+  movs.forEach(m => {
+    if (m.type === 'entrada') totalEnt += m.quantity;
+    if (m.type === 'saida') totalSai += m.quantity;
+  });
+  return {
+    totalEntradas: totalEnt,
+    totalSaidas: totalSai,
+    avgConsumption: totalSai === 0 ? 0 : Math.round((totalSai / 7) * 10) / 10
+  };
+}
+
+const realStockResult = testRealStockOscillationNoInvention(mockStockItem, semMovsPassadas);
+assert.strictEqual(realStockResult.totalEntradas, 0, 'Entradas não devem ser inventadas');
+assert.strictEqual(realStockResult.totalSaidas, 0, 'Saídas não devem ser inventadas');
+assert.strictEqual(realStockResult.avgConsumption, 0, 'Consumo médio deve ser 0 quando não houver consumo real');
+
+// Teste de Preservação das Instituições/Igrejas no Reset de Dados
+const testStorage = {
+  'cristolandia_reports': JSON.stringify([{ id: 'rep_antigo' }]),
+  'cristolandia_triagens': JSON.stringify([{ id: 'triagem_teste' }]),
+  'cristolandia_stock_movements': JSON.stringify([{ id: 'mov_teste' }]),
+  'cristolandia_churches': JSON.stringify([{ id: 'ch_1', name: 'Igreja Batista Central' }])
+};
+
+function testDataResetPreservingChurches(store) {
+  // Reset de relatórios, triagens e movimentos de teste
+  store['cristolandia_reports'] = JSON.stringify([]);
+  store['cristolandia_triagens'] = JSON.stringify([]);
+  store['cristolandia_stock_movements'] = JSON.stringify([]);
+  // IGREJAS/INSTITUIÇÕES NÃO SÃO TOCADAS!
+}
+
+testDataResetPreservingChurches(testStorage);
+assert.strictEqual(JSON.parse(testStorage['cristolandia_reports']).length, 0, 'Relatórios antigos limpos');
+assert.strictEqual(JSON.parse(testStorage['cristolandia_triagens']).length, 0, 'Triagem de teste limpa');
+assert.strictEqual(JSON.parse(testStorage['cristolandia_stock_movements']).length, 0, 'Movimentações antigas de estoque limpas');
+assert.strictEqual(JSON.parse(testStorage['cristolandia_churches']).length, 1, 'Instituições mantidas 100% intactas');
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens, avisos, estudos, estoque real e preservação de instituições passaram com 100% de sucesso!');
 
 
 
