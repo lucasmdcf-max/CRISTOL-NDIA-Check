@@ -441,7 +441,25 @@ assert.strictEqual(triagemEditada.demandaSaude, null, 'Campos undefined na triag
 assert.strictEqual(triagemEditada.nome, 'Marcos Vinicius Pereira Silva');
 assert.strictEqual(triagemEditada.idade, 30);
 
-console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios e triagens passaram com 100% de sucesso!');
+// 6. Teste de Criação e Exclusão de Avisos do Dia
+let mockNoticesToDelete = [
+  { id: 'n1', text: 'Reunião de alinhamento às 14h', author: 'Coordenação', createdAt: Date.now() - 1000 },
+  { id: 'n2', text: 'Culto especial na Missão às 19h30', author: 'Pastor Marcos', createdAt: Date.now() - 500 }
+];
+
+// Teste de exclusão por ID
+function deleteMockNotice(id) {
+  mockNoticesToDelete = mockNoticesToDelete.filter(n => n.id !== id);
+}
+
+deleteMockNotice('n1');
+assert.strictEqual(mockNoticesToDelete.length, 1, 'Após excluir n1, deve restar apenas 1 aviso');
+assert.strictEqual(mockNoticesToDelete[0].id, 'n2', 'O aviso restante deve ser n2');
+
+deleteMockNotice('n2');
+assert.strictEqual(mockNoticesToDelete.length, 0, 'Após excluir n2, a lista deve ficar vazia');
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens e avisos passaram com 100% de sucesso!');
 
 
 

@@ -1946,6 +1946,36 @@ body::before {
   color: #555555; /* Cinza */
 }
 
+.notice-meta-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-delete-notice {
+  background: transparent;
+  border: none;
+  color: #777777;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1;
+}
+
+.btn-delete-notice:hover {
+  color: #DC3545;
+  background: rgba(220, 53, 69, 0.12);
+  transform: scale(1.15);
+}
+
+.btn-delete-notice:active {
+  transform: scale(0.92);
+}
+
 /* Botões discretos de navegação lateral */
 .notice-nav-arrow {
   position: absolute;

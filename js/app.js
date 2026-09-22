@@ -735,9 +735,17 @@ function renderDailyNotices() {
         </svg>
         ${safeAuthor}
       </span>
-      <span class="notice-meta-time">
-        ${formatNoticeTime(activeNotice.createdAt)}
-      </span>
+      <div class="notice-meta-actions">
+        <span class="notice-meta-time">
+          ${formatNoticeTime(activeNotice.createdAt)}
+        </span>
+        <button type="button" class="btn-delete-notice" onclick="deleteDailyNotice('${activeNotice.id}')" title="Excluir este aviso do dia" aria-label="Excluir aviso">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
     </div>
   `;
 
@@ -902,11 +910,45 @@ async function handleSaveNotice() {
   }
 }
 
+async function deleteDailyNotice(noticeId) {
+  if (!noticeId) return;
+
+  if (!confirm('Deseja realmente excluir este aviso do dia?')) {
+    return;
+  }
+
+  showLoading('Excluindo aviso...');
+  try {
+    if (typeof dbManager !== 'undefined' && dbManager.deleteNotice) {
+      await dbManager.deleteNotice(noticeId);
+    }
+
+    // Se o índice atual estiver fora dos limites após a exclusão
+    const notices = (typeof dbManager !== 'undefined' && dbManager.getNotices) 
+      ? dbManager.getNotices(true) 
+      : [];
+    if (_currentNoticeIndex >= notices.length) {
+      _currentNoticeIndex = Math.max(0, notices.length - 1);
+    }
+
+    renderDailyNotices();
+    showToast('Aviso do dia excluído com sucesso!', 'success');
+    if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+  } catch (err) {
+    console.error('Erro ao excluir aviso:', err);
+    showToast('Erro ao excluir aviso: ' + (err.message || err), 'danger');
+  } finally {
+    hideLoading();
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.renderDailyNotices = renderDailyNotices;
   window.navNotice = navNotice;
   window.goToNotice = goToNotice;
   window.openAddNoticeModal = openAddNoticeModal;
   window.handleSaveNotice = handleSaveNotice;
+  window.deleteDailyNotice = deleteDailyNotice;
 }
+
 

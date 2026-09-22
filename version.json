@@ -1,6 +1,6 @@
 {
-  "version": "1.0.40",
-  "build": "20260922_40",
+  "version": "1.0.41",
+  "build": "20260922_41",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Atualizado ícone do botão WhatsApp na janela de relatórios para seta de compartilhamento."
+  "releaseNotes": "Adicionada opção de excluir aviso do dia com confirmação de segurança e sincronização em tempo real."
 }
