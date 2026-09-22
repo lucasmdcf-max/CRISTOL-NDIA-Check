@@ -195,21 +195,30 @@ function openMissaoCalendar(targetYear, targetMonth) {
     const monthPad = String(_missaoCalMonth + 1).padStart(2, '0');
     const dateStr = `${_missaoCalYear}-${monthPad}-${dayPad}`;
 
-    const isFilled = !!filledDatesMap[dateStr];
+    const isFuture = (dateStr > todayStr);
+    const isFilled = !isFuture && !!filledDatesMap[dateStr];
     if (isFilled) filledCount++;
     const isToday = (dateStr === todayStr);
 
-    const btnClass = isFilled ? 'day-filled' : 'day-empty';
+    let btnClass = 'day-empty';
+    if (isFuture) {
+      btnClass = 'day-future';
+    } else if (isFilled) {
+      btnClass = 'day-filled';
+    }
     const todayClass = isToday ? 'day-today' : '';
-    const clickFn = isFilled 
-      ? `viewMissaoDayReport('${dateStr}')` 
-      : `openMissaoForm('${dateStr}')`;
-    const titleAttr = isFilled ? `Relatório preenchido em ${dayPad}/${monthPad}` : `Toque para preencher este dia`;
+    const clickFn = isFuture
+      ? ''
+      : (isFilled ? `viewMissaoDayReport('${dateStr}')` : `openMissaoForm('${dateStr}')`);
+    const titleAttr = isFuture
+      ? 'Data futura não permitida'
+      : (isFilled ? `Relatório preenchido em ${dayPad}/${monthPad}` : `Toque para preencher este dia`);
 
     daysHtml += `
       <button type="button" 
         class="calendar-day-btn ${btnClass} ${todayClass}" 
-        onclick="${clickFn}" 
+        ${isFuture ? 'disabled' : ''}
+        ${clickFn ? `onclick="${clickFn}"` : ''} 
         title="${titleAttr}">
         ${day}
       </button>
@@ -524,7 +533,7 @@ function openMissaoForm(targetDate, isEdit) {
             <span style="font-family:var(--font-gothic); font-weight:800; color:var(--green-primary); font-size:0.95rem;" id="missao-date-label">
               ${isToday ? `Hoje (${formatDateBR(selectedDate)})` : formatDateBR(selectedDate)}
             </span>
-            <input type="date" id="missao-rep-date" value="${selectedDate}" class="form-input" style="width:auto; padding:4px 8px; font-size:0.8rem;" onchange="onMissaoDateChanged(this.value)">
+            <input type="date" id="missao-rep-date" value="${selectedDate}" max="${todayStr}" class="form-input" style="width:auto; padding:4px 8px; font-size:0.8rem;" onchange="onMissaoDateChanged(this.value)">
           </div>
         </div>
       </div>
@@ -760,6 +769,12 @@ window.openMissaoForm = openMissaoForm;
 // Auxiliares do Formulário da Missão
 function onMissaoDateChanged(newDate) {
   const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  if (newDate > todayStr) {
+    showToast('Não é possível selecionar uma data futura!', 'warning');
+    const input = document.getElementById('missao-rep-date');
+    if (input) input.value = todayStr;
+    newDate = todayStr;
+  }
   const label = document.getElementById('missao-date-label');
   if (label) {
     label.textContent = (newDate === todayStr) ? `Hoje (${formatDateBR(newDate)})` : formatDateBR(newDate);
@@ -869,8 +884,13 @@ window.recalcMissaoTotal = recalcMissaoTotal;
 async function handleSaveMissaoReport() {
   const btn = document.getElementById('btn-save-missao-report');
   const dateVal = document.getElementById('missao-rep-date')?.value;
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
   if (!dateVal) {
     showToast('Informe a data do relatório.', 'danger');
+    return;
+  }
+  if (dateVal > todayStr) {
+    showToast('Não é permitido salvar relatório com data futura.', 'danger');
     return;
   }
 
@@ -1251,12 +1271,12 @@ function getStockUnitObj(unitId) {
 }
 
 const STOCK_CATEGORIES_INFO = [
-  { id: 'todas', label: 'Todas', icon: '🏷️' },
-  { id: 'alimentos_grossos', label: 'Alimentos Grossos', icon: '🫘' },
-  { id: 'proteinas', label: 'Proteínas', icon: '🍖' },
-  { id: 'temperos', label: 'Temperos', icon: '🧄' },
-  { id: 'lanches', label: 'Lanches', icon: '🍟' },
-  { id: 'verduras_legumes', label: 'Verduras e Legumes', icon: '🫑' }
+  { id: 'todas', label: 'Todas' },
+  { id: 'alimentos_grossos', label: 'Alimentos Grossos' },
+  { id: 'proteinas', label: 'Proteínas' },
+  { id: 'temperos', label: 'Temperos' },
+  { id: 'lanches', label: 'Lanches' },
+  { id: 'verduras_legumes', label: 'Verduras e Legumes' }
 ];
 
 // 1. TELA DE SELEÇÃO DA DESPENSA (MISSÃO, MACEDÔNIA, FEMININA)
@@ -1341,7 +1361,10 @@ function selectStockUnit(unitId) {
       <!-- 1. Atualizar Estoque -->
       <div class="stock-action-choice-card" onclick="openStockUpdateView('${unitId}')">
         <div class="stock-action-icon-box update">
-          📝
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
         </div>
         <div class="stock-action-title">Atualizar</div>
         <div class="stock-action-desc">Contar itens, acrescentar ou remover quantidades do estoque</div>
@@ -1350,7 +1373,12 @@ function selectStockUnit(unitId) {
       <!-- 2. Analisar Gráficos -->
       <div class="stock-action-choice-card" onclick="openStockAnalyticsView('${unitId}')">
         <div class="stock-action-icon-box analytics">
-          📊
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+            <line x1="2" y1="20" x2="22" y2="20"/>
+          </svg>
         </div>
         <div class="stock-action-title">Analisar</div>
         <div class="stock-action-desc">Ver gráfico em barras com escala adaptativa, histórico e consumo médio</div>
@@ -1398,11 +1426,10 @@ function openStockUpdateView(unitId) {
         <button type="button" onclick="promptAddNewStockItem('${unitId}')" class="btn-step" title="Cadastrar novo alimento nesta despensa" style="width:38px; height:38px; background:var(--green-light); border-color:var(--green-primary); color:var(--green-primary); font-weight:800; font-size:1.1rem; flex-shrink:0;">＋</button>
       </div>
 
-      <!-- Tags das Categorias Sempre Fixas -->
+      <!-- Tags das Categorias Sempre Fixas (Sem Emojis) -->
       <div class="stock-tags-scroll">
         ${STOCK_CATEGORIES_INFO.map(cat => `
           <button type="button" class="chip-filter ${cat.id === (window.currentStockCategory || 'todas') ? 'active' : ''}" data-cat="${cat.id}" onclick="setStockCategoryFilter('${cat.id}', this)">
-            <span style="font-size:0.95rem;">${cat.icon}</span>
             <span>${cat.label}</span>
           </button>
         `).join('')}
@@ -1502,7 +1529,7 @@ function renderStockList() {
     html += `
       <div class="stock-cat-section">
         <div class="stock-cat-title">
-          <span>${cat.icon} ${cat.label.toUpperCase()}</span>
+          <span>${cat.label.toUpperCase()}</span>
           <span class="stock-cat-count">${catItems.length} ${catItems.length === 1 ? 'item' : 'itens'}</span>
         </div>
         <div style="display:flex; flex-direction:column; gap:6px;">
@@ -1591,34 +1618,36 @@ async function promptAddNewStockItem(unitId) {
     unitId: unitId
   };
 
-  await dbManager.saveStockItem(newItem);
-  showToast(`Item "${newItem.name}" adicionado com sucesso!`, 'success');
-  renderStockList();
+  showLoading('Cadastrando alimento...');
+  try {
+    await dbManager.addStockItem(newItem);
+    showToast(`"${name.trim()}" adicionado com sucesso!`, 'success');
+    renderStockList();
+  } catch (e) {
+    showToast('Erro ao adicionar: ' + e.message, 'danger');
+  } finally {
+    hideLoading();
+  }
 }
 
 async function removeStockItem(itemId, unitId) {
-  const stock = dbManager.getStock();
-  const item = stock.find(s => s.id === itemId);
+  const item = dbManager.getStock(unitId).find(i => i.id === itemId);
   if (!item) return;
 
   if (!confirm(`Deseja realmente remover "${item.name}" do estoque desta despensa?`)) {
     return;
   }
 
-  const filtered = stock.filter(s => s.id !== itemId);
-  localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(filtered));
-
-  if (dbManager.firebaseDb) {
-    try {
-      dbManager._lastLocalWrite = Date.now();
-      await dbManager.firebaseDb.ref(`cristolandia_check/stock/${itemId}`).remove();
-    } catch (e) {
-      console.warn('Erro ao remover no Firebase:', e);
-    }
+  showLoading('Removendo alimento...');
+  try {
+    await dbManager.deleteStockItem(itemId);
+    showToast(`"${item.name}" removido do estoque.`, 'info');
+    renderStockList();
+  } catch (e) {
+    showToast('Erro ao remover: ' + e.message, 'danger');
+  } finally {
+    hideLoading();
   }
-
-  showToast(`Item "${item.name}" removido.`, 'info');
-  renderStockList();
 }
 
 // 4. MODO ANALISAR: GRÁFICO EM BARRAS HORIZONTAL COM ESCALA ADAPTATIVA
@@ -1638,7 +1667,12 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="selectStockUnit('${unitId}')" title="Voltar para ações" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
       <div class="modal-unit-icon">
-        <span style="font-size: 1.2rem;">📊</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+          <line x1="2" y1="20" x2="22" y2="20"/>
+        </svg>
       </div>
       <div>
         <h2>Análise de Estoque</h2>
@@ -1661,11 +1695,10 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
   }
 
   modalBody.innerHTML = `
-    <!-- Filtros de Categorias para o Gráfico (Todas Juntas sem Scroll Lock) -->
+    <!-- Filtros de Categorias para o Gráfico (Sem Emojis, Apenas Nomes das Tags) -->
     <div class="stock-tags-wrap">
       ${STOCK_CATEGORIES_INFO.map(cat => `
         <button type="button" class="chip-filter ${cat.id === filterCat ? 'active' : ''}" onclick="openStockAnalyticsView('${unitId}', '${cat.id}')">
-          <span style="font-size:0.95rem;">${cat.icon}</span>
           <span>${cat.label}</span>
         </button>
       `).join('')}
@@ -2076,13 +2109,13 @@ function openAtividadesView(filterInstId = '') {
         const instName = a.institutionName || '—';
         const unitLabel = { missao: 'Missão', macedonia: 'Macedônia', feminina: 'Feminina' }[a.unitId] || a.unitId || '—';
         return `
-          <div class="history-item" style="border-left:3px solid var(--gold-primary);">
+          <div class="history-item clickable" style="border-left:3px solid var(--gold-primary); cursor:pointer;" onclick="openNovaAtividadeForm({}, '${a.id}')">
             <div class="history-item-header">
               <div>
                 <h4 style="font-size:0.85rem;font-weight:700;color:var(--green-primary);">${instName}</h4>
                 <span style="font-size:0.72rem;color:var(--text-muted);">${formatDateBR(a.date)} · ${unitLabel}</span>
               </div>
-              <button onclick="handleDeleteAtividade('${a.id}')" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-weight:600;">Remover</button>
+              <button onclick="event.stopPropagation(); handleDeleteAtividade('${a.id}')" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-weight:600;">Remover</button>
             </div>
             ${a.description ? `<p style="font-size:0.78rem;color:var(--text-main);margin-top:4px;line-height:1.4;">${a.description}</p>` : ''}
           </div>
@@ -2107,10 +2140,11 @@ function openAtividadesView(filterInstId = '') {
   modalFooter.innerHTML = '';
 }
 
-function openNovaAtividadeForm(pending) {
+function openNovaAtividadeForm(pending, editId = null) {
   // pending = { date, unitId, institutionId, description } — preservado ao retornar do cadastro
-  const p = pending || {};
   const institutions = dbManager.getChurches();
+  const existingAct = editId ? (dbManager.getActivities().find(a => a.id === editId) || null) : null;
+  const p = existingAct || pending || {};
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
@@ -2122,11 +2156,14 @@ function openNovaAtividadeForm(pending) {
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="openAtividadesView()" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
       <div class="modal-unit-icon">
-        <span style="font-size:1.1rem;">📝</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
       </div>
       <div>
-        <h2>Nova Atividade</h2>
-        <p style="font-size:0.75rem;">Registrar atividade realizada</p>
+        <h2>${editId ? 'Editar Atividade' : 'Nova Atividade'}</h2>
+        <p style="font-size:0.75rem;">${editId ? 'Alterar dados da atividade' : 'Registrar atividade realizada'}</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -2144,7 +2181,7 @@ function openNovaAtividadeForm(pending) {
     <form id="nova-atividade-form" onsubmit="event.preventDefault();">
       <div class="form-group">
         <label class="form-label">Data da Atividade</label>
-        <input type="date" id="atv-date" class="form-input" value="${p.date || today}" required>
+        <input type="date" id="atv-date" class="form-input" value="${p.date || today}" max="${today}" required>
       </div>
 
       <div class="form-group">
@@ -2158,7 +2195,7 @@ function openNovaAtividadeForm(pending) {
 
       <div class="form-group">
         <label class="form-label">Instituição</label>
-        <select id="atv-institution" class="form-input" onchange="handleInstituicaoSelectChange(this.value)">
+        <select id="atv-institution" class="form-input" onchange="handleInstituicaoSelectChange(this.value, '${editId || ''}')">
           <option value="">Selecione uma instituição...</option>
           ${instOptions}
         </select>
@@ -2172,14 +2209,15 @@ function openNovaAtividadeForm(pending) {
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveAtividade()">💾 Salvar Atividade</button>
+    <button type="button" class="btn-primary-action" style="width:100%;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveAtividade('${editId || ''}')">${editId ? '💾 Salvar Alterações' : '💾 Salvar Atividade'}</button>
   `;
 }
 
-function handleInstituicaoSelectChange(val) {
+function handleInstituicaoSelectChange(val, editId) {
   if (val !== '__cadastrar__') return;
   // Coleta dados parciais do formulário antes de navegar
   const pending = {
+    id: editId || undefined,
     date: document.getElementById('atv-date')?.value || '',
     unitId: document.getElementById('atv-unit')?.value || 'missao',
     institutionId: '',
@@ -2188,22 +2226,28 @@ function handleInstituicaoSelectChange(val) {
   openCadastroInstituicaoForm(pending);
 }
 
-async function handleSaveAtividade() {
+async function handleSaveAtividade(editId) {
   const institutionId = document.getElementById('atv-institution')?.value;
   const date = document.getElementById('atv-date')?.value;
   const unitId = document.getElementById('atv-unit')?.value;
   const description = document.getElementById('atv-description')?.value.trim();
 
+  const today = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+
   if (!institutionId || institutionId === '__cadastrar__') {
     showToast('Selecione uma instituição!', 'warning'); return;
   }
   if (!date) { showToast('Informe a data da atividade!', 'warning'); return; }
+  if (date > today) {
+    showToast('Não é possível selecionar uma data futura!', 'warning');
+    return;
+  }
   if (!description) { showToast('Descreva a atividade!', 'warning'); return; }
 
   const institution = dbManager.getChurches().find(i => i.id === institutionId);
 
-  const newActivity = {
-    id: 'act_' + Date.now(),
+  const actData = {
+    id: editId || ('act_' + Date.now()),
     date,
     unitId,
     institutionId,
@@ -2211,10 +2255,10 @@ async function handleSaveAtividade() {
     description
   };
 
-  showLoading('Gravando atividade...');
+  showLoading(editId ? 'Atualizando atividade...' : 'Gravando atividade...');
   try {
-    await dbManager.saveActivity(newActivity);
-    showToast('Atividade registrada!', 'success');
+    await dbManager.saveActivity(actData);
+    showToast(editId ? 'Atividade atualizada com sucesso!' : 'Atividade registrada!', 'success');
     openAtividadesView();
   } catch (e) {
     showToast('Erro: ' + e.message, 'danger');
@@ -2306,27 +2350,27 @@ function renderInstituicoesList() {
     const rawPhone = (c.phone || '').replace(/\D/g, '');
     const waUrl = rawPhone ? `https://wa.me/55${rawPhone}?text=Olá%20${encodeURIComponent(c.pastor || '')},%20paz%20do%20Senhor!%20Mensagem%20da%20Cristolândia:` : '#';
     return `
-      <div class="history-item" style="border-left:3px solid var(--green-primary);">
+      <div class="history-item clickable" style="border-left:3px solid var(--green-primary); cursor:pointer;" onclick="openCadastroInstituicaoForm(null, '${c.id}')">
         <div class="history-item-header">
           <div>
             <h4 style="font-size:0.9rem;font-weight:700;color:var(--green-primary);">${c.name}</h4>
             <span style="font-size:0.72rem;color:var(--text-muted);">${c.pastor || ''}${c.address ? ' · ' + c.address : ''}</span>
           </div>
-          ${rawPhone ? `<a href="${waUrl}" target="_blank" style="padding:4px 8px;border-radius:6px;background:var(--green-light);color:var(--green-primary);font-size:0.72rem;font-weight:700;text-decoration:none;">WhatsApp</a>` : ''}
+          ${rawPhone ? `<a href="${waUrl}" target="_blank" onclick="event.stopPropagation();" style="padding:4px 8px;border-radius:6px;background:var(--green-light);color:var(--green-primary);font-size:0.72rem;font-weight:700;text-decoration:none;">WhatsApp</a>` : ''}
         </div>
         <div style="font-size:0.76rem;background:var(--bg-beige);padding:8px 10px;border-radius:8px;display:flex;flex-direction:column;gap:3px;">
           ${c.phone ? `<div><strong>Telefone:</strong> ${c.phone}</div>` : ''}
           ${c.instagram ? `<div><strong>Instagram/Site:</strong> ${c.instagram}</div>` : ''}
         </div>
         <div style="display:flex;justify-content:flex-end;">
-          <button onclick="handleDeleteInstituicao('${c.id}')" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-weight:600;">Remover</button>
+          <button onclick="event.stopPropagation(); handleDeleteInstituicao('${c.id}')" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;font-weight:600;">Remover</button>
         </div>
       </div>
     `;
   }).join('');
 }
 
-function openCadastroInstituicaoForm(pendingActivityData) {
+function openCadastroInstituicaoForm(pendingActivityData, editId = null) {
   // pendingActivityData: se vier de openNovaAtividadeForm, guarda os dados parciais
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
@@ -2335,16 +2379,20 @@ function openCadastroInstituicaoForm(pendingActivityData) {
   const fromActivity = pendingActivityData !== null && pendingActivityData !== undefined;
   const pendingJson = fromActivity ? encodeURIComponent(JSON.stringify(pendingActivityData)) : 'null';
 
+  const inst = editId ? dbManager.getChurches().find(x => x.id === editId) : null;
+
   modalHeader.className = 'modal-header theme-instituicoes';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="${fromActivity ? `openNovaAtividadeForm(JSON.parse(decodeURIComponent('${pendingJson}')))` : 'openCadastrosInstituicoes()'}" style="width:32px;height:32px;font-size:1rem;margin-right:4px;">←</button>
       <div class="modal-unit-icon">
-        <span style="font-size:1.1rem;">🏛️</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
       </div>
       <div>
-        <h2>Nova Instituição</h2>
-        <p style="font-size:0.75rem;">${fromActivity ? 'Cadastrar e retornar ao registro de atividade' : 'Cadastrar instituição parceira'}</p>
+        <h2>${editId ? 'Editar Cadastro' : 'Nova Instituição'}</h2>
+        <p style="font-size:0.75rem;">${editId ? 'Atualizar dados cadastrais' : (fromActivity ? 'Cadastrar e retornar ao registro de atividade' : 'Cadastrar instituição parceira')}</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -2356,63 +2404,65 @@ function openCadastroInstituicaoForm(pendingActivityData) {
 
       <div class="form-group">
         <label class="form-label">Nome da Instituição *</label>
-        <input type="text" id="inst-name" class="form-input" placeholder="Ex: Igreja Batista Central, ONG Abraço" required autofocus>
+        <input type="text" id="inst-name" class="form-input" placeholder="Ex: Igreja Batista Central, ONG Abraço" value="${inst ? (inst.name || '') : ''}" required autofocus>
       </div>
 
       <div class="form-group">
         <label class="form-label">Endereço</label>
-        <input type="text" id="inst-address" class="form-input" placeholder="Ex: Rua das Flores, 123 - Centro">
+        <input type="text" id="inst-address" class="form-input" placeholder="Ex: Rua das Flores, 123 - Centro" value="${inst ? (inst.address || '') : ''}">
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Presidente / Responsável</label>
-          <input type="text" id="inst-pastor" class="form-input" placeholder="Ex: Pastor João">
+          <input type="text" id="inst-pastor" class="form-input" placeholder="Ex: Pastor João" value="${inst ? (inst.pastor || '') : ''}">
         </div>
         <div class="form-group">
           <label class="form-label">Telefone</label>
-          <input type="tel" id="inst-phone" class="form-input" placeholder="(11) 99999-9999">
+          <input type="tel" id="inst-phone" class="form-input" placeholder="(11) 99999-9999" value="${inst ? (inst.phone || '') : ''}">
         </div>
       </div>
 
       <div class="form-group">
         <label class="form-label">Instagram ou Site</label>
-        <input type="text" id="inst-instagram" class="form-input" placeholder="Ex: @nome_instagram ou https://...">
+        <input type="text" id="inst-instagram" class="form-input" placeholder="Ex: @nome_instagram ou https://..." value="${inst ? (inst.instagram || '') : ''}">
       </div>
     </form>
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-primary-action" style="width:100%;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveInstituicao(${fromActivity ? `JSON.parse(decodeURIComponent('${pendingJson}'))` : 'null'})">💾 Salvar Instituição</button>
+    <button type="button" class="btn-primary-action" style="width:100%;background:linear-gradient(135deg,#1E4D2B,#2E6A3B);color:#FFF;font-weight:800;" onclick="handleSaveInstituicao(${fromActivity ? `JSON.parse(decodeURIComponent('${pendingJson}'))` : 'null'}, '${editId || ''}')">${editId ? '💾 Salvar Alterações' : '💾 Salvar Instituição'}</button>
   `;
 }
 
-async function handleSaveInstituicao(pendingActivityData) {
+async function handleSaveInstituicao(pendingActivityData, editId) {
   const name = document.getElementById('inst-name')?.value.trim();
   if (!name) { showToast('Informe o nome da instituição!', 'warning'); return; }
 
-  const newInstitution = {
-    id: 'chu_' + Date.now(),
+  const existingInst = editId ? dbManager.getChurches().find(x => x.id === editId) : null;
+
+  const instData = {
+    id: editId || ('chu_' + Date.now()),
     name,
     address: document.getElementById('inst-address')?.value.trim() || '',
     pastor: document.getElementById('inst-pastor')?.value.trim() || '',
     phone: document.getElementById('inst-phone')?.value.trim() || '',
     instagram: document.getElementById('inst-instagram')?.value.trim() || '',
-    city: '',
-    neighborhood: '',
-    supportType: '',
-    lastVisit: '',
-    notes: ''
+    city: existingInst?.city || '',
+    neighborhood: existingInst?.neighborhood || '',
+    supportType: existingInst?.supportType || '',
+    lastVisit: existingInst?.lastVisit || '',
+    notes: existingInst?.notes || ''
   };
 
-  showLoading('Cadastrando instituição...');
+  showLoading(editId ? 'Atualizando cadastro...' : 'Cadastrando instituição...');
   try {
-    await dbManager.saveChurch(newInstitution);
-    showToast(`"${name}" cadastrada!`, 'success');
+    await dbManager.saveChurch(instData);
+    showToast(editId ? `"${name}" atualizada com sucesso!` : `"${name}" cadastrada!`, 'success');
     if (pendingActivityData !== null && pendingActivityData !== undefined) {
       // Retorna ao formulário de atividade com instituição já selecionada
-      const updated = { ...pendingActivityData, institutionId: newInstitution.id };
-      openNovaAtividadeForm(updated);
+      const updated = { ...pendingActivityData, institutionId: instData.id };
+      openNovaAtividadeForm(updated, pendingActivityData.id || null);
     } else {
       openCadastrosInstituicoes();
     }

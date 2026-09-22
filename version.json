@@ -1,6 +1,6 @@
 {
-  "version": "1.0.26",
-  "build": "20260922_26",
+  "version": "1.0.27",
+  "build": "20260922_27",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Ajuste na interface da Missão: caixas numéricas iniciam vazias com preenchimento em cinza claro (#E8E4DC); ao clicar na caixa, surge o valor '0' por padrão e o fundo passa a branco com destaque em verde; validação por bloco implementada (perguntas com subitens como Pessoas e Refeições só são consideradas respondidas quando todos os campos do bloco forem preenchidos)."
+  "releaseNotes": "Bloqueio de datas futuras no calendário e formulários; reset automático das 7 bolinhas neon e contadores na virada do dia; ícones 'Atualizar' e 'Analisar' do estoque atualizados para linhas simples no padrão do app; remoção de emojis das tags e categorias do estoque (somente texto); edição intuitiva de cadastros de instituições e atividades ao clicar diretamente nos cards com opção de salvar alterações."
 }

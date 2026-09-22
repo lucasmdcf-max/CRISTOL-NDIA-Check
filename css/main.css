@@ -960,16 +960,24 @@ body {
   font-size: 1.5rem;
 }
 
-.stock-action-icon-box.update {
+.stock-action-icon-box.update,
+.stock-action-icon-box.analytics {
   background: var(--green-light);
   color: var(--green-primary);
   border: 1.5px solid rgba(30, 77, 43, 0.2);
 }
 
-.stock-action-icon-box.analytics {
-  background: var(--gold-light);
-  color: var(--gold-primary);
-  border: 1.5px solid rgba(197, 137, 8, 0.25);
+.history-item.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.history-item.clickable:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.history-item.clickable:active {
+  transform: scale(0.985);
 }
 
 .stock-action-title {
@@ -1498,6 +1506,18 @@ body {
   opacity: 0.25;
   cursor: default;
   pointer-events: none;
+}
+
+/* Dias Futuros (Bloqueados para seleção) */
+.calendar-day-btn.day-future,
+.calendar-day-btn:disabled {
+  background: #F0EDE6 !important;
+  color: #BDB7AB !important;
+  opacity: 0.4;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 /* Dia Selecionado */

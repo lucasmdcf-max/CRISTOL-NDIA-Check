@@ -40,6 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Monitoramento de inatividade (30 minutos)
   setupInactivityWatcher();
 
+  // Monitor de virada de dia (reseta bolinhas e métricas do dia automaticamente)
+  setupDayTransitionWatcher();
+
   // Ouvinte de sincronização remota em tempo real (Motor CUIDAR Pilar 1)
   window.addEventListener('db:cloud-synced', (e) => {
     updateHeroMetrics();
@@ -535,3 +538,32 @@ function setupInactivityWatcher() {
     }
   }, 60000);
 }
+
+// Monitor de Virada de Dia (Garante que as bolinhas e o painel correspondam estritamente ao dia atual)
+let _currentTrackedDay = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+
+function checkDayTransition() {
+  const newDay = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  if (newDay !== _currentTrackedDay) {
+    console.log(`[Virada de Dia Detectada] Transição de ${_currentTrackedDay} para ${newDay}`);
+    _currentTrackedDay = newDay;
+    if (typeof renderCurrentDate === 'function') renderCurrentDate();
+    if (typeof updateHeroMetrics === 'function') updateHeroMetrics();
+    if (typeof updateMissaoDots === 'function') updateMissaoDots();
+  }
+}
+
+function setupDayTransitionWatcher() {
+  // Checagem periódica a cada 30 segundos
+  setInterval(checkDayTransition, 30000);
+  // Checagem imediata quando o usuário retorna à aba ou desbloqueia o PWA
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') checkDayTransition();
+    });
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('focus', checkDayTransition);
+  }
+}
+
