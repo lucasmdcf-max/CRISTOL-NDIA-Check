@@ -1,6 +1,6 @@
 {
-  "version": "1.0.32",
-  "build": "20260922_32",
+  "version": "1.0.33",
+  "build": "20260922_33",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Configuração completa do relatório da Unidade Macedônia: fluxo de Histórico com calendário mensal e Novo Relatório, formulário com as 8 perguntas oficiais (Refeições servidas com 5 subcampos, Encaminhamentos Sociais, Saúde, Psicológicos, Demandas Jurídicas, Estudos Bíblicos, Cultos/Vigílias e Decisões por Cristo), caixas interativas com ativação cinza para verde, 8 bolinhas neon no botão e bloqueio de datas futuras."
+  "releaseNotes": "Acrescentadas 4 novas perguntas ao relatório da Unidade Macedônia (Sons da Missão, Ensaios do Coro, Atividades Físicas Realizadas e Participantes) totalizando as 12 perguntas oficiais. Relatório integralmente reproduzido na Unidade Feminina com Histórico, Calendário Mensal com bloqueio de datas futuras, visualização com botão editar, novo formulário com ativação dinâmica de caixas cinza para verde ao clique, 12 bolinhas neon nos botões e persistência de dupla camada."
 }

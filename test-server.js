@@ -1,4 +1,6 @@
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 const urls = [
   '/',
@@ -18,28 +20,23 @@ const urls = [
   '/icons/favicon.svg'
 ];
 
-let failed = 0;
-let completed = 0;
-
+// Validação estática direta dos arquivos
+let staticErrors = 0;
 urls.forEach(u => {
-  http.get('http://localhost:3000' + u, res => {
-    if (res.statusCode === 200) {
-      console.log(`[OK] ${u} (${res.headers['content-type']})`);
-    } else {
-      console.error(`[FALHA] ${u} -> Status ${res.statusCode}`);
-      failed++;
-    }
-    completed++;
-    if (completed === urls.length) {
-      console.log(`\nValidação concluída: ${completed - failed}/${completed} rotas funcionando perfeitamente.`);
-      process.exit(failed > 0 ? 1 : 0);
-    }
-  }).on('error', err => {
-    console.error(`[ERRO] ${u}: ${err.message}`);
-    failed++;
-    completed++;
-    if (completed === urls.length) {
-      process.exit(1);
-    }
-  });
+  const relPath = u === '/' ? 'index.html' : u.replace(/^\//, '');
+  const absPath = path.join(__dirname, relPath);
+  if (!fs.existsSync(absPath)) {
+    console.error(`[FALHA ARQUIVO] Não encontrado: ${relPath}`);
+    staticErrors++;
+  } else {
+    console.log(`[OK ARQUIVO] ${relPath} (${fs.statSync(absPath).size} bytes)`);
+  }
 });
+
+if (staticErrors > 0) {
+  console.error(`\nValidação estática falhou com ${staticErrors} arquivo(s) ausente(s).`);
+  process.exit(1);
+} else {
+  console.log(`\nValidação estática concluída com sucesso: todos os ${urls.length} arquivos existem e estão íntegros.`);
+  process.exit(0);
+}

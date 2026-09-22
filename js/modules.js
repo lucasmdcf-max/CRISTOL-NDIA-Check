@@ -1010,11 +1010,12 @@ async function handleSaveMissaoReport() {
 window.handleSaveMissaoReport = handleSaveMissaoReport;
 
 // ==========================================================================
-// MÓDULO EXCLUSIVO DA UNIDADE MACEDÔNIA (HISTÓRICO + CALENDÁRIO + NOVO RELATÓRIO)
+// MÓDULO EXCLUSIVO: UNIDADES MACEDÔNIA & FEMININA
+// (HISTÓRICO + CALENDÁRIO + NOVO RELATÓRIO COM 12 PERGUNTAS OFICIAIS)
 // ==========================================================================
 
-// Ícones SVG de traço limpo na cor verde oficial para cada pergunta da Macedônia
-const MACEDONIA_ICONS = {
+// Ícones SVG de traço limpo na cor verde oficial para cada uma das perguntas
+const STANDARD_UNIT_ICONS = {
   data: MISSAO_ICONS.data,
   missionario: MISSAO_ICONS.missionario,
   refeicoes: MISSAO_ICONS.refeicoes,
@@ -1024,33 +1025,36 @@ const MACEDONIA_ICONS = {
   juridico: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="2 7 12 5 22 7"/><path d="M6 7l-4 7h8l-4-7z"/><path d="M18 7l-4 7h8l-4-7z"/><line x1="8" y1="21" x2="16" y2="21"/></svg>`,
   estudos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><line x1="6" y1="8" x2="8" y2="8"/><line x1="6" y1="11" x2="8" y2="11"/></svg>`,
   cultos: MISSAO_ICONS.cultos,
+  musica: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+  coro: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+  esporte: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>`,
+  acolhidosEsporte: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
   decisoes: MISSAO_ICONS.decisoes
 };
+const MACEDONIA_ICONS = STANDARD_UNIT_ICONS;
+const FEMININA_ICONS = STANDARD_UNIT_ICONS;
 
-// 1. Menu Inicial de Escolha da Macedônia (Histórico vs Novo Relatório)
-function openMacedoniaFlow() {
-  window._currentScreen = { type: 'macedonia-choice' };
+// 1. Menu de Escolha da Unidade (Histórico vs Novo Relatório)
+function openStandardUnitFlow(unitId) {
+  const unit = UNIT_PROFILES[unitId] || { name: 'Unidade', fullName: 'Unidade Cristolândia', defaultReporter: 'Missionário' };
+  window._currentScreen = { type: `${unitId}-choice`, unitId };
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
   const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
   const reports = dbManager.getReports();
-  const todayReport = reports.find(r => r.unitId === 'macedonia' && r.date === todayStr);
+  const todayReport = reports.find(r => r.unitId === unitId && r.date === todayStr);
 
   modalHeader.className = 'modal-header';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <div class="modal-unit-icon">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22V12"/>
-          <path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/>
-          <path d="M12 17C15 17 18 19 19 22"/>
-        </svg>
+        ${unit.iconSvg || '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9"/></svg>'}
       </div>
       <div>
-        <h2>Unidade Macedônia</h2>
-        <p style="margin-bottom:2px;">Internação & Restauração de Vidas</p>
+        <h2>Unidade ${unit.name}</h2>
+        <p style="margin-bottom:2px;">${unit.fullName}</p>
         ${todayReport 
           ? `<span style="display:inline-block; margin-top:2px; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#E8F5E9; color:#1E4D2B;">✓ Relatório de hoje registrado</span>` 
           : `<span style="display:inline-block; margin-top:2px; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#FFF8E1; color:#C58908;">📝 Relatório de hoje pendente</span>`}
@@ -1061,12 +1065,12 @@ function openMacedoniaFlow() {
 
   modalBody.innerHTML = `
     <div style="text-align:center; margin: 6px 0 14px;">
-      <p style="font-size:0.82rem; color:var(--text-muted);">Selecione a ação desejada para o relatório da Macedônia:</p>
+      <p style="font-size:0.82rem; color:var(--text-muted);">Selecione a ação desejada para o relatório da ${unit.name}:</p>
     </div>
 
     <div class="missao-choice-grid">
       <!-- Opção 1: Histórico com Calendário Mensal -->
-      <div class="btn-choice-card" onclick="openMacedoniaCalendar()">
+      <div class="btn-choice-card" onclick="openStandardUnitCalendar('${unitId}')">
         <div class="btn-choice-icon">
           <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -1080,7 +1084,7 @@ function openMacedoniaFlow() {
       </div>
 
       <!-- Opção 2: Novo Relatório -->
-      <div class="btn-choice-card" onclick="openMacedoniaForm()">
+      <div class="btn-choice-card" onclick="openStandardUnitForm('${unitId}')">
         <div class="btn-choice-icon">
           <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 20h9"/>
@@ -1099,28 +1103,31 @@ function openMacedoniaFlow() {
 
   openModal('modal-generic');
 }
-window.openMacedoniaFlow = openMacedoniaFlow;
 
-// 2. Histórico com Calendário Mensal da Macedônia
-let _macedoniaCalYear = null;
-let _macedoniaCalMonth = null;
+// 2. Histórico com Calendário Mensal
+let _standardUnitCalYear = {};
+let _standardUnitCalMonth = {};
 
-function openMacedoniaCalendar(targetYear, targetMonth) {
-  window._currentScreen = { type: 'macedonia-calendar' };
+function openStandardUnitCalendar(unitId, targetYear, targetMonth) {
+  const unit = UNIT_PROFILES[unitId] || { name: 'Unidade' };
+  window._currentScreen = { type: `${unitId}-calendar`, unitId };
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
   const now = new Date();
   if (targetYear === undefined || targetYear === null) {
-    _macedoniaCalYear = now.getFullYear();
-    _macedoniaCalMonth = now.getMonth();
+    _standardUnitCalYear[unitId] = now.getFullYear();
+    _standardUnitCalMonth[unitId] = now.getMonth();
   } else {
-    _macedoniaCalYear = targetYear;
-    _macedoniaCalMonth = targetMonth;
+    _standardUnitCalYear[unitId] = targetYear;
+    _standardUnitCalMonth[unitId] = targetMonth;
   }
 
-  const reports = dbManager.getReports().filter(r => r.unitId === 'macedonia');
+  const curYear = _standardUnitCalYear[unitId];
+  const curMonth = _standardUnitCalMonth[unitId];
+
+  const reports = dbManager.getReports().filter(r => r.unitId === unitId);
   const filledDatesMap = {};
   reports.forEach(r => {
     if (r && r.date) filledDatesMap[r.date] = r;
@@ -1131,16 +1138,16 @@ function openMacedoniaCalendar(targetYear, targetMonth) {
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  const firstDayOfWeek = new Date(_macedoniaCalYear, _macedoniaCalMonth, 1).getDay();
-  const daysInMonth = new Date(_macedoniaCalYear, _macedoniaCalMonth + 1, 0).getDate();
-  const prevMonthDays = new Date(_macedoniaCalYear, _macedoniaCalMonth, 0).getDate();
+  const firstDayOfWeek = new Date(curYear, curMonth, 1).getDay();
+  const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(curYear, curMonth, 0).getDate();
 
   const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
 
   modalHeader.className = 'modal-header';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
-      <button type="button" class="btn-step" onclick="openMacedoniaFlow()" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
+      <button type="button" class="btn-step" onclick="openStandardUnitFlow('${unitId}')" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
       <div class="modal-unit-icon">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -1150,7 +1157,7 @@ function openMacedoniaCalendar(targetYear, targetMonth) {
         </svg>
       </div>
       <div>
-        <h2>Histórico Macedônia</h2>
+        <h2>Histórico ${unit.name}</h2>
         <p style="margin-bottom:2px;">Calendário de Atividades</p>
       </div>
     </div>
@@ -1169,8 +1176,8 @@ function openMacedoniaCalendar(targetYear, targetMonth) {
   let filledCount = 0;
   for (let day = 1; day <= daysInMonth; day++) {
     const dayPad = String(day).padStart(2, '0');
-    const monthPad = String(_macedoniaCalMonth + 1).padStart(2, '0');
-    const dateStr = `${_macedoniaCalYear}-${monthPad}-${dayPad}`;
+    const monthPad = String(curMonth + 1).padStart(2, '0');
+    const dateStr = `${curYear}-${monthPad}-${dayPad}`;
 
     const isFuture = (dateStr > todayStr);
     const isFilled = !isFuture && !!filledDatesMap[dateStr];
@@ -1186,7 +1193,7 @@ function openMacedoniaCalendar(targetYear, targetMonth) {
     const todayClass = isToday ? 'day-today' : '';
     const clickFn = isFuture
       ? ''
-      : (isFilled ? `viewMacedoniaDayReport('${dateStr}')` : `openMacedoniaForm('${dateStr}')`);
+      : (isFilled ? `viewStandardUnitDayReport('${unitId}', '${dateStr}')` : `openStandardUnitForm('${unitId}', '${dateStr}')`);
     const titleAttr = isFuture
       ? 'Data futura não permitida'
       : (isFilled ? `Relatório preenchido em ${dayPad}/${monthPad}` : `Toque para preencher este dia`);
@@ -1205,9 +1212,9 @@ function openMacedoniaCalendar(targetYear, targetMonth) {
   modalBody.innerHTML = `
     <div class="calendar-card">
       <div class="calendar-header-nav">
-        <button type="button" class="calendar-nav-btn" onclick="navMacedoniaCalendar(-1)">←</button>
-        <div class="calendar-month-title">${monthNames[_macedoniaCalMonth]} de ${_macedoniaCalYear}</div>
-        <button type="button" class="calendar-nav-btn" onclick="navMacedoniaCalendar(1)">→</button>
+        <button type="button" class="calendar-nav-btn" onclick="navStandardUnitCalendar('${unitId}', -1)">←</button>
+        <div class="calendar-month-title">${monthNames[curMonth]} de ${curYear}</div>
+        <button type="button" class="calendar-nav-btn" onclick="navStandardUnitCalendar('${unitId}', 1)">→</button>
       </div>
 
       <div class="calendar-weekdays">
@@ -1242,18 +1249,17 @@ function openMacedoniaCalendar(targetYear, targetMonth) {
 
   modalFooter.innerHTML = `
     <div style="display:flex; gap:8px; width:100%;">
-      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openMacedoniaFlow()">← Voltar</button>
-      <button type="button" class="btn-primary-action" style="flex:1;" onclick="openMacedoniaForm()">📝 Novo de Hoje</button>
+      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openStandardUnitFlow('${unitId}')">← Voltar</button>
+      <button type="button" class="btn-primary-action" style="flex:1;" onclick="openStandardUnitForm('${unitId}')">📝 Novo de Hoje</button>
     </div>
   `;
 
   openModal('modal-generic');
 }
-window.openMacedoniaCalendar = openMacedoniaCalendar;
 
-function navMacedoniaCalendar(delta) {
-  let newMonth = _macedoniaCalMonth + delta;
-  let newYear = _macedoniaCalYear;
+function navStandardUnitCalendar(unitId, delta) {
+  let newMonth = (_standardUnitCalMonth[unitId] || 0) + delta;
+  let newYear = _standardUnitCalYear[unitId] || new Date().getFullYear();
   if (newMonth < 0) {
     newMonth = 11;
     newYear--;
@@ -1261,17 +1267,17 @@ function navMacedoniaCalendar(delta) {
     newMonth = 0;
     newYear++;
   }
-  openMacedoniaCalendar(newYear, newMonth);
+  openStandardUnitCalendar(unitId, newYear, newMonth);
 }
-window.navMacedoniaCalendar = navMacedoniaCalendar;
 
-// 3. Visualização do Relatório da Macedônia por Data
-function viewMacedoniaDayReport(dateStr) {
-  window._currentScreen = { type: 'macedonia-view', dateStr };
+// 3. Visualização do Relatório por Data (12 Perguntas)
+function viewStandardUnitDayReport(unitId, dateStr) {
+  const unit = UNIT_PROFILES[unitId] || { name: 'Unidade', defaultReporter: 'Missionário' };
+  window._currentScreen = { type: `${unitId}-view`, unitId, dateStr };
   const reports = dbManager.getReports();
-  const r = reports.find(rep => rep.unitId === 'macedonia' && rep.date === dateStr);
+  const r = reports.find(rep => rep.unitId === unitId && rep.date === dateStr);
   if (!r) {
-    openMacedoniaForm(dateStr);
+    openStandardUnitForm(unitId, dateStr);
     return;
   }
 
@@ -1285,17 +1291,13 @@ function viewMacedoniaDayReport(dateStr) {
   modalHeader.className = 'modal-header';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
-      <button type="button" class="btn-step" onclick="openMacedoniaCalendar()" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
+      <button type="button" class="btn-step" onclick="openStandardUnitCalendar('${unitId}')" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
       <div class="modal-unit-icon">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22V12"/>
-          <path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/>
-          <path d="M12 17C15 17 18 19 19 22"/>
-        </svg>
+        ${unit.iconSvg || '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9"/></svg>'}
       </div>
       <div>
-        <h2>Relatório Macedônia</h2>
-        <p style="margin-bottom:2px;">${formatDateBR(dateStr)} • ${r.reporterName || 'Missionário'}</p>
+        <h2>Relatório ${unit.name}</h2>
+        <p style="margin-bottom:2px;">${formatDateBR(dateStr)} • ${r.reporterName || unit.defaultReporter}</p>
         <span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#E8F5E9; color:#1E4D2B;">✓ Relatório Registrado</span>
       </div>
     </div>
@@ -1303,24 +1305,24 @@ function viewMacedoniaDayReport(dateStr) {
   `;
 
   modalBody.innerHTML = `
-    <!-- 1. Data e Missionário -->
+    <!-- Data e Missionário -->
     <div style="background:var(--bg-cream); border:1px solid var(--border-beige); border-radius:12px; padding:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
       <div>
         <span style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Data do Relatório</span>
         <div style="font-family:var(--font-gothic); font-size:0.95rem; font-weight:800; color:var(--green-primary);">${formatDateBR(dateStr)}</div>
       </div>
       <div style="text-align:right;">
-        <span style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Missionário</span>
-        <div style="font-family:var(--font-gothic); font-size:0.9rem; font-weight:800; color:var(--text-main);">${r.reporterName || 'Missionário Carlos Eduardo'}</div>
+        <span style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Missionário(a)</span>
+        <div style="font-family:var(--font-gothic); font-size:0.9rem; font-weight:800; color:var(--text-main);">${r.reporterName || unit.defaultReporter}</div>
       </div>
     </div>
 
-    <!-- Indicadores Numéricos em Cards -->
+    <!-- Indicadores Numéricos em Cards (12 Perguntas) -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
-      <!-- Refeições -->
+      <!-- 1. Refeições -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px; grid-column: span 2;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-          <span style="color:var(--green-primary);">${MACEDONIA_ICONS.refeicoes}</span>
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.refeicoes}</span>
           <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Refeições Servidas na Unidade</span>
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--gold-primary);">${totalRef}</div>
@@ -1329,72 +1331,112 @@ function viewMacedoniaDayReport(dateStr) {
         </div>
       </div>
 
-      <!-- Encaminhamentos Sociais -->
+      <!-- 2. Encaminhamentos Sociais -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-          <span style="color:var(--green-primary);">${MACEDONIA_ICONS.sociais}</span>
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.sociais}</span>
           <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Encam. Sociais</span>
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.encaminhamentosSociais || 0}</div>
         <div style="font-size:0.64rem; color:var(--text-muted);">CRAS, CREAS, INSS, Docs</div>
       </div>
 
-      <!-- Encaminhamentos de Saúde -->
+      <!-- 3. Encaminhamentos de Saúde -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-          <span style="color:var(--green-primary);">${MACEDONIA_ICONS.saude}</span>
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.saude}</span>
           <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Encam. de Saúde</span>
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.encaminhamentosSaude || 0}</div>
         <div style="font-size:0.64rem; color:var(--text-muted);">Consultas, vacinas, exames</div>
       </div>
 
-      <!-- Atendimentos Psicológicos -->
+      <!-- 4. Atendimentos Psicológicos -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-          <span style="color:var(--green-primary);">${MACEDONIA_ICONS.psico}</span>
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.psico}</span>
           <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Atend. Psicológicos</span>
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.atendimentosPsicologicos || 0}</div>
         <div style="font-size:0.64rem; color:var(--text-muted);">Sessões & escuta ativa</div>
       </div>
 
-      <!-- Demandas Jurídicas -->
+      <!-- 5. Demandas Jurídicas -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-          <span style="color:var(--green-primary);">${MACEDONIA_ICONS.juridico}</span>
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.juridico}</span>
           <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Demandas Jurídicas</span>
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.demandasJuridicas || 0}</div>
         <div style="font-size:0.64rem; color:var(--text-muted);">Advogado, fóruns, varas</div>
       </div>
 
-      <!-- Estudos Bíblicos -->
+      <!-- 6. Estudos Bíblicos -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-          <span style="color:var(--green-primary);">${MACEDONIA_ICONS.estudos}</span>
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.estudos}</span>
           <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Estudos Bíblicos</span>
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.estudosBiblicos || 0}</div>
-        <div style="font-size:0.64rem; color:var(--text-muted);">Qtd de estudos na unidade</div>
+        <div style="font-size:0.64rem; color:var(--text-muted);">Qtd de estudos realizados</div>
       </div>
 
-      <!-- Cultos e Vigílias -->
+      <!-- 7. Cultos e Vigílias -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-          <span style="color:var(--green-primary);">${MACEDONIA_ICONS.cultos}</span>
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.cultos}</span>
           <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Cultos & Vigílias</span>
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.cultosVigilias || r.cultos || 0}</div>
         <div style="font-size:0.64rem; color:var(--text-muted);">Momentos de celebração</div>
       </div>
+
+      <!-- 8. Sons da Missão (Oficinas de Instrumentos) -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.musica}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Sons da Missão</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.sonsDaMissao || 0}</div>
+        <div style="font-size:0.64rem; color:var(--text-muted);">Acolhidos nas oficinas</div>
+      </div>
+
+      <!-- 9. Ensaios do Coro -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.coro}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Ensaios do Coro</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.ensaiosCoro || 0}</div>
+        <div style="font-size:0.64rem; color:var(--text-muted);">Ensaios realizados</div>
+      </div>
+
+      <!-- 10. Atividades Físicas / Esportes Realizados -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.esporte}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Atividades Físicas</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.atividadesFisicas || 0}</div>
+        <div style="font-size:0.64rem; color:var(--text-muted);">Esportes realizados</div>
+      </div>
+
+      <!-- 11. Acolhidos nas Atividades Físicas -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.acolhidosEsporte}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Acolhidos no Esporte</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.participantesAtividadesFisicas || 0}</div>
+        <div style="font-size:0.64rem; color:var(--text-muted);">Acolhidos participantes</div>
+      </div>
     </div>
 
-    <!-- Decisões por Cristo em destaque -->
+    <!-- 12. Decisões por Cristo em destaque nobre ouro -->
     <div style="background:linear-gradient(135deg, rgba(197, 137, 8, 0.12), rgba(30, 77, 43, 0.08)); border:1.5px solid var(--gold-primary); border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
       <div style="display:flex; align-items:center; gap:10px;">
         <div style="width:36px; height:36px; border-radius:50%; background:var(--gold-primary); color:#FFFFFF; display:flex; align-items:center; justify-content:center;">
-          ${MACEDONIA_ICONS.decisoes}
+          ${STANDARD_UNIT_ICONS.decisoes}
         </div>
         <div>
           <div style="font-family:var(--font-gothic); font-size:0.9rem; font-weight:800; color:var(--text-main);">Decisões por Cristo</div>
@@ -1407,18 +1449,18 @@ function viewMacedoniaDayReport(dateStr) {
 
   modalFooter.innerHTML = `
     <div style="display:flex; gap:8px; width:100%;">
-      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openMacedoniaCalendar()">← Calendário</button>
-      <button type="button" class="btn-primary-action" style="flex:1.2;" onclick="openMacedoniaForm('${dateStr}', true)">✏️ Editar Relatório</button>
+      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openStandardUnitCalendar('${unitId}')">← Calendário</button>
+      <button type="button" class="btn-primary-action" style="flex:1.2;" onclick="openStandardUnitForm('${unitId}', '${dateStr}', true)">✏️ Editar Relatório</button>
     </div>
   `;
 
   openModal('modal-generic');
 }
-window.viewMacedoniaDayReport = viewMacedoniaDayReport;
 
-// 4. Formulário do Relatório da Macedônia (Novo ou Edição com as 8 Perguntas Oficiais)
-function openMacedoniaForm(targetDate, isEdit) {
-  window._currentScreen = { type: 'macedonia-form', targetDate, isEdit };
+// 4. Formulário do Relatório (Novo ou Edição com as 12 Perguntas Oficiais)
+function openStandardUnitForm(unitId, targetDate, isEdit) {
+  const unit = UNIT_PROFILES[unitId] || { name: 'Unidade', defaultReporter: 'Missionário' };
+  window._currentScreen = { type: `${unitId}-form`, unitId, targetDate, isEdit };
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
@@ -1428,10 +1470,10 @@ function openMacedoniaForm(targetDate, isEdit) {
   const isToday = (selectedDate === todayStr);
 
   const reports = dbManager.getReports();
-  const existing = reports.find(r => r.unitId === 'macedonia' && r.date === selectedDate);
+  const existing = reports.find(r => r.unitId === unitId && r.date === selectedDate);
 
   // Valores pré-carregados
-  const reporter = existing ? (r_name => r_name || 'Missionário Carlos Eduardo')(existing.reporterName) : 'Missionário Carlos Eduardo';
+  const reporter = existing ? (r_name => r_name || unit.defaultReporter)(existing.reporterName) : unit.defaultReporter;
 
   // Detecção de status de ativação prévio
   const ans = existing?.answeredQuestions || {};
@@ -1446,13 +1488,17 @@ function openMacedoniaForm(targetDate, isEdit) {
   const isEventosActive = hasAns ? (sub.rEventos ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.eventosEspeciais === 'number');
   const isRefeicoesComplete = isCafeActive && isAlmocoActive && isJantarActive && isAbordagensActive && isEventosActive;
 
-  // Campos individuais
+  // Campos individuais (11 restantes)
   const isSociaisActive = hasAns ? !!ans.sociais : (!!existing && (typeof existing.encaminhamentosSociais === 'number' || typeof existing.novasTriagens === 'number'));
   const isSaudeActive = hasAns ? !!ans.saude : (!!existing && typeof existing.encaminhamentosSaude === 'number');
   const isPsicoActive = hasAns ? !!ans.psicologicos : (!!existing && typeof existing.atendimentosPsicologicos === 'number');
   const isJuridicoActive = hasAns ? !!ans.juridicas : (!!existing && typeof existing.demandasJuridicas === 'number');
   const isEstudosActive = hasAns ? !!ans.estudosBiblicos : (!!existing && typeof existing.estudosBiblicos === 'number');
   const isCultosActive = hasAns ? !!ans.cultosVigilias : (!!existing && (typeof existing.cultosVigilias === 'number' || typeof existing.cultos === 'number'));
+  const isMusicaActive = hasAns ? !!ans.sonsDaMissao : (!!existing && typeof existing.sonsDaMissao === 'number');
+  const isCoroActive = hasAns ? !!ans.ensaiosCoro : (!!existing && typeof existing.ensaiosCoro === 'number');
+  const isEsporteActive = hasAns ? !!ans.atividadesFisicas : (!!existing && typeof existing.atividadesFisicas === 'number');
+  const isAcolhidosEsporteActive = hasAns ? !!ans.participantesAtividadesFisicas : (!!existing && typeof existing.participantesAtividadesFisicas === 'number');
   const isDecisoesActive = hasAns ? !!ans.decisoes : (!!existing && typeof existing.decisoesCristo === 'number');
 
   // Valores numéricos carregados
@@ -1470,21 +1516,21 @@ function openMacedoniaForm(targetDate, isEdit) {
   const juridico = existing?.demandasJuridicas ?? 0;
   const estudos = existing?.estudosBiblicos ?? 0;
   const cultos = existing?.cultosVigilias ?? existing?.cultos ?? 0;
+  const musica = existing?.sonsDaMissao ?? 0;
+  const coro = existing?.ensaiosCoro ?? 0;
+  const esporte = existing?.atividadesFisicas ?? 0;
+  const acolhidosEsporte = existing?.participantesAtividadesFisicas ?? 0;
   const decisoes = existing?.decisoesCristo ?? 0;
 
   modalHeader.className = 'modal-header';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
-      <button type="button" class="btn-step" onclick="openMacedoniaFlow()" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
+      <button type="button" class="btn-step" onclick="openStandardUnitFlow('${unitId}')" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
       <div class="modal-unit-icon">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22V12"/>
-          <path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/>
-          <path d="M12 17C15 17 18 19 19 22"/>
-        </svg>
+        ${unit.iconSvg || '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9"/></svg>'}
       </div>
       <div>
-        <h2>${existing ? 'Editar' : 'Preencher'} Macedônia</h2>
+        <h2>${existing ? 'Editar' : 'Preencher'} ${unit.name}</h2>
         <p style="margin-bottom:2px;">${isToday ? 'Relatório de Hoje' : 'Relatório de ' + formatDateBR(selectedDate)}</p>
         ${existing 
           ? `<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#E8F5E9; color:#1E4D2B;">✓ Modo de edição</span>`
@@ -1495,13 +1541,13 @@ function openMacedoniaForm(targetDate, isEdit) {
   `;
 
   modalBody.innerHTML = `
-    <form id="macedonia-report-form" onsubmit="event.preventDefault();">
-      <input type="hidden" id="macedonia-rep-id" value="${existing ? existing.id : ''}">
+    <form id="${unitId}-report-form" onsubmit="event.preventDefault();">
+      <input type="hidden" id="${unitId}-rep-id" value="${existing ? existing.id : ''}">
 
       <!-- DATA -->
       <div class="missao-q-card">
         <div class="missao-q-header">
-          <div class="missao-q-icon">${MACEDONIA_ICONS.data}</div>
+          <div class="missao-q-icon">${STANDARD_UNIT_ICONS.data}</div>
           <div class="missao-q-title-box">
             <div class="missao-q-title">Data</div>
             <div class="missao-q-sub">Padrão "Hoje" ou toque no calendário para alterar</div>
@@ -1509,10 +1555,10 @@ function openMacedoniaForm(targetDate, isEdit) {
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
           <div style="flex:1; background:var(--bg-cream); border:1.5px solid var(--border-beige); border-radius:10px; padding:8px 12px; display:flex; align-items:center; justify-content:space-between;">
-            <span style="font-family:var(--font-gothic); font-weight:800; color:var(--green-primary); font-size:0.95rem;" id="macedonia-date-label">
+            <span style="font-family:var(--font-gothic); font-weight:800; color:var(--green-primary); font-size:0.95rem;" id="${unitId}-date-label">
               ${isToday ? `Hoje (${formatDateBR(selectedDate)})` : formatDateBR(selectedDate)}
             </span>
-            <input type="date" id="macedonia-rep-date" value="${selectedDate}" max="${todayStr}" class="form-input" style="width:auto; padding:4px 8px; font-size:0.8rem;" onchange="onMacedoniaDateChanged(this.value)">
+            <input type="date" id="${unitId}-rep-date" value="${selectedDate}" max="${todayStr}" class="form-input" style="width:auto; padding:4px 8px; font-size:0.8rem;" onchange="onStandardUnitDateChanged('${unitId}', this.value)">
           </div>
         </div>
       </div>
@@ -1520,25 +1566,25 @@ function openMacedoniaForm(targetDate, isEdit) {
       <!-- MISSIONÁRIO -->
       <div class="missao-q-card">
         <div class="missao-q-header">
-          <div class="missao-q-icon">${MACEDONIA_ICONS.missionario}</div>
+          <div class="missao-q-icon">${STANDARD_UNIT_ICONS.missionario}</div>
           <div class="missao-q-title-box">
-            <div class="missao-q-title">Missionário</div>
+            <div class="missao-q-title">${unitId === 'feminina' ? 'Missionária' : 'Missionário'}</div>
           </div>
         </div>
-        <input type="text" id="macedonia-rep-reporter" class="form-input" value="${reporter}" placeholder="Ex: Missionário Carlos Eduardo" required>
+        <input type="text" id="${unitId}-rep-reporter" class="form-input" value="${reporter}" placeholder="Ex: ${unit.defaultReporter}" required>
       </div>
 
       <!-- 1. Nº REFEIÇÕES SERVIDAS NA UNIDADE -->
       <div class="missao-q-card">
         <div class="missao-q-header">
-          <div class="missao-q-icon">${MACEDONIA_ICONS.refeicoes}</div>
+          <div class="missao-q-icon">${STANDARD_UNIT_ICONS.refeicoes}</div>
           <div class="missao-q-title-box">
             <div class="missao-q-title">Nº Refeições servidas na unidade</div>
             <div class="missao-q-sub">Contabilizar café da manhã, almoço, jantar, abordagens de rua e eventos especiais - de todas as fases; considerar usuários, equipe e voluntários</div>
           </div>
           <div style="text-align:right;">
             <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
-            <div class="missao-total-val ${isRefeicoesComplete ? 'active-val' : ''}" id="macedonia-total-refeicoes">${isRefeicoesComplete ? rTotal : '-'}</div>
+            <div class="missao-total-val ${isRefeicoesComplete ? 'active-val' : ''}" id="${unitId}-total-refeicoes">${isRefeicoesComplete ? rTotal : '-'}</div>
           </div>
         </div>
 
@@ -1546,45 +1592,45 @@ function openMacedoniaForm(targetDate, isEdit) {
           <div class="missao-sub-item">
             <div class="missao-sub-item-header"><span>Café da Manhã</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-cafe', -1, 'refeicoes')">-</button>
-              <input type="number" id="macedonia-r-cafe" class="missao-step-input ${isCafeActive ? 'active-val' : ''}" data-activated="${isCafeActive ? 'true' : 'false'}" value="${isCafeActive ? rCafe : ''}" onfocus="activateMacedoniaInput(this.id, 'refeicoes')" onclick="activateMacedoniaInput(this.id, 'refeicoes')" oninput="activateMacedoniaInput(this.id, 'refeicoes'); recalcMacedoniaTotal('refeicoes')">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-cafe', 1, 'refeicoes')">+</button>
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-cafe', -1, 'refeicoes')">-</button>
+              <input type="number" id="${unitId}-r-cafe" class="missao-step-input ${isCafeActive ? 'active-val' : ''}" data-activated="${isCafeActive ? 'true' : 'false'}" value="${isCafeActive ? rCafe : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" onclick="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" oninput="activateStandardUnitInput('${unitId}', this.id, 'refeicoes'); recalcStandardUnitTotal('${unitId}', 'refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-cafe', 1, 'refeicoes')">+</button>
             </div>
           </div>
 
           <div class="missao-sub-item">
             <div class="missao-sub-item-header"><span>Almoço</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-almoco', -1, 'refeicoes')">-</button>
-              <input type="number" id="macedonia-r-almoco" class="missao-step-input ${isAlmocoActive ? 'active-val' : ''}" data-activated="${isAlmocoActive ? 'true' : 'false'}" value="${isAlmocoActive ? rAlmoco : ''}" onfocus="activateMacedoniaInput(this.id, 'refeicoes')" onclick="activateMacedoniaInput(this.id, 'refeicoes')" oninput="activateMacedoniaInput(this.id, 'refeicoes'); recalcMacedoniaTotal('refeicoes')">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-almoco', 1, 'refeicoes')">+</button>
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-almoco', -1, 'refeicoes')">-</button>
+              <input type="number" id="${unitId}-r-almoco" class="missao-step-input ${isAlmocoActive ? 'active-val' : ''}" data-activated="${isAlmocoActive ? 'true' : 'false'}" value="${isAlmocoActive ? rAlmoco : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" onclick="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" oninput="activateStandardUnitInput('${unitId}', this.id, 'refeicoes'); recalcStandardUnitTotal('${unitId}', 'refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-almoco', 1, 'refeicoes')">+</button>
             </div>
           </div>
 
           <div class="missao-sub-item">
             <div class="missao-sub-item-header"><span>Jantar</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-jantar', -1, 'refeicoes')">-</button>
-              <input type="number" id="macedonia-r-jantar" class="missao-step-input ${isJantarActive ? 'active-val' : ''}" data-activated="${isJantarActive ? 'true' : 'false'}" value="${isJantarActive ? rJantar : ''}" onfocus="activateMacedoniaInput(this.id, 'refeicoes')" onclick="activateMacedoniaInput(this.id, 'refeicoes')" oninput="activateMacedoniaInput(this.id, 'refeicoes'); recalcMacedoniaTotal('refeicoes')">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-jantar', 1, 'refeicoes')">+</button>
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-jantar', -1, 'refeicoes')">-</button>
+              <input type="number" id="${unitId}-r-jantar" class="missao-step-input ${isJantarActive ? 'active-val' : ''}" data-activated="${isJantarActive ? 'true' : 'false'}" value="${isJantarActive ? rJantar : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" onclick="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" oninput="activateStandardUnitInput('${unitId}', this.id, 'refeicoes'); recalcStandardUnitTotal('${unitId}', 'refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-jantar', 1, 'refeicoes')">+</button>
             </div>
           </div>
 
           <div class="missao-sub-item">
             <div class="missao-sub-item-header"><span>Abordagens de Rua</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-abordagens', -1, 'refeicoes')">-</button>
-              <input type="number" id="macedonia-r-abordagens" class="missao-step-input ${isAbordagensActive ? 'active-val' : ''}" data-activated="${isAbordagensActive ? 'true' : 'false'}" value="${isAbordagensActive ? rAbordagens : ''}" onfocus="activateMacedoniaInput(this.id, 'refeicoes')" onclick="activateMacedoniaInput(this.id, 'refeicoes')" oninput="activateMacedoniaInput(this.id, 'refeicoes'); recalcMacedoniaTotal('refeicoes')">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-abordagens', 1, 'refeicoes')">+</button>
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-abordagens', -1, 'refeicoes')">-</button>
+              <input type="number" id="${unitId}-r-abordagens" class="missao-step-input ${isAbordagensActive ? 'active-val' : ''}" data-activated="${isAbordagensActive ? 'true' : 'false'}" value="${isAbordagensActive ? rAbordagens : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" onclick="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" oninput="activateStandardUnitInput('${unitId}', this.id, 'refeicoes'); recalcStandardUnitTotal('${unitId}', 'refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-abordagens', 1, 'refeicoes')">+</button>
             </div>
           </div>
 
           <div class="missao-sub-item" style="grid-column: span 2;">
             <div class="missao-sub-item-header"><span>Eventos Especiais</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-eventos', -1, 'refeicoes')">-</button>
-              <input type="number" id="macedonia-r-eventos" class="missao-step-input ${isEventosActive ? 'active-val' : ''}" data-activated="${isEventosActive ? 'true' : 'false'}" value="${isEventosActive ? rEventos : ''}" onfocus="activateMacedoniaInput(this.id, 'refeicoes')" onclick="activateMacedoniaInput(this.id, 'refeicoes')" oninput="activateMacedoniaInput(this.id, 'refeicoes'); recalcMacedoniaTotal('refeicoes')">
-              <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-r-eventos', 1, 'refeicoes')">+</button>
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-eventos', -1, 'refeicoes')">-</button>
+              <input type="number" id="${unitId}-r-eventos" class="missao-step-input ${isEventosActive ? 'active-val' : ''}" data-activated="${isEventosActive ? 'true' : 'false'}" value="${isEventosActive ? rEventos : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" onclick="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" oninput="activateStandardUnitInput('${unitId}', this.id, 'refeicoes'); recalcStandardUnitTotal('${unitId}', 'refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-eventos', 1, 'refeicoes')">+</button>
             </div>
           </div>
         </div>
@@ -1594,16 +1640,16 @@ function openMacedoniaForm(targetDate, isEdit) {
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon">${MACEDONIA_ICONS.sociais}</div>
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.sociais}</div>
             <div>
               <div class="missao-q-title">Nº Encaminhamentos Sociais</div>
               <div class="missao-q-sub">CRAS, CREAS, INSS, DETRAN, emissão de documentos e outros</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-sociais', -1)">-</button>
-            <input type="number" id="macedonia-rep-sociais" class="missao-step-input ${isSociaisActive ? 'active-val' : ''}" data-activated="${isSociaisActive ? 'true' : 'false'}" value="${isSociaisActive ? sociais : ''}" onfocus="activateMacedoniaInput(this.id)" onclick="activateMacedoniaInput(this.id)" oninput="activateMacedoniaInput(this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-sociais', 1)">+</button>
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-sociais', -1)">-</button>
+            <input type="number" id="${unitId}-rep-sociais" class="missao-step-input ${isSociaisActive ? 'active-val' : ''}" data-activated="${isSociaisActive ? 'true' : 'false'}" value="${isSociaisActive ? sociais : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-sociais', 1)">+</button>
           </div>
         </div>
       </div>
@@ -1612,16 +1658,16 @@ function openMacedoniaForm(targetDate, isEdit) {
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon">${MACEDONIA_ICONS.saude}</div>
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.saude}</div>
             <div>
               <div class="missao-q-title">Nº Encaminhamentos de saúde</div>
               <div class="missao-q-sub">Consultas médicas e odontológicas, vacinas, exames e outros</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-saude', -1)">-</button>
-            <input type="number" id="macedonia-rep-saude" class="missao-step-input ${isSaudeActive ? 'active-val' : ''}" data-activated="${isSaudeActive ? 'true' : 'false'}" value="${isSaudeActive ? saude : ''}" onfocus="activateMacedoniaInput(this.id)" onclick="activateMacedoniaInput(this.id)" oninput="activateMacedoniaInput(this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-saude', 1)">+</button>
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-saude', -1)">-</button>
+            <input type="number" id="${unitId}-rep-saude" class="missao-step-input ${isSaudeActive ? 'active-val' : ''}" data-activated="${isSaudeActive ? 'true' : 'false'}" value="${isSaudeActive ? saude : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-saude', 1)">+</button>
           </div>
         </div>
       </div>
@@ -1630,16 +1676,16 @@ function openMacedoniaForm(targetDate, isEdit) {
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon">${MACEDONIA_ICONS.psico}</div>
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.psico}</div>
             <div>
               <div class="missao-q-title">Nº Atendimentos Psicológicos</div>
               <div class="missao-q-sub">Atendimentos e acompanhamentos psicológicos na unidade</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-psico', -1)">-</button>
-            <input type="number" id="macedonia-rep-psico" class="missao-step-input ${isPsicoActive ? 'active-val' : ''}" data-activated="${isPsicoActive ? 'true' : 'false'}" value="${isPsicoActive ? psico : ''}" onfocus="activateMacedoniaInput(this.id)" onclick="activateMacedoniaInput(this.id)" oninput="activateMacedoniaInput(this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-psico', 1)">+</button>
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-psico', -1)">-</button>
+            <input type="number" id="${unitId}-rep-psico" class="missao-step-input ${isPsicoActive ? 'active-val' : ''}" data-activated="${isPsicoActive ? 'true' : 'false'}" value="${isPsicoActive ? psico : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-psico', 1)">+</button>
           </div>
         </div>
       </div>
@@ -1648,16 +1694,16 @@ function openMacedoniaForm(targetDate, isEdit) {
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon">${MACEDONIA_ICONS.juridico}</div>
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.juridico}</div>
             <div>
               <div class="missao-q-title">Nº de demandas jurídicas</div>
               <div class="missao-q-sub">Atendimento com advogado presencial ou online, idas a fóruns, varas e outros departamentos da justiça</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-juridico', -1)">-</button>
-            <input type="number" id="macedonia-rep-juridico" class="missao-step-input ${isJuridicoActive ? 'active-val' : ''}" data-activated="${isJuridicoActive ? 'true' : 'false'}" value="${isJuridicoActive ? juridico : ''}" onfocus="activateMacedoniaInput(this.id)" onclick="activateMacedoniaInput(this.id)" oninput="activateMacedoniaInput(this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-juridico', 1)">+</button>
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-juridico', -1)">-</button>
+            <input type="number" id="${unitId}-rep-juridico" class="missao-step-input ${isJuridicoActive ? 'active-val' : ''}" data-activated="${isJuridicoActive ? 'true' : 'false'}" value="${isJuridicoActive ? juridico : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-juridico', 1)">+</button>
           </div>
         </div>
       </div>
@@ -1666,16 +1712,16 @@ function openMacedoniaForm(targetDate, isEdit) {
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon">${MACEDONIA_ICONS.estudos}</div>
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.estudos}</div>
             <div>
               <div class="missao-q-title">Nº Estudos Bíblicos realizados na unidade</div>
               <div class="missao-q-sub">Contabilizar a quantidade de estudos realizados e não o número de pessoas que participaram dos estudos bíblicos</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-estudos', -1)">-</button>
-            <input type="number" id="macedonia-rep-estudos" class="missao-step-input ${isEstudosActive ? 'active-val' : ''}" data-activated="${isEstudosActive ? 'true' : 'false'}" value="${isEstudosActive ? estudos : ''}" onfocus="activateMacedoniaInput(this.id)" onclick="activateMacedoniaInput(this.id)" oninput="activateMacedoniaInput(this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-estudos', 1)">+</button>
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-estudos', -1)">-</button>
+            <input type="number" id="${unitId}-rep-estudos" class="missao-step-input ${isEstudosActive ? 'active-val' : ''}" data-activated="${isEstudosActive ? 'true' : 'false'}" value="${isEstudosActive ? estudos : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-estudos', 1)">+</button>
           </div>
         </div>
       </div>
@@ -1684,34 +1730,106 @@ function openMacedoniaForm(targetDate, isEdit) {
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon">${MACEDONIA_ICONS.cultos}</div>
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.cultos}</div>
             <div>
               <div class="missao-q-title">Nº Cultos e Vigílias realizadas na unidade</div>
               <div class="missao-q-sub">Cultos, vigílias e celebrações espirituais</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-cultos', -1)">-</button>
-            <input type="number" id="macedonia-rep-cultos" class="missao-step-input ${isCultosActive ? 'active-val' : ''}" data-activated="${isCultosActive ? 'true' : 'false'}" value="${isCultosActive ? cultos : ''}" onfocus="activateMacedoniaInput(this.id)" onclick="activateMacedoniaInput(this.id)" oninput="activateMacedoniaInput(this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-cultos', 1)">+</button>
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-cultos', -1)">-</button>
+            <input type="number" id="${unitId}-rep-cultos" class="missao-step-input ${isCultosActive ? 'active-val' : ''}" data-activated="${isCultosActive ? 'true' : 'false'}" value="${isCultosActive ? cultos : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-cultos', 1)">+</button>
           </div>
         </div>
       </div>
 
-      <!-- 8. Nº DECISÕES POR CRISTO -->
+      <!-- 8. Nº DE ACOLHIDOS QUE PARTICIPARAM DAS OFICINAS DE INSTRUMENTOS SONS DA MISSÃO -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.musica}</div>
+            <div>
+              <div class="missao-q-title">Nº de acolhidos que participaram das oficinas de instrumentos musicais do Sons da Missão</div>
+              <div class="missao-q-sub">Oficinas de música e prática instrumental</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-musica', -1)">-</button>
+            <input type="number" id="${unitId}-rep-musica" class="missao-step-input ${isMusicaActive ? 'active-val' : ''}" data-activated="${isMusicaActive ? 'true' : 'false'}" value="${isMusicaActive ? musica : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-musica', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Nº DE ENSAIOS DO CORO -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.coro}</div>
+            <div>
+              <div class="missao-q-title">Nº de ensaios do coro</div>
+              <div class="missao-q-sub">Ensaios do coro e grupo vocal da unidade</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-coro', -1)">-</button>
+            <input type="number" id="${unitId}-rep-coro" class="missao-step-input ${isCoroActive ? 'active-val' : ''}" data-activated="${isCoroActive ? 'true' : 'false'}" value="${isCoroActive ? coro : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-coro', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. Nº DE ATIVIDADES FÍSICAS/ESPORTES FORAM REALIZADAS -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.esporte}</div>
+            <div>
+              <div class="missao-q-title">Nº de atividades físicas/esportes foram realizadas</div>
+              <div class="missao-q-sub">Treinos, partidas e atividades esportivas na unidade</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-esporte', -1)">-</button>
+            <input type="number" id="${unitId}-rep-esporte" class="missao-step-input ${isEsporteActive ? 'active-val' : ''}" data-activated="${isEsporteActive ? 'true' : 'false'}" value="${isEsporteActive ? esporte : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-esporte', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11. Nº DE ACOLHIDOS PARTICIPARAM DAS ATIVIDADES FÍSICAS/ESPORTES -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.acolhidosEsporte}</div>
+            <div>
+              <div class="missao-q-title">Nº de acolhidos participaram das atividades físicas/esportes</div>
+              <div class="missao-q-sub">Quantidade total de acolhidos participantes</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-acolhidos-esporte', -1)">-</button>
+            <input type="number" id="${unitId}-rep-acolhidos-esporte" class="missao-step-input ${isAcolhidosEsporteActive ? 'active-val' : ''}" data-activated="${isAcolhidosEsporteActive ? 'true' : 'false'}" value="${isAcolhidosEsporteActive ? acolhidosEsporte : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-acolhidos-esporte', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12. Nº DECISÕES POR CRISTO -->
       <div class="missao-q-card" style="border:1.5px solid var(--gold-primary); background:rgba(197, 137, 8, 0.04);">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon" style="background:var(--gold-primary); color:#FFFFFF;">${MACEDONIA_ICONS.decisoes}</div>
+            <div class="missao-q-icon" style="background:var(--gold-primary); color:#FFFFFF;">${STANDARD_UNIT_ICONS.decisoes}</div>
             <div>
               <div class="missao-q-title" style="color:var(--gold-primary);">Nº Decisões por Cristo</div>
               <div class="missao-q-sub">Contabilizar decisões e reconciliações</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-decisoes', -1)">-</button>
-            <input type="number" id="macedonia-rep-decisoes" class="missao-step-input ${isDecisoesActive ? 'active-val' : ''}" data-activated="${isDecisoesActive ? 'true' : 'false'}" value="${isDecisoesActive ? decisoes : ''}" onfocus="activateMacedoniaInput(this.id)" onclick="activateMacedoniaInput(this.id)" oninput="activateMacedoniaInput(this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustMacedoniaStep('macedonia-rep-decisoes', 1)">+</button>
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-decisoes', -1)">-</button>
+            <input type="number" id="${unitId}-rep-decisoes" class="missao-step-input ${isDecisoesActive ? 'active-val' : ''}" data-activated="${isDecisoesActive ? 'true' : 'false'}" value="${isDecisoesActive ? decisoes : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-decisoes', 1)">+</button>
           </div>
         </div>
       </div>
@@ -1720,8 +1838,8 @@ function openMacedoniaForm(targetDate, isEdit) {
 
   modalFooter.innerHTML = `
     <div style="display:flex; gap:8px; width:100%;">
-      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openMacedoniaFlow()">Cancelar</button>
-      <button type="button" id="btn-save-macedonia-report" class="btn-primary-action" style="flex:1.5;" onclick="handleSaveMacedoniaReport()">
+      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openStandardUnitFlow('${unitId}')">Cancelar</button>
+      <button type="button" id="btn-save-${unitId}-report" class="btn-primary-action" style="flex:1.5;" onclick="handleSaveStandardUnitReport('${unitId}')">
         💾 Salvar Relatório
       </button>
     </div>
@@ -1729,25 +1847,23 @@ function openMacedoniaForm(targetDate, isEdit) {
 
   openModal('modal-generic');
 }
-window.openMacedoniaForm = openMacedoniaForm;
 
-// Auxiliares do Formulário da Macedônia
-function onMacedoniaDateChanged(newDate) {
+// Funções de Interação e Steppers
+function onStandardUnitDateChanged(unitId, newDate) {
   const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
   if (newDate > todayStr) {
     showToast('Não é possível selecionar uma data futura!', 'warning');
-    const input = document.getElementById('macedonia-rep-date');
+    const input = document.getElementById(`${unitId}-rep-date`);
     if (input) input.value = todayStr;
     newDate = todayStr;
   }
-  const label = document.getElementById('macedonia-date-label');
+  const label = document.getElementById(`${unitId}-date-label`);
   if (label) {
     label.textContent = (newDate === todayStr) ? `Hoje (${formatDateBR(newDate)})` : formatDateBR(newDate);
   }
 }
-window.onMacedoniaDateChanged = onMacedoniaDateChanged;
 
-function activateMacedoniaInput(inputId, group) {
+function activateStandardUnitInput(unitId, inputId, group) {
   const el = document.getElementById(inputId);
   if (!el) return;
 
@@ -1758,12 +1874,11 @@ function activateMacedoniaInput(inputId, group) {
   el.setAttribute('data-activated', 'true');
 
   if (group) {
-    recalcMacedoniaTotal(group);
+    recalcStandardUnitTotal(unitId, group);
   }
 }
-window.activateMacedoniaInput = activateMacedoniaInput;
 
-function adjustMacedoniaStep(inputId, delta, group) {
+function adjustStandardUnitStep(unitId, inputId, delta, group) {
   const el = document.getElementById(inputId);
   if (!el) return;
 
@@ -1777,19 +1892,18 @@ function adjustMacedoniaStep(inputId, delta, group) {
   el.setAttribute('data-activated', 'true');
 
   if (group) {
-    recalcMacedoniaTotal(group);
+    recalcStandardUnitTotal(unitId, group);
   }
   if (navigator.vibrate) navigator.vibrate(10);
 }
-window.adjustMacedoniaStep = adjustMacedoniaStep;
 
-function recalcMacedoniaTotal(group) {
+function recalcStandardUnitTotal(unitId, group) {
   if (group === 'refeicoes') {
-    const elCafe = document.getElementById('macedonia-r-cafe');
-    const elAlmoco = document.getElementById('macedonia-r-almoco');
-    const elJantar = document.getElementById('macedonia-r-jantar');
-    const elAbordagens = document.getElementById('macedonia-r-abordagens');
-    const elEventos = document.getElementById('macedonia-r-eventos');
+    const elCafe = document.getElementById(`${unitId}-r-cafe`);
+    const elAlmoco = document.getElementById(`${unitId}-r-almoco`);
+    const elJantar = document.getElementById(`${unitId}-r-jantar`);
+    const elAbordagens = document.getElementById(`${unitId}-r-abordagens`);
+    const elEventos = document.getElementById(`${unitId}-r-eventos`);
 
     const cAct = elCafe?.getAttribute('data-activated') === 'true';
     const aAct = elAlmoco?.getAttribute('data-activated') === 'true';
@@ -1804,7 +1918,7 @@ function recalcMacedoniaTotal(group) {
     const abordagens = parseInt(elAbordagens?.value, 10) || 0;
     const eventos = parseInt(elEventos?.value, 10) || 0;
 
-    const totalEl = document.getElementById('macedonia-total-refeicoes');
+    const totalEl = document.getElementById(`${unitId}-total-refeicoes`);
     if (totalEl) {
       if (allFilled) {
         totalEl.textContent = (cafe + almoco + jantar + abordagens + eventos);
@@ -1817,12 +1931,12 @@ function recalcMacedoniaTotal(group) {
     }
   }
 }
-window.recalcMacedoniaTotal = recalcMacedoniaTotal;
 
-// 5. Salvamento Oficial do Relatório da Macedônia
-async function handleSaveMacedoniaReport() {
-  const btn = document.getElementById('btn-save-macedonia-report');
-  const dateVal = document.getElementById('macedonia-rep-date')?.value;
+// 5. Salvamento Oficial do Relatório da Unidade (12 Perguntas)
+async function handleSaveStandardUnitReport(unitId) {
+  const unit = UNIT_PROFILES[unitId] || { name: 'Unidade', defaultReporter: 'Missionário' };
+  const btn = document.getElementById(`btn-save-${unitId}-report`);
+  const dateVal = document.getElementById(`${unitId}-rep-date`)?.value;
   const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
   if (!dateVal) {
     showToast('Informe a data do relatório.', 'danger');
@@ -1833,38 +1947,46 @@ async function handleSaveMacedoniaReport() {
     return;
   }
 
-  const rCafe = parseInt(document.getElementById('macedonia-r-cafe')?.value, 10) || 0;
-  const rAlmoco = parseInt(document.getElementById('macedonia-r-almoco')?.value, 10) || 0;
-  const rJantar = parseInt(document.getElementById('macedonia-r-jantar')?.value, 10) || 0;
-  const rAbordagens = parseInt(document.getElementById('macedonia-r-abordagens')?.value, 10) || 0;
-  const rEventos = parseInt(document.getElementById('macedonia-r-eventos')?.value, 10) || 0;
+  const rCafe = parseInt(document.getElementById(`${unitId}-r-cafe`)?.value, 10) || 0;
+  const rAlmoco = parseInt(document.getElementById(`${unitId}-r-almoco`)?.value, 10) || 0;
+  const rJantar = parseInt(document.getElementById(`${unitId}-r-jantar`)?.value, 10) || 0;
+  const rAbordagens = parseInt(document.getElementById(`${unitId}-r-abordagens`)?.value, 10) || 0;
+  const rEventos = parseInt(document.getElementById(`${unitId}-r-eventos`)?.value, 10) || 0;
 
-  const sociais = parseInt(document.getElementById('macedonia-rep-sociais')?.value, 10) || 0;
-  const saude = parseInt(document.getElementById('macedonia-rep-saude')?.value, 10) || 0;
-  const psico = parseInt(document.getElementById('macedonia-rep-psico')?.value, 10) || 0;
-  const juridico = parseInt(document.getElementById('macedonia-rep-juridico')?.value, 10) || 0;
-  const estudos = parseInt(document.getElementById('macedonia-rep-estudos')?.value, 10) || 0;
-  const cultos = parseInt(document.getElementById('macedonia-rep-cultos')?.value, 10) || 0;
-  const decisoes = parseInt(document.getElementById('macedonia-rep-decisoes')?.value, 10) || 0;
-  const reporter = document.getElementById('macedonia-rep-reporter')?.value.trim() || 'Missionário Carlos Eduardo';
-  const repId = document.getElementById('macedonia-rep-id')?.value;
+  const sociais = parseInt(document.getElementById(`${unitId}-rep-sociais`)?.value, 10) || 0;
+  const saude = parseInt(document.getElementById(`${unitId}-rep-saude`)?.value, 10) || 0;
+  const psico = parseInt(document.getElementById(`${unitId}-rep-psico`)?.value, 10) || 0;
+  const juridico = parseInt(document.getElementById(`${unitId}-rep-juridico`)?.value, 10) || 0;
+  const estudos = parseInt(document.getElementById(`${unitId}-rep-estudos`)?.value, 10) || 0;
+  const cultos = parseInt(document.getElementById(`${unitId}-rep-cultos`)?.value, 10) || 0;
+  const musica = parseInt(document.getElementById(`${unitId}-rep-musica`)?.value, 10) || 0;
+  const coro = parseInt(document.getElementById(`${unitId}-rep-coro`)?.value, 10) || 0;
+  const esporte = parseInt(document.getElementById(`${unitId}-rep-esporte`)?.value, 10) || 0;
+  const acolhidosEsporte = parseInt(document.getElementById(`${unitId}-rep-acolhidos-esporte`)?.value, 10) || 0;
+  const decisoes = parseInt(document.getElementById(`${unitId}-rep-decisoes`)?.value, 10) || 0;
+  const reporter = document.getElementById(`${unitId}-rep-reporter`)?.value.trim() || unit.defaultReporter;
+  const repId = document.getElementById(`${unitId}-rep-id`)?.value;
 
   // Bloco Refeições: só é considerado preenchido se TODOS os 5 subcampos forem ativados
-  const cafeAct = document.getElementById('macedonia-r-cafe')?.getAttribute('data-activated') === 'true';
-  const almocoAct = document.getElementById('macedonia-r-almoco')?.getAttribute('data-activated') === 'true';
-  const jantarAct = document.getElementById('macedonia-r-jantar')?.getAttribute('data-activated') === 'true';
-  const abordagensAct = document.getElementById('macedonia-r-abordagens')?.getAttribute('data-activated') === 'true';
-  const eventosAct = document.getElementById('macedonia-r-eventos')?.getAttribute('data-activated') === 'true';
+  const cafeAct = document.getElementById(`${unitId}-r-cafe`)?.getAttribute('data-activated') === 'true';
+  const almocoAct = document.getElementById(`${unitId}-r-almoco`)?.getAttribute('data-activated') === 'true';
+  const jantarAct = document.getElementById(`${unitId}-r-jantar`)?.getAttribute('data-activated') === 'true';
+  const abordagensAct = document.getElementById(`${unitId}-r-abordagens`)?.getAttribute('data-activated') === 'true';
+  const eventosAct = document.getElementById(`${unitId}-r-eventos`)?.getAttribute('data-activated') === 'true';
   const isRefeicoesComplete = cafeAct && almocoAct && jantarAct && abordagensAct && eventosAct;
 
-  // Campos individuais: preenchidos se o campo foi ativado
-  const isSociaisComplete = document.getElementById('macedonia-rep-sociais')?.getAttribute('data-activated') === 'true';
-  const isSaudeComplete = document.getElementById('macedonia-rep-saude')?.getAttribute('data-activated') === 'true';
-  const isPsicoComplete = document.getElementById('macedonia-rep-psico')?.getAttribute('data-activated') === 'true';
-  const isJuridicoComplete = document.getElementById('macedonia-rep-juridico')?.getAttribute('data-activated') === 'true';
-  const isEstudosComplete = document.getElementById('macedonia-rep-estudos')?.getAttribute('data-activated') === 'true';
-  const isCultosComplete = document.getElementById('macedonia-rep-cultos')?.getAttribute('data-activated') === 'true';
-  const isDecisoesComplete = document.getElementById('macedonia-rep-decisoes')?.getAttribute('data-activated') === 'true';
+  // Campos individuais (11 restantes)
+  const isSociaisComplete = document.getElementById(`${unitId}-rep-sociais`)?.getAttribute('data-activated') === 'true';
+  const isSaudeComplete = document.getElementById(`${unitId}-rep-saude`)?.getAttribute('data-activated') === 'true';
+  const isPsicoComplete = document.getElementById(`${unitId}-rep-psico`)?.getAttribute('data-activated') === 'true';
+  const isJuridicoComplete = document.getElementById(`${unitId}-rep-juridico`)?.getAttribute('data-activated') === 'true';
+  const isEstudosComplete = document.getElementById(`${unitId}-rep-estudos`)?.getAttribute('data-activated') === 'true';
+  const isCultosComplete = document.getElementById(`${unitId}-rep-cultos`)?.getAttribute('data-activated') === 'true';
+  const isMusicaComplete = document.getElementById(`${unitId}-rep-musica`)?.getAttribute('data-activated') === 'true';
+  const isCoroComplete = document.getElementById(`${unitId}-rep-coro`)?.getAttribute('data-activated') === 'true';
+  const isEsporteComplete = document.getElementById(`${unitId}-rep-esporte`)?.getAttribute('data-activated') === 'true';
+  const isAcolhidosEsporteComplete = document.getElementById(`${unitId}-rep-acolhidos-esporte`)?.getAttribute('data-activated') === 'true';
+  const isDecisoesComplete = document.getElementById(`${unitId}-rep-decisoes`)?.getAttribute('data-activated') === 'true';
 
   const answeredQuestions = {
     refeicoes: isRefeicoesComplete,
@@ -1874,6 +1996,10 @@ async function handleSaveMacedoniaReport() {
     juridicas: isJuridicoComplete,
     estudosBiblicos: isEstudosComplete,
     cultosVigilias: isCultosComplete,
+    sonsDaMissao: isMusicaComplete,
+    ensaiosCoro: isCoroComplete,
+    atividadesFisicas: isEsporteComplete,
+    participantesAtividadesFisicas: isAcolhidosEsporteComplete,
     decisoes: isDecisoesComplete
   };
 
@@ -1885,14 +2011,15 @@ async function handleSaveMacedoniaReport() {
     rEventos: eventosAct
   };
 
-  // Mantém acolhidosPresentes herdado ou padrão da Macedônia (60) para integridade do censo geral
-  const existingRep = dbManager.getReports().find(r => r.unitId === 'macedonia' && r.date === dateVal);
-  const acolhidosPresentes = (existingRep && typeof existingRep.acolhidosPresentes === 'number') ? existingRep.acolhidosPresentes : 60;
+  // Mantém acolhidosPresentes herdado ou padrão da unidade para integridade do censo geral
+  const existingRep = dbManager.getReports().find(r => r.unitId === unitId && r.date === dateVal);
+  const defAcolhidos = (unitId === 'macedonia' ? 60 : unitId === 'feminina' ? 30 : 45);
+  const acolhidosPresentes = (existingRep && typeof existingRep.acolhidosPresentes === 'number') ? existingRep.acolhidosPresentes : defAcolhidos;
 
   const reportData = {
-    id: repId || `rep_macedonia_${dateVal}`,
-    unitId: 'macedonia',
-    unitName: 'Macedônia',
+    id: repId || `rep_${unitId}_${dateVal}`,
+    unitId: unitId,
+    unitName: unit.name,
     date: dateVal,
     reporterName: reporter,
     acolhidosPresentes: acolhidosPresentes,
@@ -1912,6 +2039,10 @@ async function handleSaveMacedoniaReport() {
     estudosBiblicos: estudos,
     cultosVigilias: cultos,
     cultos: cultos,
+    sonsDaMissao: musica,
+    ensaiosCoro: coro,
+    atividadesFisicas: esporte,
+    participantesAtividadesFisicas: acolhidosEsporte,
     decisoesCristo: decisoes,
     answeredQuestions: answeredQuestions,
     answeredSubfields: answeredSubfields,
@@ -1924,12 +2055,13 @@ async function handleSaveMacedoniaReport() {
   try {
     await dbManager.saveReport(reportData);
     closeModal('modal-generic');
-    showToast(`Relatório da Macedônia (${formatDateBR(dateVal)}) salvo com sucesso!`, 'success');
+    showToast(`Relatório da ${unit.name} (${formatDateBR(dateVal)}) salvo com sucesso!`, 'success');
     if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
     
-    // Atualiza Painel Diário e 8 bolinhas de progresso neon
+    // Atualiza Painel Diário e bolinhas de progresso neon
     if (typeof updateHeroMetrics === 'function') updateHeroMetrics();
-    if (typeof updateMacedoniaDots === 'function') updateMacedoniaDots();
+    if (unitId === 'macedonia' && typeof updateMacedoniaDots === 'function') updateMacedoniaDots();
+    if (unitId === 'feminina' && typeof updateFemininaDots === 'function') updateFemininaDots();
   } catch (err) {
     showToast('Erro ao salvar relatório: ' + err.message, 'danger');
   } finally {
@@ -1937,7 +2069,20 @@ async function handleSaveMacedoniaReport() {
     if (btn) btn.disabled = false;
   }
 }
-window.handleSaveMacedoniaReport = handleSaveMacedoniaReport;
+
+// Aliases e Exportações Globais
+window.openMacedoniaFlow = () => openStandardUnitFlow('macedonia');
+window.openFemininaFlow = () => openStandardUnitFlow('feminina');
+window.openStandardUnitFlow = openStandardUnitFlow;
+window.openStandardUnitCalendar = openStandardUnitCalendar;
+window.navStandardUnitCalendar = navStandardUnitCalendar;
+window.viewStandardUnitDayReport = viewStandardUnitDayReport;
+window.openStandardUnitForm = openStandardUnitForm;
+window.onStandardUnitDateChanged = onStandardUnitDateChanged;
+window.activateStandardUnitInput = activateStandardUnitInput;
+window.adjustStandardUnitStep = adjustStandardUnitStep;
+window.recalcStandardUnitTotal = recalcStandardUnitTotal;
+window.handleSaveStandardUnitReport = handleSaveStandardUnitReport;
 
 // --- MÓDULOS DE UNIDADE (MISSÃO, MACEDÔNIA, FEMININA) ---
 function openUnitReportModal(unitId) {
@@ -1946,7 +2091,11 @@ function openUnitReportModal(unitId) {
     return;
   }
   if (unitId === 'macedonia') {
-    openMacedoniaFlow();
+    openStandardUnitFlow('macedonia');
+    return;
+  }
+  if (unitId === 'feminina') {
+    openStandardUnitFlow('feminina');
     return;
   }
   const unit = UNIT_PROFILES[unitId];

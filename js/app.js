@@ -31,9 +31,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Atualizar métricas do card de visão geral
   updateHeroMetrics();
 
-  // Atualizar 7 bolinhas de progresso neon do botão Missão e 8 da Macedônia
+  // Atualizar bolinhas de progresso neon dos botões de unidades (Missão, Macedônia e Feminina)
   updateMissaoDots();
   updateMacedoniaDots();
+  updateFemininaDots();
 
   // Ativar efeitos 3D táteis e micro-animações nos 6 botões
   setup3DButtonsInteractions();
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateHeroMetrics();
     updateMissaoDots();
     updateMacedoniaDots();
+    updateFemininaDots();
     const detail = (e && e.detail) || {};
     if (detail.firstLoad) {
       // Primeira carga: silenciosa
@@ -168,62 +170,91 @@ if (typeof window !== 'undefined') {
   window.updateMissaoDots = updateMissaoDots;
 }
 
-// Atualiza o estado das 8 bolinhas de progresso neon no topo do botão Macedônia
-function updateMacedoniaDots() {
-  const container = document.getElementById('macedonia-dots-container');
+// Atualiza o estado das 12 bolinhas de progresso neon para Macedônia ou Feminina
+function updateStandardUnitDots(unitId, containerId) {
+  const container = document.getElementById(containerId);
   if (!container) return;
 
   const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
   const reports = (typeof dbManager !== 'undefined' && dbManager.getReports) ? dbManager.getReports() : [];
-  const macReport = reports.find(r => r.unitId === 'macedonia' && r.date === todayStr);
+  const rep = reports.find(r => r.unitId === unitId && r.date === todayStr);
 
   const dots = container.querySelectorAll('.btn-dot');
-  if (!dots || dots.length < 8) return;
+  if (!dots || dots.length < 12) return;
 
-  if (!macReport) {
+  if (!rep) {
     dots.forEach(d => d.classList.remove('active'));
     return;
   }
 
-  const ans = macReport.answeredQuestions || {};
-  const hasAnsFlags = !!macReport.answeredQuestions;
+  const ans = rep.answeredQuestions || {};
+  const hasAnsFlags = !!rep.answeredQuestions;
 
   // 1. Refeições (5 subcampos)
-  const ref = macReport.refeicoes || {};
+  const ref = rep.refeicoes || {};
   const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
   const rActive = hasAnsFlags ? !!ans.refeicoes : (totalRef > 0);
   if (rActive) dots[0].classList.add('active'); else dots[0].classList.remove('active');
 
   // 2. Encaminhamentos Sociais
-  const sociaisActive = hasAnsFlags ? !!ans.sociais : ((macReport.encaminhamentosSociais || 0) > 0 || (macReport.novasTriagens || 0) > 0);
+  const sociaisActive = hasAnsFlags ? !!ans.sociais : ((rep.encaminhamentosSociais || 0) > 0 || (rep.novasTriagens || 0) > 0);
   if (sociaisActive) dots[1].classList.add('active'); else dots[1].classList.remove('active');
 
   // 3. Encaminhamentos de Saúde
-  const saudeActive = hasAnsFlags ? !!ans.saude : ((macReport.encaminhamentosSaude || 0) > 0);
+  const saudeActive = hasAnsFlags ? !!ans.saude : ((rep.encaminhamentosSaude || 0) > 0);
   if (saudeActive) dots[2].classList.add('active'); else dots[2].classList.remove('active');
 
   // 4. Atendimentos Psicológicos
-  const psicoActive = hasAnsFlags ? !!ans.psicologicos : ((macReport.atendimentosPsicologicos || 0) > 0);
+  const psicoActive = hasAnsFlags ? !!ans.psicologicos : ((rep.atendimentosPsicologicos || 0) > 0);
   if (psicoActive) dots[3].classList.add('active'); else dots[3].classList.remove('active');
 
   // 5. Demandas Jurídicas
-  const juridicoActive = hasAnsFlags ? !!ans.juridicas : ((macReport.demandasJuridicas || 0) > 0);
+  const juridicoActive = hasAnsFlags ? !!ans.juridicas : ((rep.demandasJuridicas || 0) > 0);
   if (juridicoActive) dots[4].classList.add('active'); else dots[4].classList.remove('active');
 
   // 6. Estudos Bíblicos
-  const estudosActive = hasAnsFlags ? !!ans.estudosBiblicos : ((macReport.estudosBiblicos || 0) > 0);
+  const estudosActive = hasAnsFlags ? !!ans.estudosBiblicos : ((rep.estudosBiblicos || 0) > 0);
   if (estudosActive) dots[5].classList.add('active'); else dots[5].classList.remove('active');
 
   // 7. Cultos e Vigílias
-  const cultosActive = hasAnsFlags ? !!ans.cultosVigilias : (((macReport.cultosVigilias || 0) > 0) || ((macReport.cultos || 0) > 0));
+  const cultosActive = hasAnsFlags ? !!ans.cultosVigilias : (((rep.cultosVigilias || 0) > 0) || ((rep.cultos || 0) > 0));
   if (cultosActive) dots[6].classList.add('active'); else dots[6].classList.remove('active');
 
-  // 8. Decisões por Cristo
-  const decisoesActive = hasAnsFlags ? !!ans.decisoes : ((macReport.decisoesCristo || 0) > 0);
-  if (decisoesActive) dots[7].classList.add('active'); else dots[7].classList.remove('active');
+  // 8. Sons da Missão (Oficinas de instrumentos musicais)
+  const musicaActive = hasAnsFlags ? !!ans.sonsDaMissao : ((rep.sonsDaMissao || 0) > 0);
+  if (musicaActive) dots[7].classList.add('active'); else dots[7].classList.remove('active');
+
+  // 9. Ensaios do Coro
+  const coroActive = hasAnsFlags ? !!ans.ensaiosCoro : ((rep.ensaiosCoro || 0) > 0);
+  if (coroActive) dots[8].classList.add('active'); else dots[8].classList.remove('active');
+
+  // 10. Atividades Físicas / Esportes realizadas
+  const esporteActive = hasAnsFlags ? !!ans.atividadesFisicas : ((rep.atividadesFisicas || 0) > 0);
+  if (esporteActive) dots[9].classList.add('active'); else dots[9].classList.remove('active');
+
+  // 11. Acolhidos que participaram das atividades físicas/esportes
+  const acolhidosEsporteActive = hasAnsFlags ? !!ans.participantesAtividadesFisicas : ((rep.participantesAtividadesFisicas || 0) > 0);
+  if (acolhidosEsporteActive) dots[10].classList.add('active'); else dots[10].classList.remove('active');
+
+  // 12. Decisões por Cristo
+  const decisoesActive = hasAnsFlags ? !!ans.decisoes : ((rep.decisoesCristo || 0) > 0);
+  if (decisoesActive) dots[11].classList.add('active'); else dots[11].classList.remove('active');
+}
+
+// Atualiza o estado das 12 bolinhas de progresso neon no topo do botão Macedônia
+function updateMacedoniaDots() {
+  updateStandardUnitDots('macedonia', 'macedonia-dots-container');
 }
 if (typeof window !== 'undefined') {
   window.updateMacedoniaDots = updateMacedoniaDots;
+}
+
+// Atualiza o estado das 12 bolinhas de progresso neon no topo do botão Unidade Feminina
+function updateFemininaDots() {
+  updateStandardUnitDots('feminina', 'feminina-dots-container');
+}
+if (typeof window !== 'undefined') {
+  window.updateFemininaDots = updateFemininaDots;
 }
 
 // Renderização da Data por extenso em Português
@@ -323,12 +354,15 @@ function updateHeroMetrics() {
   if (elTriagens) elTriagens.textContent = triagens;
   if (elRelatoriosCount) elRelatoriosCount.textContent = `${todayReports.length}/3`;
 
-  // Mantém as bolinhas neon dos botões Missão e Macedônia sincronizadas
+  // Mantém as bolinhas neon dos botões Missão, Macedônia e Feminina sincronizadas
   if (typeof updateMissaoDots === 'function') {
     updateMissaoDots();
   }
   if (typeof updateMacedoniaDots === 'function') {
     updateMacedoniaDots();
+  }
+  if (typeof updateFemininaDots === 'function') {
+    updateFemininaDots();
   }
 }
 
@@ -614,6 +648,7 @@ function checkDayTransition() {
     if (typeof updateHeroMetrics === 'function') updateHeroMetrics();
     if (typeof updateMissaoDots === 'function') updateMissaoDots();
     if (typeof updateMacedoniaDots === 'function') updateMacedoniaDots();
+    if (typeof updateFemininaDots === 'function') updateFemininaDots();
   }
 }
 

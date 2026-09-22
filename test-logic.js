@@ -214,9 +214,9 @@ const stockAfterAdd = testMergeStock([...initialStock, newItem], stockSeed);
 assert.strictEqual(stockAfterAdd.length, 3, 'Estoque após adição deve ter 3 itens');
 assert(stockAfterAdd.some(i => i.id === 'stk_missao_g01'), 'Feijões devem continuar no estoque');
 assert(stockAfterAdd.some(i => i.id === 'stk_missao_g02'), 'Arroz deve continuar no estoque');
-// Teste de cálculo das 8 bolinhas neon da Macedônia (com suporte a answeredQuestions e valor 0)
-function calculateMacedoniaDots(report) {
-  if (!report) return [false, false, false, false, false, false, false, false];
+// Teste de cálculo das 12 bolinhas neon da Macedônia e Feminina (com suporte a answeredQuestions e valor 0)
+function calculateStandardUnitDots(report) {
+  if (!report) return Array(12).fill(false);
   const ans = report.answeredQuestions || {};
   const hasAnsFlags = !!report.answeredQuestions;
 
@@ -231,6 +231,10 @@ function calculateMacedoniaDots(report) {
     hasAnsFlags ? !!ans.juridicas : ((report.demandasJuridicas || 0) > 0),
     hasAnsFlags ? !!ans.estudosBiblicos : ((report.estudosBiblicos || 0) > 0),
     hasAnsFlags ? !!ans.cultosVigilias : (((report.cultosVigilias || 0) > 0) || ((report.cultos || 0) > 0)),
+    hasAnsFlags ? !!ans.sonsDaMissao : ((report.sonsDaMissao || 0) > 0),
+    hasAnsFlags ? !!ans.ensaiosCoro : ((report.ensaiosCoro || 0) > 0),
+    hasAnsFlags ? !!ans.atividadesFisicas : ((report.atividadesFisicas || 0) > 0),
+    hasAnsFlags ? !!ans.participantesAtividadesFisicas : ((report.participantesAtividadesFisicas || 0) > 0),
     hasAnsFlags ? !!ans.decisoes : ((report.decisoesCristo || 0) > 0)
   ];
 }
@@ -243,13 +247,17 @@ const mockMacedoniaCompleta = {
   demandasJuridicas: 2,
   estudosBiblicos: 4,
   cultosVigilias: 1,
+  sonsDaMissao: 12,
+  ensaiosCoro: 2,
+  atividadesFisicas: 3,
+  participantesAtividadesFisicas: 15,
   decisoesCristo: 2
 };
-const dotsMacCompleta = calculateMacedoniaDots(mockMacedoniaCompleta);
-assert.deepStrictEqual(dotsMacCompleta, [true, true, true, true, true, true, true, true], 'Todas as 8 bolinhas da Macedônia devem acender');
+const dotsMacCompleta = calculateStandardUnitDots(mockMacedoniaCompleta);
+assert.deepStrictEqual(dotsMacCompleta, Array(12).fill(true), 'Todas as 12 bolinhas da Macedônia devem acender');
 
-// Teste Macedônia com valor 0 ativado
-const mockMacedoniaZeroRespondido = {
+// Teste Unidade Feminina com valor 0 ativado em perguntas específicas
+const mockFemininaZeroRespondido = {
   refeicoes: { cafe: 0, almoco: 0, jantar: 0, abordagens: 0, eventosEspeciais: 0 },
   encaminhamentosSociais: 0,
   encaminhamentosSaude: 0,
@@ -257,6 +265,10 @@ const mockMacedoniaZeroRespondido = {
   demandasJuridicas: 0,
   estudosBiblicos: 0,
   cultosVigilias: 0,
+  sonsDaMissao: 0,
+  ensaiosCoro: 0,
+  atividadesFisicas: 0,
+  participantesAtividadesFisicas: 0,
   decisoesCristo: 0,
   answeredQuestions: {
     refeicoes: true,
@@ -266,13 +278,17 @@ const mockMacedoniaZeroRespondido = {
     juridicas: false,
     estudosBiblicos: true,
     cultosVigilias: true,
+    sonsDaMissao: true,
+    ensaiosCoro: false,
+    atividadesFisicas: true,
+    participantesAtividadesFisicas: true,
     decisoes: false
   }
 };
-const dotsMacZero = calculateMacedoniaDots(mockMacedoniaZeroRespondido);
-assert.deepStrictEqual(dotsMacZero, [true, true, false, true, false, true, true, false], 'Bolinhas da Macedônia devem responder a answeredQuestions mesmo com 0');
+const dotsFemZero = calculateStandardUnitDots(mockFemininaZeroRespondido);
+assert.deepStrictEqual(dotsFemZero, [true, true, false, true, false, true, true, true, false, true, true, false], 'Bolinhas da Feminina devem responder a answeredQuestions mesmo com 0');
 
-// Teste do bloco de 5 refeições da Macedônia
+// Teste do bloco de 5 refeições da Macedônia/Feminina
 const macRefeicoesIncompleto = { rCafe: true, rAlmoco: true, rJantar: true, rAbordagens: true, rEventos: false };
 assert.strictEqual(checkBlockCompletion(macRefeicoesIncompleto, ['rCafe', 'rAlmoco', 'rJantar', 'rAbordagens', 'rEventos']), false, 'Bloco de 5 refeições incompleto não deve contar');
 
