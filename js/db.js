@@ -12,6 +12,18 @@ const DB_KEYS = {
   APP_CONFIG: 'cristolandia_check_app_cfg_v1'
 };
 
+// Data local no fuso horário do usuário (YYYY-MM-DD) sem distorção UTC
+function getLocalDateStr(d = new Date()) {
+  const dateObj = (d instanceof Date) ? d : new Date(d);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+if (typeof window !== 'undefined') {
+  window.getLocalDateStr = getLocalDateStr;
+}
+
 // Configuração Oficial Nativa do Firebase (Provisionada e Integrada)
 const OFFICIAL_FIREBASE_CONFIG = {
   apiKey: "AIzaSyBCoSFxtSYEXAaU-4JbHhFNT84CEFYjjTw",
@@ -98,20 +110,20 @@ const INITIAL_SEED = {
       id: 'rep_demo_01',
       unitId: 'missao',
       unitName: 'Missão',
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateStr(),
       createdAt: Date.now() - 3600000 * 3,
       reporterName: 'Pr. Marcos Lima',
-      acolhidosPresentes: 48,
-      novasTriagens: 4,
-      desligamentos: 1,
+      acolhidosPresentes: 45,
+      novasTriagens: 2,
+      desligamentos: 0,
       refeicoes: {
-        cafe: 48,
-        almoco: 52,
-        lanche: 48,
-        jantar: 50
+        cafe: 45,
+        almoco: 49,
+        lanche: 45,
+        jantar: 45
       },
-      atividades: 'Culto matinal de louvor e testemunhos, palestra sobre reconstrução de vínculos familiares.',
-      saude: '2 acolhidos encaminhados para consulta médica de rotina na UBS.',
+      atividades: 'Culto matinal de louvor e testemunhos, devocional e atendimento.',
+      saude: 'Atendimento de rotina e acompanhamento de acolhidos.',
       necessidades: 'Reposição urgente de sabonetes e escovas de dente.',
       status: 'concluido'
     },
@@ -119,17 +131,17 @@ const INITIAL_SEED = {
       id: 'rep_demo_02',
       unitId: 'macedonia',
       unitName: 'Macedônia',
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateStr(),
       createdAt: Date.now() - 3600000 * 5,
       reporterName: 'Missionário Carlos Eduardo',
-      acolhidosPresentes: 62,
+      acolhidosPresentes: 60,
       novasTriagens: 2,
       desligamentos: 0,
       refeicoes: {
-        cafe: 62,
-        almoco: 65,
-        lanche: 62,
-        jantar: 64
+        cafe: 60,
+        almoco: 62,
+        lanche: 60,
+        jantar: 60
       },
       atividades: 'Oficina de marcenaria comunitária, horta agroecológica e discipulado bíblico nível 2.',
       saude: 'Medicação continuada administrada pontualmente pela equipe de enfermagem.',
@@ -140,16 +152,16 @@ const INITIAL_SEED = {
       id: 'rep_demo_03',
       unitId: 'feminina',
       unitName: 'Feminina',
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateStr(),
       createdAt: Date.now() - 3600000 * 2,
       reporterName: 'Missionária Sarah Silva',
-      acolhidosPresentes: 29,
+      acolhidosPresentes: 30,
       novasTriagens: 1,
       desligamentos: 0,
       refeicoes: {
-        cafe: 29,
-        almoco: 31,
-        lanche: 29,
+        cafe: 30,
+        almoco: 32,
+        lanche: 30,
         jantar: 30
       },
       atividades: 'Oficina de artesanato, roda de conversa terapêutica e momento devocional.',
@@ -393,7 +405,15 @@ class CristolandiaDB {
   getReports() {
     try {
       const raw = localStorage.getItem(DB_KEYS.REPORTS);
-      return raw ? JSON.parse(raw) : [];
+      const list = raw ? JSON.parse(raw) : [];
+      const defaults = { missao: 45, macedonia: 60, feminina: 30 };
+      return list.map(r => {
+        if (!r) return r;
+        if (!r.acolhidosPresentes || r.acolhidosPresentes <= 0) {
+          r.acolhidosPresentes = defaults[r.unitId] || 30;
+        }
+        return r;
+      });
     } catch {
       return [];
     }

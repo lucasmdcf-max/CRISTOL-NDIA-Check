@@ -1,6 +1,6 @@
 {
-  "version": "1.0.21",
-  "build": "20260921_21",
+  "version": "1.0.22",
+  "build": "20260922_22",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Harmonização de identidade visual nos cabeçalhos dos modais (temas Estoque, Relatórios e Instituições sincronizados com os botões da Home); remoção de balões verdes dispensáveis; data no topo de atualização de estoque; reorganização das tags em wrap sem scroll lock e eliminação de botões inferiores redundantes."
+  "releaseNotes": "Correção e sincronização resiliente dos contadores do Painel Diário: cálculo ininterrupto do censo residencial ativo das 3 unidades (Missão, Macedônia, Feminina), consolidação inteligente do último plantão concluído para refeições e triagens antes do novo lançamento, função padrão getLocalDateStr anti-fuso UTC e indicação clara de status no formulário de unidade."
 }

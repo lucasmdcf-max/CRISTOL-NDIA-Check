@@ -37,25 +37,36 @@ function openUnitReportModal(unitId) {
   const unit = UNIT_PROFILES[unitId];
   if (!unit) return;
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
   const reports = dbManager.getReports();
   const existing = reports.find(r => r.unitId === unitId && r.date === todayStr);
 
-  const acolhidos = existing ? existing.acolhidosPresentes : (unitId === 'missao' ? 45 : unitId === 'macedonia' ? 60 : 28);
-  const triagens = existing ? existing.novasTriagens : 2;
+  // Busca o último relatório salvo da unidade para herdar o censo de residentes
+  const unitReports = reports
+    .filter(r => r.unitId === unitId)
+    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.updatedAt || 0) - (a.updatedAt || 0));
+  const lastReport = unitReports[0];
+
+  const defaultAcolhidos = (unitId === 'missao' ? 45 : unitId === 'macedonia' ? 60 : 30);
+  const acolhidos = existing ? existing.acolhidosPresentes : (lastReport && lastReport.acolhidosPresentes > 0 ? lastReport.acolhidosPresentes : defaultAcolhidos);
+  const triagens = existing ? existing.novasTriagens : 0;
   const desligamentos = existing ? existing.desligamentos : 0;
-  const cafe = existing ? existing.refeicoes.cafe : acolhidos;
-  const almoco = existing ? existing.refeicoes.almoco : (acolhidos + 4);
-  const lanche = existing ? existing.refeicoes.lanche : acolhidos;
-  const jantar = existing ? existing.refeicoes.jantar : acolhidos;
+  const cafe = existing ? (existing.refeicoes?.cafe ?? acolhidos) : acolhidos;
+  const almoco = existing ? (existing.refeicoes?.almoco ?? (acolhidos + 2)) : (acolhidos + 2);
+  const lanche = existing ? (existing.refeicoes?.lanche ?? acolhidos) : acolhidos;
+  const jantar = existing ? (existing.refeicoes?.jantar ?? acolhidos) : acolhidos;
   const atividades = existing ? existing.atividades : '';
   const saude = existing ? existing.saude : '';
   const necessidades = existing ? existing.necessidades : '';
-  const reporter = existing ? existing.reporterName : unit.defaultReporter;
+  const reporter = existing ? existing.reporterName : (lastReport ? lastReport.reporterName : unit.defaultReporter);
 
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
+
+  const statusBadge = existing
+    ? `<span style="display:inline-block; margin-top:3px; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#E8F5E9; color:#1E4D2B;">✓ Registrado hoje (${formatDateBR(existing.date)})</span>`
+    : `<span style="display:inline-block; margin-top:3px; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#FFF8E1; color:#C58908;">📝 Novo relatório do dia</span>`;
 
   modalHeader.className = 'modal-header';
   modalHeader.innerHTML = `
@@ -65,7 +76,8 @@ function openUnitReportModal(unitId) {
       </div>
       <div>
         <h2>Relatório ${unit.name}</h2>
-        <p>${unit.fullName}</p>
+        <p style="margin-bottom:2px;">${unit.fullName}</p>
+        ${statusBadge}
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -968,7 +980,7 @@ function renderReportsHistory() {
 
 function shareReportsWhatsApp() {
   const reports = dbManager.getReports();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
   const todayReports = reports.filter(r => r.date === todayStr);
 
   let text = `*CRISTOLÂNDIA CHECK • RESUMO DIÁRIO (${formatDateBR(todayStr)})*\n\n`;
@@ -1140,7 +1152,7 @@ function openNovaAtividadeForm(pending) {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
 
   modalHeader.className = 'modal-header theme-instituicoes';
   modalHeader.innerHTML = `

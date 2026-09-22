@@ -97,6 +97,19 @@ function refreshCurrentScreen() {
 }
 
 // Renderização da Data por extenso em Português
+// Data local no fuso horário do usuário (YYYY-MM-DD) sem distorção UTC
+function getLocalDateStr(d = new Date()) {
+  const dateObj = (d instanceof Date) ? d : new Date(d);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+if (typeof window !== 'undefined') {
+  window.getLocalDateStr = getLocalDateStr;
+}
+
+// Renderização da Data por extenso em Português
 function renderCurrentDate() {
   const dateEl = document.getElementById('current-date-display');
   if (!dateEl) return;
@@ -107,23 +120,64 @@ function renderCurrentDate() {
   dateEl.textContent = formatted;
 }
 
-// Atualização das métricas do card de resumo
+// Atualização resiliente das métricas do card de resumo (Painel Diário)
 function updateHeroMetrics() {
   const reports = dbManager.getReports();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateStr();
 
-  const todayReports = reports.filter(r => r.date === todayStr);
+  // 1. CENSO ATIVO DE ACOLHIDOS RESIDENTES (3 Despensas/Unidades)
+  // Em comunidades de acolhimento, o censo é residencial contínuo.
+  // Para cada unidade, obtém o número de acolhidos do dia de hoje;
+  // se ainda não preenchido hoje, herda do último relatório registrado salvo daquela unidade.
+  const unitDefaults = { missao: 45, macedonia: 60, feminina: 30 };
+  const unitIds = ['missao', 'macedonia', 'feminina'];
 
   let acolhidos = 0;
+  unitIds.forEach(uId => {
+    // 1º: Relatório de hoje salvo
+    const repToday = reports.find(r => r.unitId === uId && r.date === todayStr);
+    if (repToday && repToday.acolhidosPresentes > 0) {
+      acolhidos += repToday.acolhidosPresentes;
+      return;
+    }
+    // 2º: Relatório mais recente da unidade com acolhidos cadastrados
+    const unitReports = reports
+      .filter(r => r.unitId === uId)
+      .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.updatedAt || 0) - (a.updatedAt || 0));
+    
+    const latestRep = unitReports.find(r => (r.acolhidosPresentes || 0) > 0);
+    if (latestRep && latestRep.acolhidosPresentes > 0) {
+      acolhidos += latestRep.acolhidosPresentes;
+    } else {
+      acolhidos += unitDefaults[uId] || 0;
+    }
+  });
+
+  // 2. REFEIÇÕES E TRIAGENS DO DIA
+  const todayReports = reports.filter(r => r.date === todayStr);
+
   let refeicoes = 0;
   let triagens = 0;
 
-  todayReports.forEach(r => {
-    acolhidos += (r.acolhidosPresentes || 0);
-    triagens += (r.novasTriagens || 0);
-    const ref = r.refeicoes || {};
-    refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
-  });
+  if (todayReports.length > 0) {
+    todayReports.forEach(r => {
+      triagens += (r.novasTriagens || 0);
+      const ref = r.refeicoes || {};
+      refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
+    });
+  } else {
+    // Caso hoje ainda não haja fechamento salvo, consolida do dia mais recente com registros
+    const sortedDates = [...new Set(reports.map(r => r.date).filter(Boolean))].sort().reverse();
+    const mostRecentDate = sortedDates[0];
+    if (mostRecentDate) {
+      const recentReports = reports.filter(r => r.date === mostRecentDate);
+      recentReports.forEach(r => {
+        triagens += (r.novasTriagens || 0);
+        const ref = r.refeicoes || {};
+        refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
+      });
+    }
+  }
 
   state.totalAcolhidosHoje = acolhidos;
   state.totalRefeicoesHoje = refeicoes;
