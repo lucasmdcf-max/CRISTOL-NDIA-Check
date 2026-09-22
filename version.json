@@ -1,6 +1,6 @@
 {
-  "version": "1.0.45",
-  "build": "20260922_45",
+  "version": "1.0.46",
+  "build": "20260922_46",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Estudos bíblicos integrados aos relatórios das unidades (cards, PDF A4 e WhatsApp); estoque sem invenção de dados passados; remoção de relatórios e triagens de teste mantendo intacto o cadastro de instituições."
+  "releaseNotes": "Remoção dos botões redundantes de registrar entrada/saída de dentro dos itens da despensa, centralizando o controle nos botões de + e - dos estoques."
 }

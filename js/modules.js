@@ -3654,22 +3654,12 @@ function renderStockItemOscillationBody(itemId, unitId, periodType) {
       </div>
 
       <!-- Card de Consumo Médio Dinâmico que acompanha o Filtro -->
-      <div class="avg-consumption-box">
+      <div class="avg-consumption-box" style="margin-bottom:4px;">
         <div class="avg-consumption-label">${osc.avgTitle}</div>
         <div class="avg-consumption-val">${osc.avgConsumption} ${osc.avgUnitLabel}</div>
         <div class="avg-consumption-sub">
           Média calculada cruzando todas as entradas (+${osc.totalEntradas}) e saídas (-${osc.totalSaidas}) nos ${osc.labels.length} ${osc.periodType === 'dias' ? 'dias' : osc.periodType === 'semanas' ? 'semanas' : 'meses'} na despensa de ${unit.name}.
         </div>
-      </div>
-
-      <!-- Ações Rápidas: Inserir Entrada ou Consumo Diário -->
-      <div style="display:flex; gap:8px; margin-top:4px;">
-        <button type="button" class="btn-step" onclick="quickStockMovementPrompt('${item.id}', '${unitId}', 'entrada')" style="flex:1; height:38px; border-radius:10px; background:rgba(46,125,50,0.12); color:#1E4D2B; font-weight:700; font-size:0.8rem; border:1px solid rgba(46,125,50,0.3); cursor:pointer;">
-          ➕ Registrar Entrada
-        </button>
-        <button type="button" class="btn-step" onclick="quickStockMovementPrompt('${item.id}', '${unitId}', 'saida')" style="flex:1; height:38px; border-radius:10px; background:rgba(198,40,40,0.1); color:#991B1B; font-weight:700; font-size:0.8rem; border:1px solid rgba(198,40,40,0.3); cursor:pointer;">
-          ➖ Registrar Consumo
-        </button>
       </div>
     </div>
   `;
