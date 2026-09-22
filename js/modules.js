@@ -439,17 +439,31 @@ function openMissaoForm(targetDate, isEdit) {
   
   // Detecção de status de ativação prévio
   const ans = existing?.answeredQuestions || {};
+  const sub = existing?.answeredSubfields || {};
   const hasAns = !!existing?.answeredQuestions;
 
-  const isPessoasActive = hasAns ? !!ans.pessoas : (!!existing && ((existing.pessoasAtendidas?.total ?? 0) > 0 || (existing.acolhidosPresentes ?? 0) > 0));
-  const isRefeicoesActive = hasAns ? !!ans.refeicoes : (!!existing && (((existing.refeicoes?.cafe || 0) + (existing.refeicoes?.almoco || 0)) > 0));
+  // Bloco Pessoas
+  const isRuaActive = hasAns ? (sub.pRua ?? !!ans.pessoas) : (!!existing && typeof existing.pessoasAtendidas?.rua === 'number');
+  const isUnidadeActive = hasAns ? (sub.pUnidade ?? !!ans.pessoas) : (!!existing && typeof existing.pessoasAtendidas?.unidade === 'number');
+  const isBuscaActive = hasAns ? (sub.pBusca ?? !!ans.pessoas) : (!!existing && typeof existing.pessoasAtendidas?.buscaAtiva === 'number');
+  const isPessoasComplete = isRuaActive && isUnidadeActive && isBuscaActive;
+
+  // Bloco Refeições
+  const isCafeActive = hasAns ? (sub.rCafe ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.cafe === 'number');
+  const isAlmocoActive = hasAns ? (sub.rAlmoco ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.almoco === 'number');
+  const isLancheActive = hasAns ? (sub.rLanche ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.lanche === 'number');
+  const isJantarActive = hasAns ? (sub.rJantar ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.jantar === 'number');
+  const isRBuscaActive = hasAns ? (sub.rBusca ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.buscaAtiva === 'number');
+  const isRefeicoesComplete = isCafeActive && isAlmocoActive && isLancheActive && isJantarActive && isRBuscaActive;
+
+  // Campos individuais
   const isBanhosActive = hasAns ? !!ans.banhos : (!!existing && typeof existing.banhos === 'number');
   const isCortesActive = hasAns ? !!ans.cortes : (!!existing && typeof existing.cortesCabelo === 'number');
   const isCultosActive = hasAns ? !!ans.cultos : (!!existing && typeof existing.cultos === 'number');
-  const isBuscaActive = hasAns ? !!ans.buscaAtiva : (!!existing && (typeof existing.buscaAtivaPessoas === 'number' || typeof existing.pessoasAtendidas?.buscaAtiva === 'number'));
+  const isBuscaPessoasActive = hasAns ? !!ans.buscaAtiva : (!!existing && (typeof existing.buscaAtivaPessoas === 'number' || typeof existing.pessoasAtendidas?.buscaAtiva === 'number'));
   const isDecisoesActive = hasAns ? !!ans.decisoes : (!!existing && typeof existing.decisoesCristo === 'number');
 
-  // Valores das perguntas (0 por padrão em novos relatórios)
+  // Valores numéricos carregados
   const pRua = existing?.pessoasAtendidas?.rua ?? 0;
   const pUnidade = existing?.pessoasAtendidas?.unidade ?? (existing?.acolhidosPresentes ?? 0);
   const pBusca = existing?.pessoasAtendidas?.buscaAtiva ?? 0;
@@ -536,7 +550,7 @@ function openMissaoForm(targetDate, isEdit) {
           </div>
           <div style="text-align:right;">
             <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
-            <div class="missao-total-val ${isPessoasActive ? 'active-val' : ''}" id="missao-total-pessoas">${pTotal}</div>
+            <div class="missao-total-val ${isPessoasComplete ? 'active-val' : ''}" id="missao-total-pessoas">${isPessoasComplete ? pTotal : '-'}</div>
           </div>
         </div>
 
@@ -547,7 +561,7 @@ function openMissaoForm(targetDate, isEdit) {
             </div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-rua', -1, 'pessoas')">-</button>
-              <input type="number" id="missao-p-rua" class="missao-step-input ${isPessoasActive ? 'active-val' : ''}" data-activated="${isPessoasActive ? 'true' : 'false'}" value="${pRua}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
+              <input type="number" id="missao-p-rua" class="missao-step-input ${isRuaActive ? 'active-val' : ''}" data-activated="${isRuaActive ? 'true' : 'false'}" value="${isRuaActive ? pRua : ''}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-rua', 1, 'pessoas')">+</button>
             </div>
           </div>
@@ -558,7 +572,7 @@ function openMissaoForm(targetDate, isEdit) {
             </div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-unidade', -1, 'pessoas')">-</button>
-              <input type="number" id="missao-p-unidade" class="missao-step-input ${isPessoasActive ? 'active-val' : ''}" data-activated="${isPessoasActive ? 'true' : 'false'}" value="${pUnidade}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
+              <input type="number" id="missao-p-unidade" class="missao-step-input ${isUnidadeActive ? 'active-val' : ''}" data-activated="${isUnidadeActive ? 'true' : 'false'}" value="${isUnidadeActive ? pUnidade : ''}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-unidade', 1, 'pessoas')">+</button>
             </div>
           </div>
@@ -569,7 +583,7 @@ function openMissaoForm(targetDate, isEdit) {
             </div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-busca', -1, 'pessoas')">-</button>
-              <input type="number" id="missao-p-busca" class="missao-step-input ${isPessoasActive ? 'active-val' : ''}" data-activated="${isPessoasActive ? 'true' : 'false'}" value="${pBusca}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
+              <input type="number" id="missao-p-busca" class="missao-step-input ${isBuscaActive ? 'active-val' : ''}" data-activated="${isBuscaActive ? 'true' : 'false'}" value="${isBuscaActive ? pBusca : ''}" onfocus="activateMissaoInput(this.id, 'pessoas')" onclick="activateMissaoInput(this.id, 'pessoas')" oninput="activateMissaoInput(this.id, 'pessoas'); recalcMissaoTotal('pessoas')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-busca', 1, 'pessoas')">+</button>
             </div>
           </div>
@@ -586,7 +600,7 @@ function openMissaoForm(targetDate, isEdit) {
           </div>
           <div style="text-align:right;">
             <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
-            <div class="missao-total-val ${isRefeicoesActive ? 'active-val' : ''}" id="missao-total-refeicoes">${rTotal}</div>
+            <div class="missao-total-val ${isRefeicoesComplete ? 'active-val' : ''}" id="missao-total-refeicoes">${isRefeicoesComplete ? rTotal : '-'}</div>
           </div>
         </div>
 
@@ -595,7 +609,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Café da Manhã</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-cafe', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-cafe" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rCafe}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-cafe" class="missao-step-input ${isCafeActive ? 'active-val' : ''}" data-activated="${isCafeActive ? 'true' : 'false'}" value="${isCafeActive ? rCafe : ''}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-cafe', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -604,7 +618,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Almoço</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-almoco', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-almoco" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rAlmoco}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-almoco" class="missao-step-input ${isAlmocoActive ? 'active-val' : ''}" data-activated="${isAlmocoActive ? 'true' : 'false'}" value="${isAlmocoActive ? rAlmoco : ''}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-almoco', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -613,7 +627,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Café da Tarde</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-lanche', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-lanche" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rLanche}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-lanche" class="missao-step-input ${isLancheActive ? 'active-val' : ''}" data-activated="${isLancheActive ? 'true' : 'false'}" value="${isLancheActive ? rLanche : ''}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-lanche', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -622,7 +636,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Jantar</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-jantar', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-jantar" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rJantar}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-jantar" class="missao-step-input ${isJantarActive ? 'active-val' : ''}" data-activated="${isJantarActive ? 'true' : 'false'}" value="${isJantarActive ? rJantar : ''}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-jantar', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -631,7 +645,7 @@ function openMissaoForm(targetDate, isEdit) {
             <div class="missao-sub-item-header"><span>Nas Ações de Busca Ativa</span></div>
             <div class="missao-stepper-controls" style="justify-content:center;">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-busca', -1, 'refeicoes')">-</button>
-              <input type="number" id="missao-r-busca" class="missao-step-input ${isRefeicoesActive ? 'active-val' : ''}" data-activated="${isRefeicoesActive ? 'true' : 'false'}" value="${rBusca}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
+              <input type="number" id="missao-r-busca" class="missao-step-input ${isRBuscaActive ? 'active-val' : ''}" data-activated="${isRBuscaActive ? 'true' : 'false'}" value="${isRBuscaActive ? rBusca : ''}" onfocus="activateMissaoInput(this.id, 'refeicoes')" onclick="activateMissaoInput(this.id, 'refeicoes')" oninput="activateMissaoInput(this.id, 'refeicoes'); recalcMissaoTotal('refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-busca', 1, 'refeicoes')">+</button>
             </div>
           </div>
@@ -650,7 +664,7 @@ function openMissaoForm(targetDate, isEdit) {
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-banhos', -1)">-</button>
-            <input type="number" id="missao-rep-banhos" class="missao-step-input ${isBanhosActive ? 'active-val' : ''}" data-activated="${isBanhosActive ? 'true' : 'false'}" value="${banhos}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
+            <input type="number" id="missao-rep-banhos" class="missao-step-input ${isBanhosActive ? 'active-val' : ''}" data-activated="${isBanhosActive ? 'true' : 'false'}" value="${isBanhosActive ? banhos : ''}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-banhos', 1)">+</button>
           </div>
         </div>
@@ -668,7 +682,7 @@ function openMissaoForm(targetDate, isEdit) {
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cortes', -1)">-</button>
-            <input type="number" id="missao-rep-cortes" class="missao-step-input ${isCortesActive ? 'active-val' : ''}" data-activated="${isCortesActive ? 'true' : 'false'}" value="${cortes}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
+            <input type="number" id="missao-rep-cortes" class="missao-step-input ${isCortesActive ? 'active-val' : ''}" data-activated="${isCortesActive ? 'true' : 'false'}" value="${isCortesActive ? cortes : ''}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cortes', 1)">+</button>
           </div>
         </div>
@@ -686,7 +700,7 @@ function openMissaoForm(targetDate, isEdit) {
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cultos', -1)">-</button>
-            <input type="number" id="missao-rep-cultos" class="missao-step-input ${isCultosActive ? 'active-val' : ''}" data-activated="${isCultosActive ? 'true' : 'false'}" value="${cultos}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
+            <input type="number" id="missao-rep-cultos" class="missao-step-input ${isCultosActive ? 'active-val' : ''}" data-activated="${isCultosActive ? 'true' : 'false'}" value="${isCultosActive ? cultos : ''}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cultos', 1)">+</button>
           </div>
         </div>
@@ -704,7 +718,7 @@ function openMissaoForm(targetDate, isEdit) {
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-busca-pessoas', -1)">-</button>
-            <input type="number" id="missao-rep-busca-pessoas" class="missao-step-input ${isBuscaActive ? 'active-val' : ''}" data-activated="${isBuscaActive ? 'true' : 'false'}" value="${buscaAtivaPessoas}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
+            <input type="number" id="missao-rep-busca-pessoas" class="missao-step-input ${isBuscaPessoasActive ? 'active-val' : ''}" data-activated="${isBuscaPessoasActive ? 'true' : 'false'}" value="${isBuscaPessoasActive ? buscaAtivaPessoas : ''}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-busca-pessoas', 1)">+</button>
           </div>
         </div>
@@ -722,7 +736,7 @@ function openMissaoForm(targetDate, isEdit) {
           </div>
           <div class="missao-stepper-controls">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-decisoes', -1)">-</button>
-            <input type="number" id="missao-rep-decisoes" class="missao-step-input ${isDecisoesActive ? 'active-val' : ''}" data-activated="${isDecisoesActive ? 'true' : 'false'}" value="${decisoes}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
+            <input type="number" id="missao-rep-decisoes" class="missao-step-input ${isDecisoesActive ? 'active-val' : ''}" data-activated="${isDecisoesActive ? 'true' : 'false'}" value="${isDecisoesActive ? decisoes : ''}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
             <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-decisoes', 1)">+</button>
           </div>
         </div>
@@ -753,19 +767,19 @@ function onMissaoDateChanged(newDate) {
 }
 window.onMissaoDateChanged = onMissaoDateChanged;
 
-// Ativação de campos numéricos (fica verde e marca data-activated="true")
+// Ativação de campos numéricos (se estiver vazio preenche 0, fica verde e marca data-activated="true")
 function activateMissaoInput(inputId, group) {
   const el = document.getElementById(inputId);
-  if (el) {
-    el.classList.add('active-val');
-    el.setAttribute('data-activated', 'true');
+  if (!el) return;
+
+  if (el.value === '' || el.value === undefined || el.value === null) {
+    el.value = '0';
   }
-  if (group === 'pessoas') {
-    const totalEl = document.getElementById('missao-total-pessoas');
-    if (totalEl) totalEl.classList.add('active-val');
-  } else if (group === 'refeicoes') {
-    const totalEl = document.getElementById('missao-total-refeicoes');
-    if (totalEl) totalEl.classList.add('active-val');
+  el.classList.add('active-val');
+  el.setAttribute('data-activated', 'true');
+
+  if (group) {
+    recalcMissaoTotal(group);
   }
 }
 window.activateMissaoInput = activateMissaoInput;
@@ -773,31 +787,80 @@ window.activateMissaoInput = activateMissaoInput;
 function adjustMissaoStep(inputId, delta, group) {
   const el = document.getElementById(inputId);
   if (!el) return;
-  activateMissaoInput(inputId, group);
+
   let val = parseInt(el.value, 10);
-  if (isNaN(val)) val = 0;
+  if (isNaN(val) || el.value === '') {
+    val = 0;
+  }
   val = Math.max(0, val + delta);
   el.value = val;
-  if (group) recalcMissaoTotal(group);
+  el.classList.add('active-val');
+  el.setAttribute('data-activated', 'true');
+
+  if (group) {
+    recalcMissaoTotal(group);
+  }
   if (navigator.vibrate) navigator.vibrate(10);
 }
 window.adjustMissaoStep = adjustMissaoStep;
 
 function recalcMissaoTotal(group) {
   if (group === 'pessoas') {
-    const rua = parseInt(document.getElementById('missao-p-rua')?.value, 10) || 0;
-    const unidade = parseInt(document.getElementById('missao-p-unidade')?.value, 10) || 0;
-    const busca = parseInt(document.getElementById('missao-p-busca')?.value, 10) || 0;
+    const elRua = document.getElementById('missao-p-rua');
+    const elUnid = document.getElementById('missao-p-unidade');
+    const elBusca = document.getElementById('missao-p-busca');
+
+    const ruaAct = elRua?.getAttribute('data-activated') === 'true';
+    const unidAct = elUnid?.getAttribute('data-activated') === 'true';
+    const buscaAct = elBusca?.getAttribute('data-activated') === 'true';
+    const allFilled = ruaAct && unidAct && buscaAct;
+
+    const rua = parseInt(elRua?.value, 10) || 0;
+    const unid = parseInt(elUnid?.value, 10) || 0;
+    const busca = parseInt(elBusca?.value, 10) || 0;
+
     const totalEl = document.getElementById('missao-total-pessoas');
-    if (totalEl) totalEl.textContent = (rua + unidade + busca);
+    if (totalEl) {
+      if (allFilled) {
+        totalEl.textContent = (rua + unid + busca);
+        totalEl.classList.add('active-val');
+      } else {
+        const partial = (ruaAct ? rua : 0) + (unidAct ? unid : 0) + (buscaAct ? busca : 0);
+        totalEl.textContent = (ruaAct || unidAct || buscaAct) ? partial : '-';
+        totalEl.classList.remove('active-val');
+      }
+    }
   } else if (group === 'refeicoes') {
-    const cafe = parseInt(document.getElementById('missao-r-cafe')?.value, 10) || 0;
-    const almoco = parseInt(document.getElementById('missao-r-almoco')?.value, 10) || 0;
-    const lanche = parseInt(document.getElementById('missao-r-lanche')?.value, 10) || 0;
-    const jantar = parseInt(document.getElementById('missao-r-jantar')?.value, 10) || 0;
-    const busca = parseInt(document.getElementById('missao-r-busca')?.value, 10) || 0;
+    const elCafe = document.getElementById('missao-r-cafe');
+    const elAlmoco = document.getElementById('missao-r-almoco');
+    const elLanche = document.getElementById('missao-r-lanche');
+    const elJantar = document.getElementById('missao-r-jantar');
+    const elBusca = document.getElementById('missao-r-busca');
+
+    const cAct = elCafe?.getAttribute('data-activated') === 'true';
+    const aAct = elAlmoco?.getAttribute('data-activated') === 'true';
+    const lAct = elLanche?.getAttribute('data-activated') === 'true';
+    const jAct = elJantar?.getAttribute('data-activated') === 'true';
+    const bAct = elBusca?.getAttribute('data-activated') === 'true';
+    const allFilled = cAct && aAct && lAct && jAct && bAct;
+
+    const cafe = parseInt(elCafe?.value, 10) || 0;
+    const almoco = parseInt(elAlmoco?.value, 10) || 0;
+    const lanche = parseInt(elLanche?.value, 10) || 0;
+    const jantar = parseInt(elJantar?.value, 10) || 0;
+    const busca = parseInt(elBusca?.value, 10) || 0;
+
     const totalEl = document.getElementById('missao-total-refeicoes');
-    if (totalEl) totalEl.textContent = (cafe + almoco + lanche + jantar + busca);
+    if (totalEl) {
+      if (allFilled) {
+        totalEl.textContent = (cafe + almoco + lanche + jantar + busca);
+        totalEl.classList.add('active-val');
+      } else {
+        const partial = (cAct ? cafe : 0) + (aAct ? almoco : 0) + (lAct ? lanche : 0) + (jAct ? jantar : 0) + (bAct ? busca : 0);
+        totalEl.textContent = (cAct || aAct || lAct || jAct || bAct) ? partial : '-';
+        totalEl.classList.remove('active-val');
+      }
+    }
   }
 }
 window.recalcMissaoTotal = recalcMissaoTotal;
@@ -830,31 +893,46 @@ async function handleSaveMissaoReport() {
   const reporter = document.getElementById('missao-rep-reporter')?.value.trim() || 'Pr. Marcos Lima';
   const repId = document.getElementById('missao-rep-id')?.value;
 
-  // Perguntas respondidas/ativadas pelo usuário (mesmo com valor 0)
-  const isPessoasActive = (document.getElementById('missao-p-rua')?.getAttribute('data-activated') === 'true') ||
-                          (document.getElementById('missao-p-unidade')?.getAttribute('data-activated') === 'true') ||
-                          (document.getElementById('missao-p-busca')?.getAttribute('data-activated') === 'true');
+  // Bloco Pessoas: só é considerado preenchido se TODOS os campos do bloco estiverem preenchidos (não cinzas)
+  const ruaAct = document.getElementById('missao-p-rua')?.getAttribute('data-activated') === 'true';
+  const unidAct = document.getElementById('missao-p-unidade')?.getAttribute('data-activated') === 'true';
+  const buscaAct = document.getElementById('missao-p-busca')?.getAttribute('data-activated') === 'true';
+  const isPessoasComplete = ruaAct && unidAct && buscaAct;
 
-  const isRefeicoesActive = (document.getElementById('missao-r-cafe')?.getAttribute('data-activated') === 'true') ||
-                            (document.getElementById('missao-r-almoco')?.getAttribute('data-activated') === 'true') ||
-                            (document.getElementById('missao-r-lanche')?.getAttribute('data-activated') === 'true') ||
-                            (document.getElementById('missao-r-jantar')?.getAttribute('data-activated') === 'true') ||
-                            (document.getElementById('missao-r-busca')?.getAttribute('data-activated') === 'true');
+  // Bloco Refeições: só é considerado preenchido se TODOS os campos do bloco estiverem preenchidos (não cinzas)
+  const cafeAct = document.getElementById('missao-r-cafe')?.getAttribute('data-activated') === 'true';
+  const almocoAct = document.getElementById('missao-r-almoco')?.getAttribute('data-activated') === 'true';
+  const lancheAct = document.getElementById('missao-r-lanche')?.getAttribute('data-activated') === 'true';
+  const jantarAct = document.getElementById('missao-r-jantar')?.getAttribute('data-activated') === 'true';
+  const rBuscaAct = document.getElementById('missao-r-busca')?.getAttribute('data-activated') === 'true';
+  const isRefeicoesComplete = cafeAct && almocoAct && lancheAct && jantarAct && rBuscaAct;
 
-  const isBanhosActive = document.getElementById('missao-rep-banhos')?.getAttribute('data-activated') === 'true';
-  const isCortesActive = document.getElementById('missao-rep-cortes')?.getAttribute('data-activated') === 'true';
-  const isCultosActive = document.getElementById('missao-rep-cultos')?.getAttribute('data-activated') === 'true';
-  const isBuscaActive = document.getElementById('missao-rep-busca-pessoas')?.getAttribute('data-activated') === 'true';
-  const isDecisoesActive = document.getElementById('missao-rep-decisoes')?.getAttribute('data-activated') === 'true';
+  // Campos individuais: preenchidos se o campo foi ativado
+  const isBanhosComplete = document.getElementById('missao-rep-banhos')?.getAttribute('data-activated') === 'true';
+  const isCortesComplete = document.getElementById('missao-rep-cortes')?.getAttribute('data-activated') === 'true';
+  const isCultosComplete = document.getElementById('missao-rep-cultos')?.getAttribute('data-activated') === 'true';
+  const isBuscaComplete = document.getElementById('missao-rep-busca-pessoas')?.getAttribute('data-activated') === 'true';
+  const isDecisoesComplete = document.getElementById('missao-rep-decisoes')?.getAttribute('data-activated') === 'true';
 
   const answeredQuestions = {
-    pessoas: isPessoasActive,
-    refeicoes: isRefeicoesActive,
-    banhos: isBanhosActive,
-    cortes: isCortesActive,
-    cultos: isCultosActive,
-    buscaAtiva: isBuscaActive,
-    decisoes: isDecisoesActive
+    pessoas: isPessoasComplete,
+    refeicoes: isRefeicoesComplete,
+    banhos: isBanhosComplete,
+    cortes: isCortesComplete,
+    cultos: isCultosComplete,
+    buscaAtiva: isBuscaComplete,
+    decisoes: isDecisoesComplete
+  };
+
+  const answeredSubfields = {
+    pRua: ruaAct,
+    pUnidade: unidAct,
+    pBusca: buscaAct,
+    rCafe: cafeAct,
+    rAlmoco: almocoAct,
+    rLanche: lancheAct,
+    rJantar: jantarAct,
+    rBusca: rBuscaAct
   };
 
   const reportData = {
@@ -886,6 +964,7 @@ async function handleSaveMissaoReport() {
     buscaAtivaPessoas: buscaAtivaPessoas,
     decisoesCristo: decisoes,
     answeredQuestions: answeredQuestions,
+    answeredSubfields: answeredSubfields,
     status: 'concluido'
   };
 

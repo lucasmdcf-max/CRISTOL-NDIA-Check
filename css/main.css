@@ -1655,9 +1655,9 @@ body {
   font-size: 0.95rem;
   font-weight: 700;
   color: #8E8E93; /* Inativo por padrão: cinza */
-  border: 1.5px solid var(--border-beige);
+  border: 1.5px solid #D5D0C7;
   border-radius: 8px;
-  background: var(--bg-cream);
+  background: #E8E4DC; /* Preenchida na cor cinza claro quando não respondida */
   padding: 2px 4px;
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }

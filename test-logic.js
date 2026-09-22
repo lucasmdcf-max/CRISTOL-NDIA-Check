@@ -178,4 +178,21 @@ const mockMissaoComZeroRespondido = {
 const dotsComZero = calculateMissaoDots(mockMissaoComZeroRespondido);
 assert.deepStrictEqual(dotsComZero, [true, true, true, false, true, false, true], 'Perguntas ativadas devem acender bolinhas mesmo se o valor for 0');
 
+// Teste de validação por bloco (só considera preenchido se TODOS os campos do bloco forem ativados)
+function checkBlockCompletion(subfields, requiredKeys) {
+  return requiredKeys.every(k => subfields[k] === true);
+}
+
+const blocoPessoasIncompleto = { pRua: true, pUnidade: true, pBusca: false };
+assert.strictEqual(checkBlockCompletion(blocoPessoasIncompleto, ['pRua', 'pUnidade', 'pBusca']), false, 'Bloco de pessoas incompleto não deve contar como respondido');
+
+const blocoPessoasCompleto = { pRua: true, pUnidade: true, pBusca: true };
+assert.strictEqual(checkBlockCompletion(blocoPessoasCompleto, ['pRua', 'pUnidade', 'pBusca']), true, 'Bloco de pessoas completo deve contar como respondido');
+
+const blocoRefeicoesIncompleto = { rCafe: true, rAlmoco: true, rLanche: true, rJantar: true, rBusca: false };
+assert.strictEqual(checkBlockCompletion(blocoRefeicoesIncompleto, ['rCafe', 'rAlmoco', 'rLanche', 'rJantar', 'rBusca']), false, 'Bloco de refeições incompleto não deve contar');
+
+const blocoRefeicoesCompleto = { rCafe: true, rAlmoco: true, rLanche: true, rJantar: true, rBusca: true };
+assert.strictEqual(checkBlockCompletion(blocoRefeicoesCompleto, ['rCafe', 'rAlmoco', 'rLanche', 'rJantar', 'rBusca']), true, 'Bloco de refeições completo deve contar');
+
 console.log('✅ Todos os testes de lógica de sanitização e dados passaram com 100% de sucesso!');

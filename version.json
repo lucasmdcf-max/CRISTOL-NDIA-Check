@@ -1,6 +1,6 @@
 {
-  "version": "1.0.25",
-  "build": "20260922_25",
+  "version": "1.0.26",
+  "build": "20260922_26",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Ajustes no formulário da Missão: valores iniciam na cor cinza e passam para verde nobre ao serem ativados (clique em +/-, foco ou digitação), permitindo que respostas com valor zero (0) sejam registradas e acendam as bolinhas neon no botão da Missão; remoção da numeração nos enunciados de todos os campos; remoção do subtítulo no campo Missionário."
+  "releaseNotes": "Ajuste na interface da Missão: caixas numéricas iniciam vazias com preenchimento em cinza claro (#E8E4DC); ao clicar na caixa, surge o valor '0' por padrão e o fundo passa a branco com destaque em verde; validação por bloco implementada (perguntas com subitens como Pessoas e Refeições só são consideradas respondidas quando todos os campos do bloco forem preenchidos)."
 }
