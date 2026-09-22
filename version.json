@@ -1,6 +1,6 @@
 {
-  "version": "1.0.30",
-  "build": "20260922_30",
+  "version": "1.0.31",
+  "build": "20260922_31",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Inclusão de formulário nativo com seleção de categoria para novos alimentos do estoque: ao cadastrar um item, o usuário escolhe a categoria (Alimentos Grossos, Proteínas, Temperos, Lanches, Verduras e Legumes), garantindo que o alimento seja posicionado e agrupado corretamente na despensa."
+  "releaseNotes": "Propagação global de novos itens de estoque: ao adicionar um novo alimento em qualquer despensa, o item é automaticamente acrescido em todos os estoques (Missão, Macedônia e Feminina), com a quantidade inicial definida na unidade ativa e 0 nas demais para controle e contagem independente."
 }

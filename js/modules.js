@@ -1621,7 +1621,7 @@ function openAddStockItemModal(unitId) {
       </div>
       <div>
         <h2>Novo Alimento</h2>
-        <p style="font-size:0.75rem;">${unit.name} · Selecione a categoria</p>
+        <p style="font-size:0.75rem;">Será acrescido em todas as 3 despensas</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -1638,7 +1638,7 @@ function openAddStockItemModal(unitId) {
       </div>
 
       <div class="form-group">
-        <label class="form-label">Categoria * (para agrupamento correto)</label>
+        <label class="form-label">Categoria * (para agrupamento em todos os estoques)</label>
         <select id="new-stock-category" class="form-input" required style="font-weight:700;">
           ${availableCats.map(cat => `
             <option value="${cat.id}" ${cat.id === defaultSelectedCat ? 'selected' : ''}>${cat.label}</option>
@@ -1648,8 +1648,9 @@ function openAddStockItemModal(unitId) {
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Quantidade Inicial</label>
+          <label class="form-label">Qtd Inicial na ${unit.name}</label>
           <input type="number" id="new-stock-qty" class="form-input" value="10" min="0" required inputmode="numeric">
+          <span style="font-size:0.68rem; color:var(--text-muted); display:block; margin-top:2px;">(Nas outras despensas iniciará com 0 para contagem independente)</span>
         </div>
 
         <div class="form-group">
@@ -1671,7 +1672,7 @@ function openAddStockItemModal(unitId) {
 
   modalFooter.innerHTML = `
     <button type="button" class="btn-primary-action" style="width:100%; background:linear-gradient(135deg, #1E4D2B, #2E6A3B); color:#FFF; font-weight:800; box-shadow:0 4px 12px rgba(30,77,43,0.3);" onclick="handleSaveNewStockItem('${unitId}')">
-      💾 Salvar no Estoque
+      💾 Salvar em Todos os Estoques
     </button>
   `;
 }
@@ -1697,27 +1698,34 @@ async function handleSaveNewStockItem(unitId) {
   const unitSelect = document.getElementById('new-stock-unit');
   const unit = unitSelect ? unitSelect.value.trim().toLowerCase() : 'und';
 
-  const newItem = {
-    id: `stk_${unitId}_custom_${Date.now()}`,
-    baseId: `c_${Date.now()}`,
-    name: name,
-    category: categoryId,
-    categoryLabel: categoryLabel,
-    quantity: quantity,
-    unit: unit,
-    minQty: 5,
-    unitId: unitId
-  };
+  const allUnits = ['missao', 'macedonia', 'feminina'];
+  const baseTimestamp = Date.now();
+  const baseId = `c_${baseTimestamp}`;
 
-  showLoading('Cadastrando alimento...');
+  showLoading('Cadastrando alimento em todos os estoques...');
   try {
-    if (typeof dbManager.addStockItem === 'function') {
-      await dbManager.addStockItem(newItem);
-    } else if (typeof dbManager.saveStockItem === 'function') {
-      await dbManager.saveStockItem(newItem);
+    for (const targetUnitId of allUnits) {
+      const itemData = {
+        id: `stk_${targetUnitId}_custom_${baseTimestamp}`,
+        baseId: baseId,
+        name: name,
+        category: categoryId,
+        categoryLabel: categoryLabel,
+        quantity: (targetUnitId === unitId) ? quantity : 0,
+        unit: unit,
+        minQty: 5,
+        unitId: targetUnitId
+      };
+
+      if (typeof dbManager.addStockItem === 'function') {
+        await dbManager.addStockItem(itemData);
+      } else if (typeof dbManager.saveStockItem === 'function') {
+        await dbManager.saveStockItem(itemData);
+      }
     }
-    showToast(`"${name}" adicionado em "${categoryLabel}"!`, 'success');
-    // Retorna à tela de atualização de estoque com o novo item exibido na categoria correta
+
+    showToast(`"${name}" adicionado em todos os estoques!`, 'success');
+    // Retorna à tela de atualização da despensa atual
     openStockUpdateView(unitId);
   } catch (e) {
     showToast('Erro ao cadastrar alimento: ' + e.message, 'danger');
