@@ -31,8 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Atualizar métricas do card de visão geral
   updateHeroMetrics();
 
-  // Atualizar 7 bolinhas de progresso neon do botão Missão
+  // Atualizar 7 bolinhas de progresso neon do botão Missão e 8 da Macedônia
   updateMissaoDots();
+  updateMacedoniaDots();
 
   // Ativar efeitos 3D táteis e micro-animações nos 6 botões
   setup3DButtonsInteractions();
@@ -47,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('db:cloud-synced', (e) => {
     updateHeroMetrics();
     updateMissaoDots();
+    updateMacedoniaDots();
     const detail = (e && e.detail) || {};
     if (detail.firstLoad) {
       // Primeira carga: silenciosa
@@ -166,6 +168,64 @@ if (typeof window !== 'undefined') {
   window.updateMissaoDots = updateMissaoDots;
 }
 
+// Atualiza o estado das 8 bolinhas de progresso neon no topo do botão Macedônia
+function updateMacedoniaDots() {
+  const container = document.getElementById('macedonia-dots-container');
+  if (!container) return;
+
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  const reports = (typeof dbManager !== 'undefined' && dbManager.getReports) ? dbManager.getReports() : [];
+  const macReport = reports.find(r => r.unitId === 'macedonia' && r.date === todayStr);
+
+  const dots = container.querySelectorAll('.btn-dot');
+  if (!dots || dots.length < 8) return;
+
+  if (!macReport) {
+    dots.forEach(d => d.classList.remove('active'));
+    return;
+  }
+
+  const ans = macReport.answeredQuestions || {};
+  const hasAnsFlags = !!macReport.answeredQuestions;
+
+  // 1. Refeições (5 subcampos)
+  const ref = macReport.refeicoes || {};
+  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+  const rActive = hasAnsFlags ? !!ans.refeicoes : (totalRef > 0);
+  if (rActive) dots[0].classList.add('active'); else dots[0].classList.remove('active');
+
+  // 2. Encaminhamentos Sociais
+  const sociaisActive = hasAnsFlags ? !!ans.sociais : ((macReport.encaminhamentosSociais || 0) > 0 || (macReport.novasTriagens || 0) > 0);
+  if (sociaisActive) dots[1].classList.add('active'); else dots[1].classList.remove('active');
+
+  // 3. Encaminhamentos de Saúde
+  const saudeActive = hasAnsFlags ? !!ans.saude : ((macReport.encaminhamentosSaude || 0) > 0);
+  if (saudeActive) dots[2].classList.add('active'); else dots[2].classList.remove('active');
+
+  // 4. Atendimentos Psicológicos
+  const psicoActive = hasAnsFlags ? !!ans.psicologicos : ((macReport.atendimentosPsicologicos || 0) > 0);
+  if (psicoActive) dots[3].classList.add('active'); else dots[3].classList.remove('active');
+
+  // 5. Demandas Jurídicas
+  const juridicoActive = hasAnsFlags ? !!ans.juridicas : ((macReport.demandasJuridicas || 0) > 0);
+  if (juridicoActive) dots[4].classList.add('active'); else dots[4].classList.remove('active');
+
+  // 6. Estudos Bíblicos
+  const estudosActive = hasAnsFlags ? !!ans.estudosBiblicos : ((macReport.estudosBiblicos || 0) > 0);
+  if (estudosActive) dots[5].classList.add('active'); else dots[5].classList.remove('active');
+
+  // 7. Cultos e Vigílias
+  const cultosActive = hasAnsFlags ? !!ans.cultosVigilias : (((macReport.cultosVigilias || 0) > 0) || ((macReport.cultos || 0) > 0));
+  if (cultosActive) dots[6].classList.add('active'); else dots[6].classList.remove('active');
+
+  // 8. Decisões por Cristo
+  const decisoesActive = hasAnsFlags ? !!ans.decisoes : ((macReport.decisoesCristo || 0) > 0);
+  if (decisoesActive) dots[7].classList.add('active'); else dots[7].classList.remove('active');
+}
+if (typeof window !== 'undefined') {
+  window.updateMacedoniaDots = updateMacedoniaDots;
+}
+
 // Renderização da Data por extenso em Português
 // Data local no fuso horário do usuário (YYYY-MM-DD) sem distorção UTC
 function getLocalDateStr(d = new Date()) {
@@ -231,9 +291,9 @@ function updateHeroMetrics() {
 
   if (todayReports.length > 0) {
     todayReports.forEach(r => {
-      triagens += (r.novasTriagens || 0);
+      triagens += (r.novasTriagens || 0) + (r.encaminhamentosSociais || 0);
       const ref = r.refeicoes || {};
-      refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
+      refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
     });
   } else {
     // Caso hoje ainda não haja fechamento salvo, consolida do dia mais recente com registros
@@ -242,9 +302,9 @@ function updateHeroMetrics() {
     if (mostRecentDate) {
       const recentReports = reports.filter(r => r.date === mostRecentDate);
       recentReports.forEach(r => {
-        triagens += (r.novasTriagens || 0);
+        triagens += (r.novasTriagens || 0) + (r.encaminhamentosSociais || 0);
         const ref = r.refeicoes || {};
-        refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
+        refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
       });
     }
   }
@@ -263,9 +323,12 @@ function updateHeroMetrics() {
   if (elTriagens) elTriagens.textContent = triagens;
   if (elRelatoriosCount) elRelatoriosCount.textContent = `${todayReports.length}/3`;
 
-  // Mantém as bolinhas neon do botão Missão sincronizadas
+  // Mantém as bolinhas neon dos botões Missão e Macedônia sincronizadas
   if (typeof updateMissaoDots === 'function') {
     updateMissaoDots();
+  }
+  if (typeof updateMacedoniaDots === 'function') {
+    updateMacedoniaDots();
   }
 }
 
@@ -550,6 +613,7 @@ function checkDayTransition() {
     if (typeof renderCurrentDate === 'function') renderCurrentDate();
     if (typeof updateHeroMetrics === 'function') updateHeroMetrics();
     if (typeof updateMissaoDots === 'function') updateMissaoDots();
+    if (typeof updateMacedoniaDots === 'function') updateMacedoniaDots();
   }
 }
 

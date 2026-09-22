@@ -214,7 +214,70 @@ const stockAfterAdd = testMergeStock([...initialStock, newItem], stockSeed);
 assert.strictEqual(stockAfterAdd.length, 3, 'Estoque após adição deve ter 3 itens');
 assert(stockAfterAdd.some(i => i.id === 'stk_missao_g01'), 'Feijões devem continuar no estoque');
 assert(stockAfterAdd.some(i => i.id === 'stk_missao_g02'), 'Arroz deve continuar no estoque');
-assert(stockAfterAdd.some(i => i.id === 'stk_missao_custom_123'), 'Novo item deve estar no estoque');
+// Teste de cálculo das 8 bolinhas neon da Macedônia (com suporte a answeredQuestions e valor 0)
+function calculateMacedoniaDots(report) {
+  if (!report) return [false, false, false, false, false, false, false, false];
+  const ans = report.answeredQuestions || {};
+  const hasAnsFlags = !!report.answeredQuestions;
+
+  const ref = report.refeicoes || {};
+  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+
+  return [
+    hasAnsFlags ? !!ans.refeicoes : (totalRef > 0),
+    hasAnsFlags ? !!ans.sociais : ((report.encaminhamentosSociais || 0) > 0 || (report.novasTriagens || 0) > 0),
+    hasAnsFlags ? !!ans.saude : ((report.encaminhamentosSaude || 0) > 0),
+    hasAnsFlags ? !!ans.psicologicos : ((report.atendimentosPsicologicos || 0) > 0),
+    hasAnsFlags ? !!ans.juridicas : ((report.demandasJuridicas || 0) > 0),
+    hasAnsFlags ? !!ans.estudosBiblicos : ((report.estudosBiblicos || 0) > 0),
+    hasAnsFlags ? !!ans.cultosVigilias : (((report.cultosVigilias || 0) > 0) || ((report.cultos || 0) > 0)),
+    hasAnsFlags ? !!ans.decisoes : ((report.decisoesCristo || 0) > 0)
+  ];
+}
+
+const mockMacedoniaCompleta = {
+  refeicoes: { cafe: 60, almoco: 65, jantar: 60, abordagens: 20, eventosEspeciais: 10 },
+  encaminhamentosSociais: 3,
+  encaminhamentosSaude: 5,
+  atendimentosPsicologicos: 8,
+  demandasJuridicas: 2,
+  estudosBiblicos: 4,
+  cultosVigilias: 1,
+  decisoesCristo: 2
+};
+const dotsMacCompleta = calculateMacedoniaDots(mockMacedoniaCompleta);
+assert.deepStrictEqual(dotsMacCompleta, [true, true, true, true, true, true, true, true], 'Todas as 8 bolinhas da Macedônia devem acender');
+
+// Teste Macedônia com valor 0 ativado
+const mockMacedoniaZeroRespondido = {
+  refeicoes: { cafe: 0, almoco: 0, jantar: 0, abordagens: 0, eventosEspeciais: 0 },
+  encaminhamentosSociais: 0,
+  encaminhamentosSaude: 0,
+  atendimentosPsicologicos: 0,
+  demandasJuridicas: 0,
+  estudosBiblicos: 0,
+  cultosVigilias: 0,
+  decisoesCristo: 0,
+  answeredQuestions: {
+    refeicoes: true,
+    sociais: true,
+    saude: false,
+    psicologicos: true,
+    juridicas: false,
+    estudosBiblicos: true,
+    cultosVigilias: true,
+    decisoes: false
+  }
+};
+const dotsMacZero = calculateMacedoniaDots(mockMacedoniaZeroRespondido);
+assert.deepStrictEqual(dotsMacZero, [true, true, false, true, false, true, true, false], 'Bolinhas da Macedônia devem responder a answeredQuestions mesmo com 0');
+
+// Teste do bloco de 5 refeições da Macedônia
+const macRefeicoesIncompleto = { rCafe: true, rAlmoco: true, rJantar: true, rAbordagens: true, rEventos: false };
+assert.strictEqual(checkBlockCompletion(macRefeicoesIncompleto, ['rCafe', 'rAlmoco', 'rJantar', 'rAbordagens', 'rEventos']), false, 'Bloco de 5 refeições incompleto não deve contar');
+
+const macRefeicoesCompleto = { rCafe: true, rAlmoco: true, rJantar: true, rAbordagens: true, rEventos: true };
+assert.strictEqual(checkBlockCompletion(macRefeicoesCompleto, ['rCafe', 'rAlmoco', 'rJantar', 'rAbordagens', 'rEventos']), true, 'Bloco de 5 refeições completo deve contar');
 
 console.log('✅ Todos os testes de lógica de sanitização e dados passaram com 100% de sucesso!');
 

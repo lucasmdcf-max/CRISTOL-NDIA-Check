@@ -22,8 +22,8 @@
   <meta name="theme-color" content="#1E4D2B">
 
   <!-- Estilos CSS com Versionamento Anti-Cache -->
-  <link rel="stylesheet" href="css/main.css?v=20260922-v31">
-  <link rel="stylesheet" href="css/buttons-3d.css?v=20260922-v31">
+  <link rel="stylesheet" href="css/main.css?v=20260922-v32">
+  <link rel="stylesheet" href="css/buttons-3d.css?v=20260922-v32">
 </head>
 <body>
 
@@ -98,7 +98,18 @@
         </button>
 
         <!-- 2. Macedônia -->
-        <button class="btn-card-3d btn-macedonia" onclick="openUnitReportModal('macedonia')">
+        <button class="btn-card-3d btn-macedonia" onclick="openMacedoniaFlow()">
+          <!-- 8 Bolinhas de Progresso Neon correspondentes às 8 perguntas do relatório -->
+          <div class="btn-dots-progress" id="macedonia-dots-container" title="Progresso das 8 perguntas de hoje">
+            <span class="btn-dot" data-q="1" title="Refeições"></span>
+            <span class="btn-dot" data-q="2" title="Encaminhamentos Sociais"></span>
+            <span class="btn-dot" data-q="3" title="Encaminhamentos de Saúde"></span>
+            <span class="btn-dot" data-q="4" title="Atendimentos Psicológicos"></span>
+            <span class="btn-dot" data-q="5" title="Demandas Jurídicas"></span>
+            <span class="btn-dot" data-q="6" title="Estudos Bíblicos"></span>
+            <span class="btn-dot" data-q="7" title="Cultos e Vigílias"></span>
+            <span class="btn-dot" data-q="8" title="Decisões por Cristo"></span>
+          </div>
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
               <path d="M12 22V12"/>
@@ -195,10 +206,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- Scripts da Aplicação com Versionamento Anti-Cache -->
-  <script src="js/db.js?v=20260922-v31"></script>
-  <script src="js/modules.js?v=20260922-v31"></script>
-  <script src="js/pwa.js?v=20260922-v31"></script>
-  <script src="js/app.js?v=20260922-v31"></script>
+  <script src="js/db.js?v=20260922-v32"></script>
+  <script src="js/modules.js?v=20260922-v32"></script>
+  <script src="js/pwa.js?v=20260922-v32"></script>
+  <script src="js/app.js?v=20260922-v32"></script>
 
 </body>
 </html>

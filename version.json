@@ -1,6 +1,6 @@
 {
-  "version": "1.0.31",
-  "build": "20260922_31",
+  "version": "1.0.32",
+  "build": "20260922_32",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Propagação global de novos itens de estoque: ao adicionar um novo alimento em qualquer despensa, o item é automaticamente acrescido em todos os estoques (Missão, Macedônia e Feminina), com a quantidade inicial definida na unidade ativa e 0 nas demais para controle e contagem independente."
+  "releaseNotes": "Configuração completa do relatório da Unidade Macedônia: fluxo de Histórico com calendário mensal e Novo Relatório, formulário com as 8 perguntas oficiais (Refeições servidas com 5 subcampos, Encaminhamentos Sociais, Saúde, Psicológicos, Demandas Jurídicas, Estudos Bíblicos, Cultos/Vigílias e Decisões por Cristo), caixas interativas com ativação cinza para verde, 8 bolinhas neon no botão e bloqueio de datas futuras."
 }
