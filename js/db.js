@@ -258,17 +258,65 @@ class CristolandiaDB {
       localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify(INITIAL_SEED.reports));
     }
     
-    // Forçar atualização do estoque para a lista oficial das 3 Despensas (Missão, Macedônia, Feminina)
-    const STOCK_VERSION_KEY = 'cristolandia_stock_seed_3_units_v2';
-    if (localStorage.getItem(STOCK_VERSION_KEY) !== 'yes') {
-      localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(INITIAL_SEED.stock));
-      localStorage.setItem(STOCK_VERSION_KEY, 'yes');
-    } else if (!localStorage.getItem(DB_KEYS.STOCK)) {
-      localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(INITIAL_SEED.stock));
-    }
+    // Sempre garante a integridade total do estoque para as 3 Despensas (Missão, Macedônia, Feminina)
+    const currentStock = this.getStock();
+    const mergedStock = this.mergeWithDefaultStock(currentStock);
+    localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(mergedStock));
+    localStorage.setItem('cristolandia_stock_seed_3_units_v3', 'yes');
 
     if (!localStorage.getItem(DB_KEYS.CHURCHES)) {
       localStorage.setItem(DB_KEYS.CHURCHES, JSON.stringify(INITIAL_SEED.churches));
+    }
+  }
+
+  getDeletedStockIds() {
+    try {
+      const raw = localStorage.getItem('cristolandia_deleted_stock_ids');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  // Mescla os itens da lista oficial padrão com quaisquer itens existentes ou adicionados
+  mergeWithDefaultStock(currentList) {
+    const list = Array.isArray(currentList) ? currentList : [];
+    const defaultStock = buildStockSeedFor3Units();
+    const deletedIds = this.getDeletedStockIds();
+
+    const map = new Map();
+    // 1. Carrega todos os itens padrão oficiais das 3 despensas (exceto os que foram deliberadamente removidos)
+    defaultStock.forEach(item => {
+      if (!deletedIds.includes(item.id)) {
+        map.set(item.id, { ...item });
+      }
+    });
+
+    // 2. Mescla com os itens atuais (preserva quantidades alteradas e novos itens cadastrados pelo usuário)
+    list.forEach(item => {
+      if (item && item.id && !deletedIds.includes(item.id)) {
+        map.set(item.id, item);
+      }
+    });
+
+    return Array.from(map.values());
+  }
+
+  async syncStockToCloud(stockList) {
+    if (!this.firebaseDb) return;
+    try {
+      const payload = {};
+      const list = stockList || this.getStock();
+      list.forEach(item => {
+        if (item && item.id) {
+          payload[item.id] = this.sanitize(item);
+        }
+      });
+      this._lastLocalWrite = Date.now();
+      await this.firebaseDb.ref('cristolandia_check/stock').set(payload);
+      console.log('[CUIDAR] Estoque das 3 Despensas sincronizado integralmente na nuvem.');
+    } catch (e) {
+      console.warn('Erro ao sincronizar estoque na nuvem:', e);
     }
   }
 
@@ -291,6 +339,9 @@ class CristolandiaDB {
           if (this.isFirebaseConnected) {
             this.notifyStatus('online', 'Nuvem Conectada');
             this.startRealtimeListeners(); // Pilar 1: listeners persistentes
+            // Garante que o estoque na nuvem contenha todos os itens padrão
+            const stock = this.mergeWithDefaultStock(this.getStock());
+            this.syncStockToCloud(stock);
           } else {
             this.notifyStatus(navigator.onLine ? 'connecting' : 'offline', navigator.onLine ? 'Conectando...' : 'Offline');
           }
@@ -303,13 +354,10 @@ class CristolandiaDB {
   }
 
   // PILAR 1 — Sincronização WebSocket Nativa em Tempo Real
-  // Substitui o antigo once('value') por listeners persistentes .on('value')
-  // Qualquer gravação em qualquer dispositivo propaga para todos em < 150ms
   startRealtimeListeners() {
     if (!this.firebaseDb || this._realtimeListenersActive) return;
     this._realtimeListenersActive = true;
 
-    // Converte objeto Firebase (keyed by id) de volta para array
     const toArray = (obj) => {
       if (!obj) return [];
       if (Array.isArray(obj)) return obj;
@@ -321,7 +369,6 @@ class CristolandiaDB {
     this.firebaseDb.ref('cristolandia_check').on('value', async (snap) => {
       const data = snap.val();
 
-      // Se a nuvem estiver completamente vazia, inicializa com os dados locais
       if (!data) {
         if (isFirstFire) {
           isFirstFire = false;
@@ -330,13 +377,24 @@ class CristolandiaDB {
         return;
       }
 
-      // Atualiza cada coleção no localStorage a partir do Firebase
-      // SEMPRE atualiza para refletir exclusões (se nó apagado na nuvem, reflete array vazio)
       if (data.reports !== undefined) {
         localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify(toArray(data.reports)));
       }
+
+      // Tratamento resiliente do estoque: nunca permite truncamento da lista oficial
       if (data.stock !== undefined) {
-        localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(toArray(data.stock)));
+        const cloudStock = toArray(data.stock);
+        const merged = this.mergeWithDefaultStock(cloudStock);
+        localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(merged));
+        if (cloudStock.length < merged.length && this.isFirebaseConnected) {
+          this.syncStockToCloud(merged);
+        }
+      } else {
+        const merged = this.mergeWithDefaultStock(this.getStock());
+        localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(merged));
+        if (this.isFirebaseConnected) {
+          this.syncStockToCloud(merged);
+        }
       }
       if (data.churches !== undefined) {
         localStorage.setItem(DB_KEYS.CHURCHES, JSON.stringify(toArray(data.churches)));
@@ -475,7 +533,7 @@ class CristolandiaDB {
   }
 
   async saveStockItem(itemData) {
-    const stock = this.getStock();
+    const stock = this.mergeWithDefaultStock(this.getStock());
     const index = stock.findIndex(s => s.id === itemData.id);
     const sanitized = this.sanitize(itemData);
 
@@ -507,6 +565,12 @@ class CristolandiaDB {
     const stock = this.getStock();
     const filtered = stock.filter(s => s.id !== itemId);
     localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(filtered));
+
+    const deletedIds = this.getDeletedStockIds();
+    if (!deletedIds.includes(itemId)) {
+      deletedIds.push(itemId);
+      localStorage.setItem('cristolandia_deleted_stock_ids', JSON.stringify(deletedIds));
+    }
 
     if (this.firebaseDb) {
       try {

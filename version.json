@@ -1,6 +1,6 @@
 {
-  "version": "1.0.28",
-  "build": "20260922_28",
+  "version": "1.0.29",
+  "build": "20260922_29",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Correção no cadastro e remoção de alimentos nas despensas do estoque: adição dos métodos addStockItem e deleteStockItem ao DBManager com fallback resiliente para saveStockItem, garantindo salvamento em memória, localStorage e sincronização no Firebase."
+  "releaseNotes": "Restauração integral e blindagem do estoque das 3 despensas: implementação de merge inteligente (mergeWithDefaultStock) e sincronização bidirecional na nuvem (syncStockToCloud), garantindo que novos alimentos sejam acrescentados sem jamais apagar os itens pré-existentes."
 }

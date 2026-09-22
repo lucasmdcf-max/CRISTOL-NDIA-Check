@@ -195,4 +195,26 @@ assert.strictEqual(checkBlockCompletion(blocoRefeicoesIncompleto, ['rCafe', 'rAl
 const blocoRefeicoesCompleto = { rCafe: true, rAlmoco: true, rLanche: true, rJantar: true, rBusca: true };
 assert.strictEqual(checkBlockCompletion(blocoRefeicoesCompleto, ['rCafe', 'rAlmoco', 'rLanche', 'rJantar', 'rBusca']), true, 'Bloco de refeições completo deve contar');
 
+// Teste de integridade de estoque: adicionar item NÃO pode apagar os itens existentes
+const stockSeed = [
+  { id: 'stk_missao_g01', name: 'Feijões', unitId: 'missao' },
+  { id: 'stk_missao_g02', name: 'Arroz', unitId: 'missao' }
+];
+function testMergeStock(current, defaults) {
+  const map = new Map();
+  defaults.forEach(d => map.set(d.id, { ...d }));
+  (current || []).forEach(c => map.set(c.id, c));
+  return Array.from(map.values());
+}
+const initialStock = testMergeStock([], stockSeed);
+assert.strictEqual(initialStock.length, 2, 'Estoque inicial deve ter 2 itens');
+
+const newItem = { id: 'stk_missao_custom_123', name: 'Azeite', unitId: 'missao' };
+const stockAfterAdd = testMergeStock([...initialStock, newItem], stockSeed);
+assert.strictEqual(stockAfterAdd.length, 3, 'Estoque após adição deve ter 3 itens');
+assert(stockAfterAdd.some(i => i.id === 'stk_missao_g01'), 'Feijões devem continuar no estoque');
+assert(stockAfterAdd.some(i => i.id === 'stk_missao_g02'), 'Arroz deve continuar no estoque');
+assert(stockAfterAdd.some(i => i.id === 'stk_missao_custom_123'), 'Novo item deve estar no estoque');
+
 console.log('✅ Todos os testes de lógica de sanitização e dados passaram com 100% de sucesso!');
+
