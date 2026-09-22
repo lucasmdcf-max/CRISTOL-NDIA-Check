@@ -1212,6 +1212,76 @@ body::before {
   margin-top: 2px;
 }
 
+/* Seletor de Período da Oscilação (Meses, Semanas, Dias) */
+.oscillation-period-selector {
+  display: flex;
+  background: rgba(30, 77, 43, 0.08);
+  border: 1px solid var(--border-beige);
+  border-radius: 24px;
+  padding: 3px;
+  gap: 4px;
+}
+
+.oscillation-period-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 7px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.oscillation-period-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.oscillation-period-btn.active {
+  background: linear-gradient(135deg, #1E4D2B, #2E6A3B);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(30, 77, 43, 0.28);
+}
+
+.oscillation-flow-badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.osc-badge-flow {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.osc-badge-flow.in {
+  background: rgba(46, 125, 50, 0.1);
+  border: 1px solid rgba(46, 125, 50, 0.25);
+  color: #1E4D2B;
+}
+
+.osc-badge-flow.out {
+  background: rgba(198, 40, 40, 0.08);
+  border: 1px solid rgba(198, 40, 40, 0.25);
+  color: #991B1B;
+}
+
+.osc-badge-flow.net {
+  background: rgba(197, 137, 8, 0.1);
+  border: 1px solid rgba(197, 137, 8, 0.28);
+  color: #8D5B00;
+}
+
 /* Histórico */
 .history-item {
   background: var(--bg-surface);

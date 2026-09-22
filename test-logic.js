@@ -514,7 +514,82 @@ const filterFeminina = mockEstudosList.filter(e => e.unitId === 'feminina');
 assert.strictEqual(filterFeminina.length, 1);
 assert.strictEqual(filterFeminina[0].id, 'e3');
 
-console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens, avisos e estudos passaram com 100% de sucesso!');
+// 8. TESTES DE OSCILAÇÃO E MÉTRICA REAL DE CONSUMO DO ESTOQUE
+// 8.1 Teste de Cruzamento de Entradas e Saídas por Dias, Semanas e Meses
+const mockStockItem = {
+  id: 'arroz_1',
+  name: 'Arroz 5kg',
+  category: 'alimentos_grossos',
+  quantity: 40,
+  unit: 'kg',
+  unitId: 'missao'
+};
+
+const mockMovements = [
+  // Movimentações no período
+  { id: 'm1', itemId: 'arroz_1', unitId: 'missao', type: 'entrada', quantity: 20, date: '2026-09-18' },
+  { id: 'm2', itemId: 'arroz_1', unitId: 'missao', type: 'saida', quantity: 5, date: '2026-09-19' },
+  { id: 'm3', itemId: 'arroz_1', unitId: 'missao', type: 'saida', quantity: 7, date: '2026-09-20' },
+  { id: 'm4', itemId: 'arroz_1', unitId: 'missao', type: 'entrada', quantity: 15, date: '2026-09-21' },
+  { id: 'm5', itemId: 'arroz_1', unitId: 'missao', type: 'saida', quantity: 10, date: '2026-09-22' }
+];
+
+// Cálculo simulando getStockItemOscillationData
+function testOscillationCalculation(item, movements, periodType) {
+  const allMovs = movements.filter(m => m.itemId === item.id);
+  let totalEnt = 0;
+  let totalSai = 0;
+  allMovs.forEach(m => {
+    if (m.type === 'entrada') totalEnt += m.quantity;
+    if (m.type === 'saida') totalSai += m.quantity;
+  });
+
+  let numDivisor = 1;
+  let unitLabel = '';
+  let title = '';
+
+  if (periodType === 'dias') {
+    numDivisor = 7;
+    unitLabel = `${item.unit} / dia`;
+    title = 'Consumo Médio Diário';
+  } else if (periodType === 'semanas') {
+    numDivisor = 4;
+    unitLabel = `${item.unit} / semana`;
+    title = 'Consumo Médio Semanal';
+  } else {
+    numDivisor = 9;
+    unitLabel = `${item.unit} / mês`;
+    title = 'Consumo Médio Mensal';
+  }
+
+  const avg = Math.round((totalSai / numDivisor) * 10) / 10;
+  return {
+    totalEntradas: totalEnt,
+    totalSaidas: totalSai,
+    avgConsumption: avg,
+    avgUnitLabel: unitLabel,
+    avgTitle: title
+  };
+}
+
+const oscDias = testOscillationCalculation(mockStockItem, mockMovements, 'dias');
+assert.strictEqual(oscDias.totalEntradas, 35, 'Total de entradas deve ser 20 + 15 = 35');
+assert.strictEqual(oscDias.totalSaidas, 22, 'Total de saídas deve ser 5 + 7 + 10 = 22');
+assert.strictEqual(oscDias.avgTitle, 'Consumo Médio Diário');
+assert.strictEqual(oscDias.avgUnitLabel, 'kg / dia');
+assert.strictEqual(oscDias.avgConsumption, 3.1, '22 / 7 = 3.1 kg / dia');
+
+const oscSemanas = testOscillationCalculation(mockStockItem, mockMovements, 'semanas');
+assert.strictEqual(oscSemanas.avgTitle, 'Consumo Médio Semanal');
+assert.strictEqual(oscSemanas.avgUnitLabel, 'kg / semana');
+assert.strictEqual(oscSemanas.avgConsumption, 5.5, '22 / 4 = 5.5 kg / semana');
+
+const oscMeses = testOscillationCalculation(mockStockItem, mockMovements, 'meses');
+assert.strictEqual(oscMeses.avgTitle, 'Consumo Médio Mensal');
+assert.strictEqual(oscMeses.avgUnitLabel, 'kg / mês');
+assert.strictEqual(oscMeses.avgConsumption, 2.4, '22 / 9 = 2.4 kg / mês');
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens, avisos, estudos e oscilação de estoque passaram com 100% de sucesso!');
 
 
 

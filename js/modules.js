@@ -3193,6 +3193,10 @@ function renderStockCardHTML(item) {
 
         <button type="button" class="btn-step" onclick="handleStockDelta('${item.id}', 1)" title="Aumentar 1">+</button>
 
+        <button type="button" onclick="openStockItemOscillationModal('${item.id}', '${item.unitId || 'missao'}')" title="Ver oscilação e consumo" style="background:none; border:none; opacity:0.8; font-size:1.05rem; cursor:pointer; padding:2px 4px; margin-left:2px;">
+          📈
+        </button>
+
         <button type="button" onclick="removeStockItem('${item.id}', '${item.unitId || 'missao'}')" title="Remover item da despensa" style="background:none; border:none; color:#DC2626; opacity:0.6; font-size:1rem; cursor:pointer; padding:2px 4px; margin-left:2px;">
           🗑️
         </button>
@@ -3473,79 +3477,154 @@ function openStockAnalyticsView(unitId, filterCat = 'todas') {
 }
 
 // 5. MODAL DE OSCILAÇÃO MENSAL E CONSUMO MÉDIO DO ITEM ESPECÍFICO
-function openStockItemOscillationModal(itemId, unitId) {
+// 5. MODAL DE OSCILAÇÃO E MÉTRICA REAL DE CONSUMO (DIAS, SEMANAS E MESES)
+window._currentStockOscillationPeriod = 'dias';
+
+function openStockItemOscillationModal(itemId, unitId, periodType = null) {
   const stock = dbManager.getStock(unitId);
   const item = stock.find(s => s.id === itemId);
   if (!item) return;
 
-  const unit = getStockUnitObj(unitId);
-  const history = dbManager.getItemMonthlyHistory(item);
+  const currentPeriod = periodType || window._currentStockOscillationPeriod || 'dias';
+  window._currentStockOscillationPeriod = currentPeriod;
+  window._currentStockOscillationItem = itemId;
+  window._currentStockOscillationUnit = unitId;
 
-  const modalBody = document.getElementById('modal-generic-body');
+  const unit = getStockUnitObj(unitId);
+
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
   modalHeader.className = 'modal-header theme-estoque';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
-      <button type="button" class="btn-step" onclick="openStockAnalyticsView('${unitId}')" title="Voltar ao gráfico geral" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
+      <button type="button" class="btn-step" onclick="handleBackFromOscillationModal('${unitId}')" title="Voltar" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
       <div class="modal-unit-icon">
         <span style="font-size: 1.2rem;">📈</span>
       </div>
       <div>
-        <h2>Oscilação do Item</h2>
+        <h2>Oscilação e Consumo</h2>
         <p style="font-size:0.75rem;">${item.name} · ${unit.name}</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
-  // Construção do Gráfico SVG de Oscilação Mensal
-  const months = history.months;
-  const values = history.stockLevels;
-  const maxVal = Math.max(...values, 1);
-  const svgW = 310;
-  const svgH = 140;
-  const padL = 26;
+  renderStockItemOscillationBody(itemId, unitId, currentPeriod);
+  modalFooter.innerHTML = '';
+}
+
+function handleBackFromOscillationModal(unitId) {
+  if (window._currentScreen && window._currentScreen.type === 'stock-update') {
+    openStockUpdateView(unitId);
+  } else {
+    openStockAnalyticsView(unitId);
+  }
+}
+
+function switchStockOscillationPeriod(periodType) {
+  window._currentStockOscillationPeriod = periodType;
+  const itemId = window._currentStockOscillationItem;
+  const unitId = window._currentStockOscillationUnit;
+  if (itemId && unitId) {
+    if (navigator.vibrate) navigator.vibrate(8);
+    renderStockItemOscillationBody(itemId, unitId, periodType);
+  }
+}
+
+function renderStockItemOscillationBody(itemId, unitId, periodType) {
+  const stock = dbManager.getStock(unitId);
+  const item = stock.find(s => s.id === itemId);
+  if (!item) return;
+
+  const unit = getStockUnitObj(unitId);
+  const osc = dbManager.getStockItemOscillationData(item, unitId, periodType);
+
+  const values = osc.stockLevels;
+  const maxVal = Math.max(...values, ...osc.entradas, ...osc.saidas, 1);
+  const svgW = 320;
+  const svgH = 145;
+  const padL = 28;
   const padR = 26;
-  const padT = 20;
-  const padB = 24;
+  const padT = 24;
+  const padB = 26;
   const drawW = svgW - padL - padR;
   const drawH = svgH - padT - padB;
 
   const points = values.map((val, i) => {
-    const x = Math.round(padL + (i / (values.length - 1)) * drawW);
+    const x = Math.round(padL + (i / Math.max(values.length - 1, 1)) * drawW);
     const y = Math.round(padT + drawH - (val / maxVal) * drawH);
-    return { x, y, val, month: months[i] };
+    return {
+      x,
+      y,
+      val,
+      label: osc.labels[i],
+      ent: osc.entradas[i] || 0,
+      sai: osc.saidas[i] || 0
+    };
   });
 
   const pathD = points.reduce((acc, p, i) => `${acc} ${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`, '');
   const areaD = `${pathD} L ${points[points.length - 1].x} ${padT + drawH} L ${points[0].x} ${padT + drawH} Z`;
+
+  const modalBody = document.getElementById('modal-generic-body');
+  if (!modalBody) return;
 
   modalBody.innerHTML = `
     <div class="oscillation-container">
       <!-- Card do Item Selecionado -->
       <div style="background: var(--bg-surface); border: 1.5px solid var(--border-beige); border-radius: var(--radius-md); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-subtle);">
         <div>
-          <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main);">${item.name}</h3>
-          <p style="font-size: 0.72rem; color: var(--text-muted);">${item.categoryLabel || 'Alimento'} · ${item.unit || 'und'}</p>
+          <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main); margin:0;">${item.name}</h3>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin:2px 0 0 0;">${item.categoryLabel || 'Alimento'} · Unidade: <strong>${item.unit || 'und'}</strong></p>
         </div>
         <div style="text-align: right;">
           <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Estoque Atual</span>
-          <div style="font-size: 1.15rem; font-weight: 800; color: var(--green-primary);">${item.quantity} ${item.unit || 'und'}</div>
+          <div style="font-size: 1.2rem; font-weight: 800; color: var(--green-primary);">${item.quantity} ${item.unit || 'und'}</div>
+        </div>
+      </div>
+
+      <!-- Seletor de Período da Oscilação (Dias, Semanas, Meses) -->
+      <div class="oscillation-period-selector">
+        <button type="button" class="oscillation-period-btn ${periodType === 'dias' ? 'active' : ''}" onclick="switchStockOscillationPeriod('dias')">
+          📅 Dias
+        </button>
+        <button type="button" class="oscillation-period-btn ${periodType === 'semanas' ? 'active' : ''}" onclick="switchStockOscillationPeriod('semanas')">
+          📊 Semanas
+        </button>
+        <button type="button" class="oscillation-period-btn ${periodType === 'meses' ? 'active' : ''}" onclick="switchStockOscillationPeriod('meses')">
+          🗓️ Meses
+        </button>
+      </div>
+
+      <!-- Sumário do Fluxo Real no Período (Entradas vs Saídas) -->
+      <div class="oscillation-flow-badges">
+        <div class="osc-badge-flow in" title="Total de entradas de alimentos no período selecionado">
+          <span style="font-size:0.62rem; text-transform:uppercase; font-weight:700;">Entradas (+)</span>
+          <strong style="font-size:0.9rem; font-weight:800;">+${osc.totalEntradas} ${osc.unit}</strong>
+        </div>
+        <div class="osc-badge-flow out" title="Total de saídas/consumo no período selecionado">
+          <span style="font-size:0.62rem; text-transform:uppercase; font-weight:700;">Consumo (-)</span>
+          <strong style="font-size:0.9rem; font-weight:800;">-${osc.totalSaidas} ${osc.unit}</strong>
+        </div>
+        <div class="osc-badge-flow net" title="Variação líquida no período">
+          <span style="font-size:0.62rem; text-transform:uppercase; font-weight:700;">Saldo Líquido</span>
+          <strong style="font-size:0.9rem; font-weight:800;">${osc.totalEntradas - osc.totalSaidas >= 0 ? '+' : ''}${Math.round((osc.totalEntradas - osc.totalSaidas) * 10) / 10} ${osc.unit}</strong>
         </div>
       </div>
 
       <!-- Gráfico SVG de Linha e Área de Oscilação -->
       <div class="oscillation-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span style="font-size: 0.72rem; font-weight: 700; color: var(--green-primary); text-transform: uppercase; letter-spacing: 0.5px;">Oscilação Mensal em Estoque (2026)</span>
-          <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">Jan – Set</span>
+          <span style="font-size: 0.72rem; font-weight: 700; color: var(--green-primary); text-transform: uppercase; letter-spacing: 0.5px;">
+            Oscilação de Estoque (${osc.periodType === 'dias' ? 'Por Dia' : osc.periodType === 'semanas' ? 'Por Semana' : 'Por Mês'})
+          </span>
+          <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">${osc.dateRangeText}</span>
         </div>
 
         <svg viewBox="0 0 ${svgW} ${svgH}" style="width: 100%; height: auto; overflow: visible;">
           <defs>
-            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="areaGradientOsc" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#C58908" stop-opacity="0.38"/>
               <stop offset="100%" stop-color="#1E4D2B" stop-opacity="0.04"/>
             </linearGradient>
@@ -3554,33 +3633,84 @@ function openStockItemOscillationModal(itemId, unitId) {
           <!-- Linha de base -->
           <line x1="${padL}" y1="${padT + drawH}" x2="${svgW - padR}" y2="${padT + drawH}" stroke="var(--border-beige)" stroke-width="1.5" />
 
+          <!-- Linhas de referência sutis -->
+          <line x1="${padL}" y1="${padT}" x2="${svgW - padR}" y2="${padT}" stroke="rgba(0,0,0,0.05)" stroke-dasharray="3,3" />
+          <line x1="${padL}" y1="${padT + drawH / 2}" x2="${svgW - padR}" y2="${padT + drawH / 2}" stroke="rgba(0,0,0,0.05)" stroke-dasharray="3,3" />
+
           <!-- Área sombreada -->
-          <path d="${areaD}" fill="url(#areaGradient)" />
+          <path d="${areaD}" fill="url(#areaGradientOsc)" />
 
           <!-- Linha da curva -->
           <path d="${pathD}" fill="none" stroke="var(--gold-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
 
           <!-- Pontos e Rótulos -->
-          ${points.map(p => `
+          ${points.map((p) => `
             <circle cx="${p.x}" cy="${p.y}" r="4" fill="#FFFFFF" stroke="var(--green-primary)" stroke-width="2.5" />
             <text x="${p.x}" y="${p.y - 7}" font-size="8.5" font-weight="700" fill="var(--green-primary)" text-anchor="middle">${p.val}</text>
-            <text x="${p.x}" y="${svgH - 6}" font-size="8.5" font-weight="600" fill="var(--text-muted)" text-anchor="middle">${p.month}</text>
+            <text x="${p.x}" y="${svgH - 6}" font-size="8" font-weight="600" fill="var(--text-muted)" text-anchor="middle">${p.label}</text>
+            ${p.sai > 0 ? `<text x="${p.x}" y="${svgH - 16}" font-size="6.5" font-weight="700" fill="#991B1B" text-anchor="middle">-${p.sai}</text>` : ''}
           `).join('')}
         </svg>
       </div>
 
-      <!-- Card de Consumo Médio Mensal em Destaque Conforme Solicitado -->
+      <!-- Card de Consumo Médio Dinâmico que acompanha o Filtro -->
       <div class="avg-consumption-box">
-        <div class="avg-consumption-label">Consumo Médio Mensal do Item</div>
-        <div class="avg-consumption-val">${history.avgConsumption} ${history.unit || 'und'} / mês</div>
+        <div class="avg-consumption-label">${osc.avgTitle}</div>
+        <div class="avg-consumption-val">${osc.avgConsumption} ${osc.avgUnitLabel}</div>
         <div class="avg-consumption-sub">
-          Média calculada com base na rotina de preparo das refeições e atendimento de ${unit.name}.
+          Média calculada cruzando todas as entradas (+${osc.totalEntradas}) e saídas (-${osc.totalSaidas}) nos ${osc.labels.length} ${osc.periodType === 'dias' ? 'dias' : osc.periodType === 'semanas' ? 'semanas' : 'meses'} na despensa de ${unit.name}.
         </div>
+      </div>
+
+      <!-- Ações Rápidas: Inserir Entrada ou Consumo Diário -->
+      <div style="display:flex; gap:8px; margin-top:4px;">
+        <button type="button" class="btn-step" onclick="quickStockMovementPrompt('${item.id}', '${unitId}', 'entrada')" style="flex:1; height:38px; border-radius:10px; background:rgba(46,125,50,0.12); color:#1E4D2B; font-weight:700; font-size:0.8rem; border:1px solid rgba(46,125,50,0.3); cursor:pointer;">
+          ➕ Registrar Entrada
+        </button>
+        <button type="button" class="btn-step" onclick="quickStockMovementPrompt('${item.id}', '${unitId}', 'saida')" style="flex:1; height:38px; border-radius:10px; background:rgba(198,40,40,0.1); color:#991B1B; font-weight:700; font-size:0.8rem; border:1px solid rgba(198,40,40,0.3); cursor:pointer;">
+          ➖ Registrar Consumo
+        </button>
       </div>
     </div>
   `;
+}
 
-  modalFooter.innerHTML = '';
+async function quickStockMovementPrompt(itemId, unitId, type) {
+  const stock = dbManager.getStock(unitId);
+  const item = stock.find(s => s.id === itemId);
+  if (!item) return;
+
+  const isEntry = (type === 'entrada');
+  const actionLabel = isEntry ? 'Entrada na despensa (doação/compra)' : 'Saída (consumo nas refeições)';
+  const inputPrompt = prompt(`Informe a quantidade de "${item.name}" para ${actionLabel} (em ${item.unit || 'und'}):`);
+  if (!inputPrompt) return;
+
+  const qty = parseFloat(inputPrompt.replace(',', '.'));
+  if (isNaN(qty) || qty <= 0) {
+    showToast('Quantidade inválida.', 'warning');
+    return;
+  }
+
+  showLoading('Gravando movimentação...');
+  try {
+    const delta = isEntry ? qty : -qty;
+    await dbManager.adjustStockQuantity(itemId, delta, isEntry ? 'Entrada registrada via painel' : 'Consumo registrado via painel');
+    showToast(`${isEntry ? 'Entrada' : 'Consumo'} de ${qty} ${item.unit || 'und'} gravado com sucesso!`, 'success');
+    if (navigator.vibrate) navigator.vibrate([20, 50]);
+    renderStockItemOscillationBody(itemId, unitId, window._currentStockOscillationPeriod || 'dias');
+  } catch (err) {
+    showToast('Erro ao gravar movimentação: ' + err.message, 'danger');
+  } finally {
+    hideLoading();
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.openStockItemOscillationModal = openStockItemOscillationModal;
+  window.handleBackFromOscillationModal = handleBackFromOscillationModal;
+  window.switchStockOscillationPeriod = switchStockOscillationPeriod;
+  window.renderStockItemOscillationBody = renderStockItemOscillationBody;
+  window.quickStockMovementPrompt = quickStockMovementPrompt;
 }
 
 // --- MÓDULO 5: RELATÓRIOS CONSOLIDADOS & FILTROS POR PERÍODO ---

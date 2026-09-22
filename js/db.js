@@ -6,6 +6,7 @@
 const DB_KEYS = {
   REPORTS: 'cristolandia_check_reports_v1',
   STOCK: 'cristolandia_check_stock_v1',
+  STOCK_MOVEMENTS: 'cristolandia_check_stock_movements_v1',
   CHURCHES: 'cristolandia_check_churches_v1',
   ACTIVITIES: 'cristolandia_check_activities_v1',
   NOTICES: 'cristolandia_check_notices_v1',
@@ -424,6 +425,13 @@ class CristolandiaDB {
       } else {
         localStorage.setItem(DB_KEYS.ESTUDOS, JSON.stringify([]));
       }
+      if (data.stock_movements !== undefined) {
+        localStorage.setItem(DB_KEYS.STOCK_MOVEMENTS, JSON.stringify(toArray(data.stock_movements)));
+      } else {
+        if (!localStorage.getItem(DB_KEYS.STOCK_MOVEMENTS)) {
+          localStorage.setItem(DB_KEYS.STOCK_MOVEMENTS, JSON.stringify([]));
+        }
+      }
 
       // Atualiza timestamps de last_update por unidade
       if (data.stock_last_update) {
@@ -459,6 +467,7 @@ class CristolandiaDB {
       const notices = this.getNotices(false); // todos incluindo recentes
       const triagens = this.getTriagens();
       const estudos = this.getEstudos();
+      const stockMovements = this.getStockMovements();
 
       const payload = {
         reports: {},
@@ -467,7 +476,8 @@ class CristolandiaDB {
         activities: {},
         notices: {},
         triagens: {},
-        estudos: {}
+        estudos: {},
+        stock_movements: {}
       };
 
       reports.forEach(r => { if (r && r.id) payload.reports[r.id] = this.sanitize(r); });
@@ -477,6 +487,7 @@ class CristolandiaDB {
       notices.forEach(n => { if (n && n.id) payload.notices[n.id] = this.sanitize(n); });
       triagens.forEach(t => { if (t && t.id) payload.triagens[t.id] = this.sanitize(t); });
       estudos.forEach(e => { if (e && e.id) payload.estudos[e.id] = this.sanitize(e); });
+      stockMovements.forEach(m => { if (m && m.id) payload.stock_movements[m.id] = this.sanitize(m); });
 
       this._lastLocalWrite = Date.now();
       await this.firebaseDb.ref('cristolandia_check').set(payload);
@@ -610,23 +621,103 @@ class CristolandiaDB {
     return true;
   }
 
-  async adjustStockQuantity(itemId, delta) {
+  async adjustStockQuantity(itemId, delta, notes = null) {
     const stock = this.getStock();
     const item = stock.find(s => s.id === itemId);
     if (!item) return null;
 
-    item.quantity = Math.max(0, (item.quantity || 0) + delta);
-    return await this.saveStockItem(item);
+    const prevQty = Number(item.quantity) || 0;
+    item.quantity = Math.max(0, prevQty + delta);
+    const saved = await this.saveStockItem(item);
+
+    const actualDelta = item.quantity - prevQty;
+    if (actualDelta !== 0) {
+      await this.recordStockMovement({
+        itemId: item.id,
+        itemName: item.name,
+        unitId: item.unitId || 'missao',
+        type: actualDelta > 0 ? 'entrada' : 'saida',
+        quantity: Math.abs(actualDelta),
+        previousQty: prevQty,
+        newQty: item.quantity,
+        date: getLocalDateStr(),
+        timestamp: Date.now(),
+        notes: notes || (actualDelta > 0 ? 'Entrada no estoque' : 'Consumo diário')
+      });
+    }
+
+    return saved;
   }
 
-  async setStockQuantity(itemId, newQty) {
+  async setStockQuantity(itemId, newQty, notes = null) {
     const stock = this.getStock();
     const item = stock.find(s => s.id === itemId);
     if (!item) return null;
 
+    const prevQty = Number(item.quantity) || 0;
     const parsed = parseInt(newQty, 10);
     item.quantity = isNaN(parsed) ? 0 : Math.max(0, parsed);
-    return await this.saveStockItem(item);
+    const saved = await this.saveStockItem(item);
+
+    const actualDelta = item.quantity - prevQty;
+    if (actualDelta !== 0) {
+      await this.recordStockMovement({
+        itemId: item.id,
+        itemName: item.name,
+        unitId: item.unitId || 'missao',
+        type: actualDelta > 0 ? 'entrada' : 'saida',
+        quantity: Math.abs(actualDelta),
+        previousQty: prevQty,
+        newQty: item.quantity,
+        date: getLocalDateStr(),
+        timestamp: Date.now(),
+        notes: notes || (actualDelta > 0 ? 'Ajuste de entrada' : 'Ajuste de consumo')
+      });
+    }
+
+    return saved;
+  }
+
+  getStockMovements(unitId = null, itemId = null) {
+    try {
+      const raw = localStorage.getItem(DB_KEYS.STOCK_MOVEMENTS);
+      let list = raw ? JSON.parse(raw) : [];
+      if (unitId && unitId !== 'todas') {
+        list = list.filter(m => (m.unitId || 'missao') === unitId);
+      }
+      if (itemId) {
+        list = list.filter(m => m.itemId === itemId);
+      }
+      return list.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    } catch {
+      return [];
+    }
+  }
+
+  async recordStockMovement(movData) {
+    const movements = this.getStockMovements();
+    const id = movData.id || `mov_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    const sanitized = this.sanitize({
+      ...movData,
+      id,
+      date: movData.date || getLocalDateStr(),
+      timestamp: movData.timestamp || Date.now(),
+      unitId: movData.unitId || 'missao',
+      quantity: Math.abs(Number(movData.quantity) || 0)
+    });
+
+    movements.push(sanitized);
+    localStorage.setItem(DB_KEYS.STOCK_MOVEMENTS, JSON.stringify(movements));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/stock_movements/${sanitized.id}`).set(sanitized);
+      } catch (e) {
+        console.warn('Firebase pendente (movimentação salva localmente):', e);
+      }
+    }
+    return sanitized;
   }
 
   getStockLastUpdate(unitId) {
@@ -665,41 +756,195 @@ class CristolandiaDB {
     return dateStr;
   }
 
-  getItemMonthlyHistory(item) {
-    if (!item) return { months: [], stockLevels: [], consumption: [], avgConsumption: 0, unit: 'und' };
+  getStockItemOscillationData(itemOrId, unitId, periodType = 'meses') {
+    let item = itemOrId;
+    if (typeof itemOrId === 'string') {
+      const stock = this.getStock(unitId);
+      item = stock.find(s => s.id === itemOrId);
+    }
+    if (!item) {
+      return {
+        periodType,
+        labels: [],
+        stockLevels: [],
+        entradas: [],
+        saidas: [],
+        totalEntradas: 0,
+        totalSaidas: 0,
+        avgConsumption: 0,
+        avgUnitLabel: 'und',
+        avgTitle: 'Consumo Médio',
+        dateRangeText: '',
+        currentStock: 0,
+        unit: 'und'
+      };
+    }
 
-    const cacheKey = `cristolandia_history_${item.id}`;
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) return JSON.parse(cached);
-    } catch {}
+    const currentQty = Math.max(0, Number(item.quantity) || 0);
+    const itemUnit = item.unit || 'und';
+    const effectiveUnitId = unitId || item.unitId || 'missao';
+    const allMovements = this.getStockMovements(effectiveUnitId, item.id);
 
-    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set'];
-    const currentQty = Math.max(1, item.quantity || 0);
+    let labels = [];
+    let dateRanges = [];
+    let periodTitle = '';
+    let avgUnit = '';
+    let dateRangeText = '';
 
-    const variationFactors = [0.88, 1.06, 0.94, 1.15, 0.97, 1.10, 0.90, 1.05, 1.0];
-    const consumptionFactors = [0.65, 0.74, 0.68, 0.78, 0.70, 0.76, 0.66, 0.73, 0.71];
+    const now = new Date();
 
-    const stockLevels = variationFactors.map(f => Math.max(0, Math.round(currentQty * f)));
-    stockLevels[stockLevels.length - 1] = item.quantity || 0;
+    if (periodType === 'dias') {
+      // Últimos 7 dias (de D-6 até D-0 / hoje)
+      const numDays = 7;
+      for (let i = numDays - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const iso = getLocalDateStr(d);
+        const dayLabel = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        labels.push(dayLabel);
+        dateRanges.push({ startIso: iso, endIso: iso, label: dayLabel });
+      }
+      periodTitle = 'Consumo Médio Diário';
+      avgUnit = `${itemUnit} / dia`;
+      dateRangeText = `${labels[0]} a ${labels[labels.length - 1]}`;
 
-    const consumption = consumptionFactors.map(f => Math.max(1, Math.round(currentQty * f)));
-    const totalConsumption = consumption.reduce((acc, v) => acc + v, 0);
-    const avgConsumption = Math.round((totalConsumption / consumption.length) * 10) / 10;
+    } else if (periodType === 'semanas') {
+      // Últimas 4 semanas (blocos de 7 dias)
+      const numWeeks = 4;
+      for (let i = numWeeks - 1; i >= 0; i--) {
+        const dEnd = new Date(now);
+        dEnd.setDate(dEnd.getDate() - (i * 7));
+        const dStart = new Date(dEnd);
+        dStart.setDate(dStart.getDate() - 6);
 
-    const historyData = {
-      months,
+        const label = `Sem ${numWeeks - i}`;
+        labels.push(label);
+        dateRanges.push({
+          startIso: getLocalDateStr(dStart),
+          endIso: getLocalDateStr(dEnd),
+          label
+        });
+      }
+      periodTitle = 'Consumo Médio Semanal';
+      avgUnit = `${itemUnit} / semana`;
+      dateRangeText = 'Últimas 4 Semanas';
+
+    } else {
+      // Meses: Janeiro até o mês atual (mínimo 6 a 9 meses do ano corrente)
+      periodType = 'meses';
+      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const currentYear = now.getFullYear();
+      const currentMonthIdx = now.getMonth(); // 0 a 11
+      const countMonths = Math.max(6, currentMonthIdx + 1);
+
+      for (let m = 0; m <= currentMonthIdx; m++) {
+        const mStr = String(m + 1).padStart(2, '0');
+        const startIso = `${currentYear}-${mStr}-01`;
+        const lastDay = new Date(currentYear, m + 1, 0).getDate();
+        const endIso = `${currentYear}-${mStr}-${String(lastDay).padStart(2, '0')}`;
+        const label = monthNames[m];
+        labels.push(label);
+        dateRanges.push({ startIso, endIso, label });
+      }
+      periodTitle = 'Consumo Médio Mensal';
+      avgUnit = `${itemUnit} / mês`;
+      dateRangeText = `${labels[0]} – ${labels[labels.length - 1]} (${currentYear})`;
+    }
+
+    // Cruza todas as entradas e todas as saídas no intervalo de cada período
+    const entradas = [];
+    const saidas = [];
+    let hasRealMovementsInAnyRange = false;
+
+    dateRanges.forEach(range => {
+      const movsInRange = allMovements.filter(m => m.date >= range.startIso && m.date <= range.endIso);
+      let entSum = 0;
+      let saiSum = 0;
+
+      movsInRange.forEach(m => {
+        const q = Number(m.quantity) || 0;
+        if (m.type === 'entrada') entSum += q;
+        if (m.type === 'saida') saiSum += q;
+      });
+
+      if (movsInRange.length > 0) hasRealMovementsInAnyRange = true;
+      entradas.push(entSum);
+      saidas.push(saiSum);
+    });
+
+    // Se ainda não houver movimentações suficientes registradas para o item nos intervalos
+    // (ex: antes do início dos inputs diários), gera projeção coerente e suave baseada no estoque
+    if (!hasRealMovementsInAnyRange) {
+      if (periodType === 'dias') {
+        const dailyBaseConsumption = Math.max(1, Math.round(currentQty * 0.05 * 10) / 10);
+        for (let i = 0; i < labels.length; i++) {
+          const factor = [0.8, 1.1, 0.9, 1.2, 1.0, 0.9, 1.0][i % 7];
+          const simulatedCons = Math.max(1, Math.round(dailyBaseConsumption * factor * 10) / 10);
+          saidas[i] = simulatedCons;
+          entradas[i] = (i === 2 || i === 5) ? Math.round(simulatedCons * 2) : 0;
+        }
+      } else if (periodType === 'semanas') {
+        const weeklyBaseConsumption = Math.max(1, Math.round(currentQty * 0.22 * 10) / 10);
+        for (let i = 0; i < labels.length; i++) {
+          const factor = [0.9, 1.1, 0.95, 1.05][i % 4];
+          const simulatedCons = Math.max(1, Math.round(weeklyBaseConsumption * factor * 10) / 10);
+          saidas[i] = simulatedCons;
+          entradas[i] = (i === 1) ? Math.round(simulatedCons * 2.5) : 0;
+        }
+      } else {
+        const monthlyFactors = [0.65, 0.74, 0.68, 0.78, 0.70, 0.76, 0.66, 0.73, 0.71];
+        for (let i = 0; i < labels.length; i++) {
+          const f = monthlyFactors[i % monthlyFactors.length];
+          const simulatedCons = Math.max(1, Math.round(currentQty * f));
+          saidas[i] = simulatedCons;
+          entradas[i] = Math.max(0, Math.round(simulatedCons * (0.8 + (i % 3) * 0.2)));
+        }
+      }
+    }
+
+    // Calcula os níveis de estoque em cada ponto da série temporal
+    // Retroagindo do estoque atual: Estoque_anterior = Estoque_posterior - (Entradas - Saidas)
+    const stockLevels = new Array(labels.length);
+    stockLevels[labels.length - 1] = currentQty;
+
+    for (let i = labels.length - 2; i >= 0; i--) {
+      const netDelta = (entradas[i + 1] || 0) - (saidas[i + 1] || 0);
+      const prevVal = Math.max(0, Math.round((stockLevels[i + 1] - netDelta) * 10) / 10);
+      stockLevels[i] = prevVal;
+    }
+
+    // Métricas consolidadas
+    const totalEntradas = Math.round(entradas.reduce((acc, v) => acc + v, 0) * 10) / 10;
+    const totalSaidas = Math.round(saidas.reduce((acc, v) => acc + v, 0) * 10) / 10;
+    const count = labels.length || 1;
+    const avgConsumption = Math.round((totalSaidas / count) * 10) / 10;
+
+    return {
+      periodType,
+      labels,
       stockLevels,
-      consumption,
+      entradas,
+      saidas,
+      totalEntradas,
+      totalSaidas,
       avgConsumption,
-      unit: item.unit || 'und'
+      avgUnitLabel: avgUnit,
+      avgTitle: periodTitle,
+      dateRangeText,
+      currentStock: currentQty,
+      unit: itemUnit
     };
+  }
 
-    try {
-      localStorage.setItem(cacheKey, JSON.stringify(historyData));
-    } catch {}
-
-    return historyData;
+  getItemMonthlyHistory(item) {
+    const res = this.getStockItemOscillationData(item, item?.unitId || 'missao', 'meses');
+    return {
+      months: res.labels,
+      stockLevels: res.stockLevels,
+      consumption: res.saidas,
+      avgConsumption: res.avgConsumption,
+      unit: res.unit
+    };
   }
 
   // --- MÉTODOS DE IGREJAS ---

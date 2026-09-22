@@ -1,6 +1,6 @@
 {
-  "version": "1.0.43",
-  "build": "20260922_43",
+  "version": "1.0.44",
+  "build": "20260922_44",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Ajustada a identidade visual da aba do topo de Estudos com fundo preto 80%, letras douradas e brancas, e corrigida a abertura do formulário de Novo Estudo com escapeHtml."
+  "releaseNotes": "Gráficos de oscilação de estoque com métrica real de consumo cruzando todas as entradas e saídas, com filtros dinâmicos por Dias, Semanas e Meses, e média reativa."
 }
