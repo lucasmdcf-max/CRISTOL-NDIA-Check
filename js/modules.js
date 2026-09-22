@@ -1423,7 +1423,7 @@ function openStockUpdateView(unitId) {
           <input type="text" id="stock-search-input" class="form-input" placeholder="🔍 Buscar alimento no estoque..." oninput="handleStockSearchInput(this.value)" style="padding-left: 12px; padding-right: 32px; background:var(--white); height:38px;">
           <button type="button" id="stock-clear-search" onclick="clearStockSearch()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; color: var(--text-muted); cursor: pointer; display: none; padding: 4px;">&times;</button>
         </div>
-        <button type="button" onclick="promptAddNewStockItem('${unitId}')" class="btn-step" title="Cadastrar novo alimento nesta despensa" style="width:38px; height:38px; background:var(--green-light); border-color:var(--green-primary); color:var(--green-primary); font-weight:800; font-size:1.1rem; flex-shrink:0;">＋</button>
+        <button type="button" onclick="openAddStockItemModal('${unitId}')" class="btn-step" title="Cadastrar novo alimento nesta despensa" style="width:38px; height:38px; background:var(--green-light); border-color:var(--green-primary); color:var(--green-primary); font-weight:800; font-size:1.1rem; flex-shrink:0;">＋</button>
       </div>
 
       <!-- Tags das Categorias Sempre Fixas (Sem Emojis) -->
@@ -1596,24 +1596,115 @@ async function handleStockDirectInput(itemId, value) {
   if (inputEl) inputEl.value = cleanVal;
 }
 
-async function promptAddNewStockItem(unitId) {
-  const name = prompt('Nome do novo alimento ou item:');
-  if (!name || !name.trim()) return;
+function promptAddNewStockItem(unitId) {
+  openAddStockItemModal(unitId);
+}
 
-  const qtyStr = prompt(`Quantidade inicial para "${name.trim()}":`, '10');
-  const qty = parseInt(qtyStr, 10) || 0;
+function openAddStockItemModal(unitId) {
+  window.currentStockUnit = unitId;
+  const unit = getStockUnitObj(unitId);
+  const currentCat = window.currentStockCategory || 'todas';
+  const defaultSelectedCat = currentCat !== 'todas' ? currentCat : 'alimentos_grossos';
 
-  const unitStr = prompt('Unidade de medida (und, pct, kg, cx, etc.):', 'und') || 'und';
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.className = 'modal-header theme-estoque';
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openStockUpdateView('${unitId}')" title="Voltar para a despensa" style="width:32px; height:32px; font-size:1rem; margin-right:4px;">←</button>
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Novo Alimento</h2>
+        <p style="font-size:0.75rem;">${unit.name} · Selecione a categoria</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  // Categorias disponíveis para seleção (excluindo 'todas')
+  const availableCats = STOCK_CATEGORIES_INFO.filter(c => c.id !== 'todas');
+
+  modalBody.innerHTML = `
+    <form id="new-stock-item-form" onsubmit="event.preventDefault(); handleSaveNewStockItem('${unitId}');">
+      <div class="form-group">
+        <label class="form-label">Nome do Alimento ou Item *</label>
+        <input type="text" id="new-stock-name" class="form-input" placeholder="Ex: Azeite, Canela em pó, Carne seca..." required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Categoria * (para agrupamento correto)</label>
+        <select id="new-stock-category" class="form-input" required style="font-weight:700;">
+          ${availableCats.map(cat => `
+            <option value="${cat.id}" ${cat.id === defaultSelectedCat ? 'selected' : ''}>${cat.label}</option>
+          `).join('')}
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Quantidade Inicial</label>
+          <input type="number" id="new-stock-qty" class="form-input" value="10" min="0" required inputmode="numeric">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Unidade de Medida</label>
+          <select id="new-stock-unit" class="form-input">
+            <option value="und" selected>Unidade (und)</option>
+            <option value="kg">Quilograma (kg)</option>
+            <option value="pct">Pacote (pct)</option>
+            <option value="cx">Caixa (cx)</option>
+            <option value="l">Litro (l)</option>
+            <option value="g">Grama (g)</option>
+            <option value="lata">Lata</option>
+            <option value="garrafa">Garrafa</option>
+          </select>
+        </div>
+      </div>
+    </form>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-primary-action" style="width:100%; background:linear-gradient(135deg, #1E4D2B, #2E6A3B); color:#FFF; font-weight:800; box-shadow:0 4px 12px rgba(30,77,43,0.3);" onclick="handleSaveNewStockItem('${unitId}')">
+      💾 Salvar no Estoque
+    </button>
+  `;
+}
+
+async function handleSaveNewStockItem(unitId) {
+  const nameInput = document.getElementById('new-stock-name');
+  const name = nameInput ? nameInput.value.trim() : '';
+  if (!name) {
+    showToast('Informe o nome do alimento ou item!', 'warning');
+    if (nameInput) nameInput.focus();
+    return;
+  }
+
+  const categorySelect = document.getElementById('new-stock-category');
+  const categoryId = categorySelect ? categorySelect.value : 'alimentos_grossos';
+  const categoryObj = STOCK_CATEGORIES_INFO.find(c => c.id === categoryId);
+  const categoryLabel = categoryObj ? categoryObj.label : 'Alimentos Grossos';
+
+  const qtyInput = document.getElementById('new-stock-qty');
+  const parsedQty = qtyInput ? parseInt(qtyInput.value, 10) : 0;
+  const quantity = isNaN(parsedQty) ? 0 : Math.max(0, parsedQty);
+
+  const unitSelect = document.getElementById('new-stock-unit');
+  const unit = unitSelect ? unitSelect.value.trim().toLowerCase() : 'und';
 
   const newItem = {
     id: `stk_${unitId}_custom_${Date.now()}`,
     baseId: `c_${Date.now()}`,
-    name: name.trim(),
-    category: window.currentStockCategory !== 'todas' ? window.currentStockCategory : 'alimentos_grossos',
-    categoryLabel: 'Alimentos Gerais',
-    categoryIcon: '📦',
-    quantity: Math.max(0, qty),
-    unit: unitStr.trim().toLowerCase(),
+    name: name,
+    category: categoryId,
+    categoryLabel: categoryLabel,
+    quantity: quantity,
+    unit: unit,
     minQty: 5,
     unitId: unitId
   };
@@ -1625,10 +1716,11 @@ async function promptAddNewStockItem(unitId) {
     } else if (typeof dbManager.saveStockItem === 'function') {
       await dbManager.saveStockItem(newItem);
     }
-    showToast(`"${name.trim()}" adicionado com sucesso!`, 'success');
-    renderStockList();
+    showToast(`"${name}" adicionado em "${categoryLabel}"!`, 'success');
+    // Retorna à tela de atualização de estoque com o novo item exibido na categoria correta
+    openStockUpdateView(unitId);
   } catch (e) {
-    showToast('Erro ao adicionar: ' + e.message, 'danger');
+    showToast('Erro ao cadastrar alimento: ' + e.message, 'danger');
   } finally {
     hideLoading();
   }

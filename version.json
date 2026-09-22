@@ -1,6 +1,6 @@
 {
-  "version": "1.0.29",
-  "build": "20260922_29",
+  "version": "1.0.30",
+  "build": "20260922_30",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Restauração integral e blindagem do estoque das 3 despensas: implementação de merge inteligente (mergeWithDefaultStock) e sincronização bidirecional na nuvem (syncStockToCloud), garantindo que novos alimentos sejam acrescentados sem jamais apagar os itens pré-existentes."
+  "releaseNotes": "Inclusão de formulário nativo com seleção de categoria para novos alimentos do estoque: ao cadastrar um item, o usuário escolhe a categoria (Alimentos Grossos, Proteínas, Temperos, Lanches, Verduras e Legumes), garantindo que o alimento seja posicionado e agrupado corretamente na despensa."
 }
