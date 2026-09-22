@@ -1,6 +1,6 @@
 {
-  "version": "1.0.36",
-  "build": "20260922_36",
+  "version": "1.0.37",
+  "build": "20260922_37",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Ajuste na seção de Avisos do dia: elevação de posição equivalente à metade da altura da caixa (-50px) para máxima harmonia visual e ampliação do tamanho da fonte dos avisos (0.88rem) na fonte Century fina."
+  "releaseNotes": "Aprimoramento ergonômico e de acessibilidade visual: tela inicial com fundo verde escuro radial desfocado, partículas brancas com glow flutuando lentamente com opacidade de 20%, e ampliação do texto dos avisos em cor cinza escuro para máximo conforto e proteção da visão."
 }
