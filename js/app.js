@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Atualizar métricas do card de visão geral
   updateHeroMetrics();
 
+  // Atualizar 7 bolinhas de progresso neon do botão Missão
+  updateMissaoDots();
+
   // Ativar efeitos 3D táteis e micro-animações nos 6 botões
   setup3DButtonsInteractions();
 
@@ -40,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Ouvinte de sincronização remota em tempo real (Motor CUIDAR Pilar 1)
   window.addEventListener('db:cloud-synced', (e) => {
     updateHeroMetrics();
+    updateMissaoDots();
     const detail = (e && e.detail) || {};
     if (detail.firstLoad) {
       // Primeira carga: silenciosa
@@ -93,7 +97,65 @@ function refreshCurrentScreen() {
     if (typeof renderReportsHistory === 'function') {
       renderReportsHistory();
     }
+  } else if (screen.type === 'missao-calendar') {
+    if (typeof openMissaoCalendar === 'function') {
+      openMissaoCalendar(typeof _missaoCalYear === 'number' ? _missaoCalYear : null, typeof _missaoCalMonth === 'number' ? _missaoCalMonth : null);
+    }
+  } else if (screen.type === 'missao-view') {
+    if (typeof viewMissaoDayReport === 'function' && screen.dateStr) {
+      viewMissaoDayReport(screen.dateStr);
+    }
   }
+}
+
+// Atualiza o estado das 7 bolinhas de progresso neon no topo do botão Missão
+function updateMissaoDots() {
+  const container = document.getElementById('missao-dots-container');
+  if (!container) return;
+
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  const reports = (typeof dbManager !== 'undefined' && dbManager.getReports) ? dbManager.getReports() : [];
+  const missaoReport = reports.find(r => r.unitId === 'missao' && r.date === todayStr);
+
+  const dots = container.querySelectorAll('.btn-dot');
+  if (!dots || dots.length < 7) return;
+
+  if (!missaoReport) {
+    dots.forEach(d => d.classList.remove('active'));
+    return;
+  }
+
+  // 1. Pessoas atendidas
+  const pTotal = missaoReport.pessoasAtendidas?.total ?? missaoReport.acolhidosPresentes ?? 0;
+  if (pTotal > 0) dots[0].classList.add('active'); else dots[0].classList.remove('active');
+
+  // 2. Refeições
+  const ref = missaoReport.refeicoes || {};
+  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0);
+  if (totalRef > 0) dots[1].classList.add('active'); else dots[1].classList.remove('active');
+
+  // 3. Banhos
+  const banhos = missaoReport.banhos || 0;
+  if (banhos > 0) dots[2].classList.add('active'); else dots[2].classList.remove('active');
+
+  // 4. Corte de cabelo
+  const cabelo = missaoReport.cortesCabelo || 0;
+  if (cabelo > 0) dots[3].classList.add('active'); else dots[3].classList.remove('active');
+
+  // 5. Cultos
+  const cultos = missaoReport.cultos || 0;
+  if (cultos > 0) dots[4].classList.add('active'); else dots[4].classList.remove('active');
+
+  // 6. Pessoas na busca ativa
+  const buscaAtiva = missaoReport.buscaAtivaPessoas || (missaoReport.pessoasAtendidas?.buscaAtiva || 0);
+  if (buscaAtiva > 0) dots[5].classList.add('active'); else dots[5].classList.remove('active');
+
+  // 7. Decisões por Cristo
+  const decisoes = missaoReport.decisoesCristo || 0;
+  if (decisoes > 0) dots[6].classList.add('active'); else dots[6].classList.remove('active');
+}
+if (typeof window !== 'undefined') {
+  window.updateMissaoDots = updateMissaoDots;
 }
 
 // Renderização da Data por extenso em Português
@@ -192,6 +254,11 @@ function updateHeroMetrics() {
   if (elRefeicoes) elRefeicoes.textContent = refeicoes;
   if (elTriagens) elTriagens.textContent = triagens;
   if (elRelatoriosCount) elRelatoriosCount.textContent = `${todayReports.length}/3`;
+
+  // Mantém as bolinhas neon do botão Missão sincronizadas
+  if (typeof updateMissaoDots === 'function') {
+    updateMissaoDots();
+  }
 }
 
 // Efeito 3D Tátil, Iluminação Dinâmica e Micro-Animações no Mouse e Dedo

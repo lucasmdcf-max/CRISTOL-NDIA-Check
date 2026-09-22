@@ -1,6 +1,6 @@
 {
-  "version": "1.0.23",
-  "build": "20260922_23",
+  "version": "1.0.24",
+  "build": "20260922_24",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Correção crítica de persistência e renderização de dados: respeita valores numéricos zerados (0 acolhidos) sem sobrescrever por padrões; indexação única e atualização garantida de relatórios por unidade e data no localStorage e Firebase RTDB."
+  "releaseNotes": "Módulo exclusivo da Unidade Missão: menu inicial com opções Histórico e Novo Relatório; calendário mensal interativo com dias preenchidos em verde escuro e dias sem relatório em cinza; visualização e edição de relatórios por data; formulário oficial completo com os 9 campos (Data com seletor e padrão Hoje, Missionário, Pessoas Atendidas na rua/unidade/busca ativa, Refeições nos 5 períodos, Banhos, Corte de Cabelo, Cultos, Busca Ativa e Decisões por Cristo) com ícones verdes de traço fino; e indicador de 7 bolinhas neon no topo do botão Missão na tela inicial."
 }

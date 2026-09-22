@@ -324,3 +324,36 @@
   color: #12331B;
   font-weight: 700;
 }
+
+/* --- 7 BOLINHAS DE PROGRESSO NEON NO TOPO DO BOTÃO MISSÃO --- */
+.btn-dots-progress {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3.5px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.btn-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #D7CCC8; /* Bege suave neutro quando não preenchido */
+  border: 1px solid rgba(197, 137, 8, 0.25);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-dot.active {
+  background: #00E676; /* Verde Neon Brilhante */
+  border-color: #00E676;
+  box-shadow: 
+    0 0 7px #00E676,
+    0 0 12px rgba(0, 230, 118, 0.75),
+    0 0 2px #FFFFFF;
+  transform: scale(1.28);
+}

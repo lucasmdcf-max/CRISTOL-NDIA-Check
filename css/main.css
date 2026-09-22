@@ -1329,3 +1329,362 @@ body {
   }
 }
 
+/* ==========================================================================
+   MÓDULO MISSÃO: MENU DE ESCOLHA, CALENDÁRIO MENSAL & RELATÓRIO OFICIAL
+   ========================================================================== */
+
+/* Menu de Escolha: Histórico vs Novo Relatório */
+.missao-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 10px 0 16px;
+}
+
+.btn-choice-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-beige);
+  border-radius: 16px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-choice-card:hover {
+  border-color: var(--green-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(30, 77, 43, 0.12);
+}
+
+.btn-choice-card:active {
+  transform: scale(0.97);
+}
+
+.btn-choice-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-cream);
+  color: var(--green-primary);
+  border: 1px solid var(--border-beige);
+}
+
+.btn-choice-title {
+  font-family: var(--font-gothic);
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--green-primary);
+}
+
+.btn-choice-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+/* --- CALENDÁRIO MENSAL DA MISSÃO --- */
+.calendar-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-beige);
+  border-radius: 16px;
+  padding: 14px 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.calendar-header-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.calendar-month-title {
+  font-family: var(--font-gothic);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--green-primary);
+  text-transform: capitalize;
+}
+
+.calendar-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-beige);
+  background: var(--bg-surface);
+  color: var(--green-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+  background: var(--green-primary);
+  color: #FFFFFF;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day-btn {
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font-gothic);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dias com Relatório: Verde Escuro */
+.calendar-day-btn.day-filled {
+  background: #1E4D2B;
+  color: #FFFFFF;
+  box-shadow: 0 2px 4px rgba(30, 77, 43, 0.25);
+}
+
+.calendar-day-btn.day-filled:hover {
+  filter: brightness(1.15);
+  transform: scale(1.05);
+}
+
+/* Dias sem Relatório: Cinza */
+.calendar-day-btn.day-empty {
+  background: #ECEFF1;
+  color: #78909C;
+}
+
+.calendar-day-btn.day-empty:hover {
+  background: #CFD8DC;
+  color: #37474F;
+}
+
+/* Dia fora do mês atual */
+.calendar-day-btn.day-outside {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Dia Selecionado */
+.calendar-day-btn.day-selected {
+  outline: 2.5px solid #C58908;
+  outline-offset: 1px;
+  transform: scale(1.06);
+  z-index: 2;
+}
+
+/* Marcador de Hoje */
+.calendar-day-btn.day-today::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #C58908;
+}
+
+/* Legenda do Calendário */
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.legend-dot.filled {
+  background: #1E4D2B;
+}
+
+.legend-dot.empty {
+  background: #ECEFF1;
+  border: 1px solid #CFD8DC;
+}
+
+/* --- CARDS DE PERGUNTA DA MISSÃO (9 CAMPOS) --- */
+.missao-q-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-beige);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.missao-q-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.missao-q-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-cream);
+  color: var(--green-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border-beige);
+}
+
+.missao-q-icon svg {
+  stroke: var(--green-primary);
+  width: 18px;
+  height: 18px;
+}
+
+.missao-q-title-box {
+  flex: 1;
+}
+
+.missao-q-title {
+  font-family: var(--font-gothic);
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+
+.missao-q-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+.missao-stepper-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.missao-stepper-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.missao-stepper-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-missao-step {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-beige);
+  background: var(--bg-surface);
+  color: var(--green-primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.btn-missao-step:active {
+  background: var(--green-primary);
+  color: #FFFFFF;
+  transform: scale(0.92);
+}
+
+.missao-step-input {
+  width: 54px;
+  height: 32px;
+  text-align: center;
+  font-family: var(--font-gothic);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--green-primary);
+  border: 1.5px solid var(--border-beige);
+  border-radius: 8px;
+  background: var(--bg-cream);
+  padding: 2px 4px;
+}
+
+.missao-sub-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-beige);
+}
+
+.missao-sub-item {
+  background: var(--bg-cream);
+  border-radius: 10px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.missao-sub-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+

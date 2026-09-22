@@ -32,8 +32,835 @@ const UNIT_PROFILES = {
   }
 };
 
+// ==========================================================================
+// MÓDULO EXCLUSIVO DA UNIDADE MISSÃO (HISTÓRICO + CALENDÁRIO + NOVO RELATÓRIO)
+// ==========================================================================
+
+// Ícones SVG de traço limpo na cor verde oficial para cada pergunta
+const MISSAO_ICONS = {
+  data: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  missionario: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M12 11v3"/><path d="M10.5 12.5h3"/></svg>`,
+  pessoas: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  refeicoes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+  banhos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7a4 4 0 0 1 4 4v2"/><path d="M11 10h8l-1.5 4h-5z"/><line x1="12" y1="17" x2="12" y2="17.01"/><line x1="15" y1="17" x2="15" y2="17.01"/><line x1="13.5" y1="20" x2="13.5" y2="20.01"/><line x1="4" y1="4" x2="4" y2="21"/></svg>`,
+  cortes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>`,
+  cultos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10L12 3L21 10"/><path d="M5 10V20H19V10"/><line x1="12" y1="7" x2="12" y2="15"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
+  buscaAtiva: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>`,
+  decisoes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M7 7h10"/><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
+};
+
+// 1. Menu Inicial de Escolha da Missão (Histórico vs Novo Relatório)
+function openMissaoFlow() {
+  window._currentScreen = { type: 'missao-choice' };
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  const reports = dbManager.getReports();
+  const todayReport = reports.find(r => r.unitId === 'missao' && r.date === todayStr);
+
+  modalHeader.className = 'modal-header';
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10L12 3L21 10"/>
+          <path d="M5 10V20H19V10"/>
+          <path d="M9 20V14H15V20"/>
+          <line x1="2" y1="20" x2="22" y2="20"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Unidade Missão</h2>
+        <p style="margin-bottom:2px;">Atendimento e Acolhimento Social</p>
+        ${todayReport 
+          ? `<span style="display:inline-block; margin-top:2px; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#E8F5E9; color:#1E4D2B;">✓ Relatório de hoje registrado</span>` 
+          : `<span style="display:inline-block; margin-top:2px; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#FFF8E1; color:#C58908;">📝 Relatório de hoje pendente</span>`}
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <div style="text-align:center; margin: 6px 0 14px;">
+      <p style="font-size:0.82rem; color:var(--text-muted);">Selecione a ação desejada para o relatório da Missão:</p>
+    </div>
+
+    <div class="missao-choice-grid">
+      <!-- Opção 1: Histórico com Calendário Mensal -->
+      <div class="btn-choice-card" onclick="openMissaoCalendar()">
+        <div class="btn-choice-icon">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="btn-choice-title">Histórico</div>
+        <div class="btn-choice-desc">Consulta por calendário mensal</div>
+      </div>
+
+      <!-- Opção 2: Novo Relatório -->
+      <div class="btn-choice-card" onclick="openMissaoForm()">
+        <div class="btn-choice-icon">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </div>
+        <div class="btn-choice-title">Novo Relatório</div>
+        <div class="btn-choice-desc">Preencher o relatório diário</div>
+      </div>
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="closeModal('modal-generic')">Fechar</button>
+  `;
+
+  openModal('modal-generic');
+}
+window.openMissaoFlow = openMissaoFlow;
+
+// 2. Histórico com Calendário Mensal da Missão
+let _missaoCalYear = null;
+let _missaoCalMonth = null;
+
+function openMissaoCalendar(targetYear, targetMonth) {
+  window._currentScreen = { type: 'missao-calendar' };
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  const now = new Date();
+  if (targetYear === undefined || targetYear === null) {
+    _missaoCalYear = now.getFullYear();
+    _missaoCalMonth = now.getMonth();
+  } else {
+    _missaoCalYear = targetYear;
+    _missaoCalMonth = targetMonth;
+  }
+
+  const reports = dbManager.getReports().filter(r => r.unitId === 'missao');
+  const filledDatesMap = {};
+  reports.forEach(r => {
+    if (r && r.date) filledDatesMap[r.date] = r;
+  });
+
+  const monthNames = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  const firstDayOfWeek = new Date(_missaoCalYear, _missaoCalMonth, 1).getDay();
+  const daysInMonth = new Date(_missaoCalYear, _missaoCalMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(_missaoCalYear, _missaoCalMonth, 0).getDate();
+
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+
+  modalHeader.className = 'modal-header';
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openMissaoFlow()" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Histórico Missão</h2>
+        <p style="margin-bottom:2px;">Calendário de Atendimentos</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  let daysHtml = '';
+
+  // Dias do mês anterior
+  for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+    const dayNum = prevMonthDays - i;
+    daysHtml += `<div class="calendar-day-btn day-outside">${dayNum}</div>`;
+  }
+
+  // Dias do mês atual
+  let filledCount = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayPad = String(day).padStart(2, '0');
+    const monthPad = String(_missaoCalMonth + 1).padStart(2, '0');
+    const dateStr = `${_missaoCalYear}-${monthPad}-${dayPad}`;
+
+    const isFilled = !!filledDatesMap[dateStr];
+    if (isFilled) filledCount++;
+    const isToday = (dateStr === todayStr);
+
+    const btnClass = isFilled ? 'day-filled' : 'day-empty';
+    const todayClass = isToday ? 'day-today' : '';
+    const clickFn = isFilled 
+      ? `viewMissaoDayReport('${dateStr}')` 
+      : `openMissaoForm('${dateStr}')`;
+    const titleAttr = isFilled ? `Relatório preenchido em ${dayPad}/${monthPad}` : `Toque para preencher este dia`;
+
+    daysHtml += `
+      <button type="button" 
+        class="calendar-day-btn ${btnClass} ${todayClass}" 
+        onclick="${clickFn}" 
+        title="${titleAttr}">
+        ${day}
+      </button>
+    `;
+  }
+
+  modalBody.innerHTML = `
+    <div class="calendar-card">
+      <div class="calendar-header-nav">
+        <button type="button" class="calendar-nav-btn" onclick="navMissaoCalendar(-1)">←</button>
+        <div class="calendar-month-title">${monthNames[_missaoCalMonth]} de ${_missaoCalYear}</div>
+        <button type="button" class="calendar-nav-btn" onclick="navMissaoCalendar(1)">→</button>
+      </div>
+
+      <div class="calendar-weekdays">
+        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+      </div>
+
+      <div class="calendar-grid">
+        ${daysHtml}
+      </div>
+
+      <div class="calendar-legend">
+        <div class="legend-item">
+          <span class="legend-dot filled"></span>
+          <span>Preenchido</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot empty"></span>
+          <span>Não preenchido</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-cream); border:1px solid var(--border-beige); border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:0.75rem; color:var(--text-muted);">Relatórios no mês:</span>
+      <span style="font-family:var(--font-gothic); font-size:0.85rem; font-weight:800; color:var(--green-primary);">${filledCount} / ${daysInMonth} dias</span>
+    </div>
+
+    <div style="margin-top:10px; text-align:center;">
+      <span style="font-size:0.72rem; color:var(--text-muted);">Toque em um dia verde para visualizar ou em um dia cinza para registrar.</span>
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <div style="display:flex; gap:8px; width:100%;">
+      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openMissaoFlow()">← Voltar</button>
+      <button type="button" class="btn-primary-action" style="flex:1;" onclick="openMissaoForm()">📝 Novo de Hoje</button>
+    </div>
+  `;
+
+  openModal('modal-generic');
+}
+window.openMissaoCalendar = openMissaoCalendar;
+
+function navMissaoCalendar(delta) {
+  let newMonth = _missaoCalMonth + delta;
+  let newYear = _missaoCalYear;
+  if (newMonth < 0) {
+    newMonth = 11;
+    newYear--;
+  } else if (newMonth > 11) {
+    newMonth = 0;
+    newYear++;
+  }
+  openMissaoCalendar(newYear, newMonth);
+}
+window.navMissaoCalendar = navMissaoCalendar;
+
+// 3. Visualização do Relatório da Missão por Data
+function viewMissaoDayReport(dateStr) {
+  window._currentScreen = { type: 'missao-view', dateStr };
+  const reports = dbManager.getReports();
+  const r = reports.find(rep => rep.unitId === 'missao' && rep.date === dateStr);
+  if (!r) {
+    openMissaoForm(dateStr);
+    return;
+  }
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  const pTotal = r.pessoasAtendidas?.total ?? r.acolhidosPresentes ?? 0;
+  const pRua = r.pessoasAtendidas?.rua ?? 0;
+  const pUnidade = r.pessoasAtendidas?.unidade ?? (r.acolhidosPresentes ?? 0);
+  const pBusca = r.pessoasAtendidas?.buscaAtiva ?? 0;
+
+  const ref = r.refeicoes || {};
+  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0);
+
+  modalHeader.className = 'modal-header';
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openMissaoCalendar()" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10L12 3L21 10"/>
+          <path d="M5 10V20H19V10"/>
+          <path d="M9 20V14H15V20"/>
+          <line x1="2" y1="20" x2="22" y2="20"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Relatório Missão</h2>
+        <p style="margin-bottom:2px;">${formatDateBR(dateStr)} • ${r.reporterName || 'Missionário'}</p>
+        <span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#E8F5E9; color:#1E4D2B;">✓ Relatório Registrado</span>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <!-- 1. Data e Missionário -->
+    <div style="background:var(--bg-cream); border:1px solid var(--border-beige); border-radius:12px; padding:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <span style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Data do Relatório</span>
+        <div style="font-family:var(--font-gothic); font-size:0.95rem; font-weight:800; color:var(--green-primary);">${formatDateBR(dateStr)}</div>
+      </div>
+      <div style="text-align:right;">
+        <span style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Missionário</span>
+        <div style="font-family:var(--font-gothic); font-size:0.9rem; font-weight:800; color:var(--text-main);">${r.reporterName || 'Equipe de Plantão'}</div>
+      </div>
+    </div>
+
+    <!-- Indicadores Numéricos em Cards -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+      <!-- Pessoas Atendidas -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${MISSAO_ICONS.pessoas}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Pessoas Atendidas</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${pTotal}</div>
+        <div style="font-size:0.66rem; color:var(--text-muted);">Rua: ${pRua} | Unid: ${pUnidade} | Busca: ${pBusca}</div>
+      </div>
+
+      <!-- Refeições -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${MISSAO_ICONS.refeicoes}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Refeições Servidas</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--gold-primary);">${totalRef}</div>
+        <div style="font-size:0.66rem; color:var(--text-muted);">Café: ${ref.cafe || 0} | Almoço: ${ref.almoco || 0} | Jantar: ${ref.jantar || 0}</div>
+      </div>
+
+      <!-- Banhos -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${MISSAO_ICONS.banhos}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Banhos</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.banhos || 0}</div>
+      </div>
+
+      <!-- Corte de Cabelo -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${MISSAO_ICONS.cortes}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Cortes de Cabelo</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.cortesCabelo || 0}</div>
+      </div>
+
+      <!-- Cultos Realizados -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${MISSAO_ICONS.cultos}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Cultos Realizados</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.cultos || 0}</div>
+      </div>
+
+      <!-- Busca Ativa Pessoas -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${MISSAO_ICONS.buscaAtiva}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Busca Ativa (Pessoas)</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.buscaAtivaPessoas || pBusca || 0}</div>
+      </div>
+    </div>
+
+    <!-- Decisões por Cristo em destaque -->
+    <div style="background:linear-gradient(135deg, rgba(197, 137, 8, 0.12), rgba(30, 77, 43, 0.08)); border:1.5px solid var(--gold-primary); border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:36px; height:36px; border-radius:50%; background:var(--gold-primary); color:#FFFFFF; display:flex; align-items:center; justify-content:center;">
+          ${MISSAO_ICONS.decisoes}
+        </div>
+        <div>
+          <div style="font-family:var(--font-gothic); font-size:0.9rem; font-weight:800; color:var(--text-main);">Decisões por Cristo</div>
+          <div style="font-size:0.68rem; color:var(--text-muted);">Vidas salvas e reconciliações</div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-gothic); font-size:1.8rem; font-weight:900; color:var(--gold-primary);">${r.decisoesCristo || 0}</div>
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <div style="display:flex; gap:8px; width:100%;">
+      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openMissaoCalendar()">← Calendário</button>
+      <button type="button" class="btn-primary-action" style="flex:1.2;" onclick="openMissaoForm('${dateStr}', true)">✏️ Editar Relatório</button>
+    </div>
+  `;
+
+  openModal('modal-generic');
+}
+window.viewMissaoDayReport = viewMissaoDayReport;
+
+// 4. Formulário do Relatório da Missão (Novo ou Edição com as 9 Perguntas Oficiais)
+function openMissaoForm(targetDate, isEdit) {
+  window._currentScreen = { type: 'missao-form', targetDate, isEdit };
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  const selectedDate = targetDate || todayStr;
+  const isToday = (selectedDate === todayStr);
+
+  const reports = dbManager.getReports();
+  const existing = reports.find(r => r.unitId === 'missao' && r.date === selectedDate);
+
+  // Valores pré-carregados
+  const reporter = existing ? (r_name => r_name || 'Pr. Marcos Lima')(existing.reporterName) : 'Pr. Marcos Lima';
+  
+  // Pergunta 3: Pessoas atendidas
+  const pRua = existing?.pessoasAtendidas?.rua ?? (existing ? 0 : 15);
+  const pUnidade = existing?.pessoasAtendidas?.unidade ?? (existing?.acolhidosPresentes ?? 45);
+  const pBusca = existing?.pessoasAtendidas?.buscaAtiva ?? (existing ? 0 : 20);
+  const pTotal = pRua + pUnidade + pBusca;
+
+  // Pergunta 4: Refeições servidas
+  const ref = existing?.refeicoes || {};
+  const rCafe = ref.cafe ?? 45;
+  const rAlmoco = ref.almoco ?? 49;
+  const rLanche = ref.lanche ?? 45;
+  const rJantar = ref.jantar ?? 45;
+  const rBusca = ref.buscaAtiva ?? 20;
+  const rTotal = rCafe + rAlmoco + rLanche + rJantar + rBusca;
+
+  // Perguntas 5 a 9
+  const banhos = existing?.banhos ?? (existing ? 0 : 25);
+  const cortes = existing?.cortesCabelo ?? (existing ? 0 : 8);
+  const cultos = existing?.cultos ?? (existing ? 0 : 2);
+  const buscaAtivaPessoas = existing?.buscaAtivaPessoas ?? pBusca;
+  const decisoes = existing?.decisoesCristo ?? (existing ? 0 : 3);
+
+  modalHeader.className = 'modal-header';
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openMissaoFlow()" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10L12 3L21 10"/>
+          <path d="M5 10V20H19V10"/>
+          <path d="M9 20V14H15V20"/>
+          <line x1="2" y1="20" x2="22" y2="20"/>
+        </svg>
+      </div>
+      <div>
+        <h2>${existing ? 'Editar' : 'Preencher'} Missão</h2>
+        <p style="margin-bottom:2px;">${isToday ? 'Relatório de Hoje' : 'Relatório de ' + formatDateBR(selectedDate)}</p>
+        ${existing 
+          ? `<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#E8F5E9; color:#1E4D2B;">✓ Modo de edição</span>`
+          : `<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.68rem; font-weight:700; background:#FFF8E1; color:#C58908;">📝 Novo preenchimento</span>`}
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <form id="missao-report-form" onsubmit="event.preventDefault();">
+      <input type="hidden" id="missao-rep-id" value="${existing ? existing.id : ''}">
+
+      <!-- 1. DATA DO RELATÓRIO -->
+      <div class="missao-q-card">
+        <div class="missao-q-header">
+          <div class="missao-q-icon">${MISSAO_ICONS.data}</div>
+          <div class="missao-q-title-box">
+            <div class="missao-q-title">1. Data do Relatório</div>
+            <div class="missao-q-sub">Padrão "Hoje" ou toque no calendário para alterar</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div style="flex:1; background:var(--bg-cream); border:1.5px solid var(--border-beige); border-radius:10px; padding:8px 12px; display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-family:var(--font-gothic); font-weight:800; color:var(--green-primary); font-size:0.95rem;" id="missao-date-label">
+              ${isToday ? `Hoje (${formatDateBR(selectedDate)})` : formatDateBR(selectedDate)}
+            </span>
+            <input type="date" id="missao-rep-date" value="${selectedDate}" class="form-input" style="width:auto; padding:4px 8px; font-size:0.8rem;" onchange="onMissaoDateChanged(this.value)">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. MISSIONÁRIO -->
+      <div class="missao-q-card">
+        <div class="missao-q-header">
+          <div class="missao-q-icon">${MISSAO_ICONS.missionario}</div>
+          <div class="missao-q-title-box">
+            <div class="missao-q-title">2. Missionário Responsável</div>
+            <div class="missao-q-sub">Nome do responsável pelo plantão</div>
+          </div>
+        </div>
+        <input type="text" id="missao-rep-reporter" class="form-input" value="${reporter}" placeholder="Ex: Pr. Marcos Lima" required>
+      </div>
+
+      <!-- 3. PESSOAS ATENDIDAS PELA MISSÃO -->
+      <div class="missao-q-card">
+        <div class="missao-q-header">
+          <div class="missao-q-icon">${MISSAO_ICONS.pessoas}</div>
+          <div class="missao-q-title-box">
+            <div class="missao-q-title">3. Nº de Pessoas Atendidas pela Missão</div>
+            <div class="missao-q-sub">Na rua, na unidade e nas ações de busca ativa</div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
+            <div style="font-family:var(--font-gothic); font-size:1.15rem; font-weight:800; color:var(--green-primary);" id="missao-total-pessoas">${pTotal}</div>
+          </div>
+        </div>
+
+        <div class="missao-sub-grid">
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header">
+              <span>Na Rua</span>
+            </div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-rua', -1, 'pessoas')">-</button>
+              <input type="number" id="missao-p-rua" class="missao-step-input" value="${pRua}" oninput="recalcMissaoTotal('pessoas')">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-rua', 1, 'pessoas')">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header">
+              <span>Na Unidade</span>
+            </div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-unidade', -1, 'pessoas')">-</button>
+              <input type="number" id="missao-p-unidade" class="missao-step-input" value="${pUnidade}" oninput="recalcMissaoTotal('pessoas')">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-unidade', 1, 'pessoas')">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item" style="grid-column: span 2;">
+            <div class="missao-sub-item-header">
+              <span>Na Busca Ativa</span>
+            </div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-busca', -1, 'pessoas')">-</button>
+              <input type="number" id="missao-p-busca" class="missao-step-input" value="${pBusca}" oninput="recalcMissaoTotal('pessoas')">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-p-busca', 1, 'pessoas')">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. REFEIÇÕES SERVIDAS -->
+      <div class="missao-q-card">
+        <div class="missao-q-header">
+          <div class="missao-q-icon">${MISSAO_ICONS.refeicoes}</div>
+          <div class="missao-q-title-box">
+            <div class="missao-q-title">4. Nº de Refeições Servidas</div>
+            <div class="missao-q-sub">Considerar usuários, equipe e voluntários</div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
+            <div style="font-family:var(--font-gothic); font-size:1.15rem; font-weight:800; color:var(--gold-primary);" id="missao-total-refeicoes">${rTotal}</div>
+          </div>
+        </div>
+
+        <div class="missao-sub-grid">
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Café da Manhã</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-cafe', -1, 'refeicoes')">-</button>
+              <input type="number" id="missao-r-cafe" class="missao-step-input" value="${rCafe}" oninput="recalcMissaoTotal('refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-cafe', 1, 'refeicoes')">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Almoço</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-almoco', -1, 'refeicoes')">-</button>
+              <input type="number" id="missao-r-almoco" class="missao-step-input" value="${rAlmoco}" oninput="recalcMissaoTotal('refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-almoco', 1, 'refeicoes')">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Café da Tarde</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-lanche', -1, 'refeicoes')">-</button>
+              <input type="number" id="missao-r-lanche" class="missao-step-input" value="${rLanche}" oninput="recalcMissaoTotal('refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-lanche', 1, 'refeicoes')">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Jantar</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-jantar', -1, 'refeicoes')">-</button>
+              <input type="number" id="missao-r-jantar" class="missao-step-input" value="${rJantar}" oninput="recalcMissaoTotal('refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-jantar', 1, 'refeicoes')">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item" style="grid-column: span 2;">
+            <div class="missao-sub-item-header"><span>Nas Ações de Busca Ativa</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-busca', -1, 'refeicoes')">-</button>
+              <input type="number" id="missao-r-busca" class="missao-step-input" value="${rBusca}" oninput="recalcMissaoTotal('refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-r-busca', 1, 'refeicoes')">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. BANHOS -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${MISSAO_ICONS.banhos}</div>
+            <div>
+              <div class="missao-q-title">5. Nº de Banhos</div>
+              <div class="missao-q-sub">Não considerar os da equipe</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-banhos', -1)">-</button>
+            <input type="number" id="missao-rep-banhos" class="missao-step-input" value="${banhos}">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-banhos', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. CORTE DE CABELO -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${MISSAO_ICONS.cortes}</div>
+            <div>
+              <div class="missao-q-title">6. Nº de Corte de Cabelo</div>
+              <div class="missao-q-sub">Não considerar os da equipe</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cortes', -1)">-</button>
+            <input type="number" id="missao-rep-cortes" class="missao-step-input" value="${cortes}">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cortes', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. CULTOS REALIZADOS -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${MISSAO_ICONS.cultos}</div>
+            <div>
+              <div class="missao-q-title">7. Nº de Cultos Realizados</div>
+              <div class="missao-q-sub">Cultos, devocionais e ministrações</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cultos', -1)">-</button>
+            <input type="number" id="missao-rep-cultos" class="missao-step-input" value="${cultos}">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-cultos', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. BUSCA ATIVA (PESSOAS ATENDIDAS) -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${MISSAO_ICONS.buscaAtiva}</div>
+            <div>
+              <div class="missao-q-title">8. Pessoas na Busca Ativa</div>
+              <div class="missao-q-sub">Atendidas nas ações externas</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-busca-pessoas', -1)">-</button>
+            <input type="number" id="missao-rep-busca-pessoas" class="missao-step-input" value="${buscaAtivaPessoas}">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-busca-pessoas', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. DECISÕES POR CRISTO -->
+      <div class="missao-q-card" style="border:1.5px solid var(--gold-primary); background:rgba(197, 137, 8, 0.04);">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon" style="background:var(--gold-primary); color:#FFFFFF;">${MISSAO_ICONS.decisoes}</div>
+            <div>
+              <div class="missao-q-title" style="color:var(--gold-primary);">9. Nº de Decisões por Cristo</div>
+              <div class="missao-q-sub">Conversões e reconciliações no dia</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-decisoes', -1)">-</button>
+            <input type="number" id="missao-rep-decisoes" class="missao-step-input" value="${decisoes}" style="color:var(--gold-primary); border-color:var(--gold-primary);">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-decisoes', 1)">+</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  `;
+
+  modalFooter.innerHTML = `
+    <div style="display:flex; gap:8px; width:100%;">
+      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openMissaoFlow()">Cancelar</button>
+      <button type="button" id="btn-save-missao-report" class="btn-primary-action" style="flex:1.5;" onclick="handleSaveMissaoReport()">
+        💾 Salvar Relatório
+      </button>
+    </div>
+  `;
+
+  openModal('modal-generic');
+}
+window.openMissaoForm = openMissaoForm;
+
+// Auxiliares do Formulário da Missão
+function onMissaoDateChanged(newDate) {
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  const label = document.getElementById('missao-date-label');
+  if (label) {
+    label.textContent = (newDate === todayStr) ? `Hoje (${formatDateBR(newDate)})` : formatDateBR(newDate);
+  }
+}
+window.onMissaoDateChanged = onMissaoDateChanged;
+
+function adjustMissaoStep(inputId, delta, group) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  let val = parseInt(el.value, 10);
+  if (isNaN(val)) val = 0;
+  val = Math.max(0, val + delta);
+  el.value = val;
+  if (group) recalcMissaoTotal(group);
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+window.adjustMissaoStep = adjustMissaoStep;
+
+function recalcMissaoTotal(group) {
+  if (group === 'pessoas') {
+    const rua = parseInt(document.getElementById('missao-p-rua')?.value, 10) || 0;
+    const unidade = parseInt(document.getElementById('missao-p-unidade')?.value, 10) || 0;
+    const busca = parseInt(document.getElementById('missao-p-busca')?.value, 10) || 0;
+    const totalEl = document.getElementById('missao-total-pessoas');
+    if (totalEl) totalEl.textContent = (rua + unidade + busca);
+  } else if (group === 'refeicoes') {
+    const cafe = parseInt(document.getElementById('missao-r-cafe')?.value, 10) || 0;
+    const almoco = parseInt(document.getElementById('missao-r-almoco')?.value, 10) || 0;
+    const lanche = parseInt(document.getElementById('missao-r-lanche')?.value, 10) || 0;
+    const jantar = parseInt(document.getElementById('missao-r-jantar')?.value, 10) || 0;
+    const busca = parseInt(document.getElementById('missao-r-busca')?.value, 10) || 0;
+    const totalEl = document.getElementById('missao-total-refeicoes');
+    if (totalEl) totalEl.textContent = (cafe + almoco + lanche + jantar + busca);
+  }
+}
+window.recalcMissaoTotal = recalcMissaoTotal;
+
+// 5. Salvamento Oficial do Relatório da Missão
+async function handleSaveMissaoReport() {
+  const btn = document.getElementById('btn-save-missao-report');
+  const dateVal = document.getElementById('missao-rep-date')?.value;
+  if (!dateVal) {
+    showToast('Informe a data do relatório.', 'danger');
+    return;
+  }
+
+  const pRua = parseInt(document.getElementById('missao-p-rua')?.value, 10) || 0;
+  const pUnidade = parseInt(document.getElementById('missao-p-unidade')?.value, 10) || 0;
+  const pBusca = parseInt(document.getElementById('missao-p-busca')?.value, 10) || 0;
+  const pTotal = pRua + pUnidade + pBusca;
+
+  const rCafe = parseInt(document.getElementById('missao-r-cafe')?.value, 10) || 0;
+  const rAlmoco = parseInt(document.getElementById('missao-r-almoco')?.value, 10) || 0;
+  const rLanche = parseInt(document.getElementById('missao-r-lanche')?.value, 10) || 0;
+  const rJantar = parseInt(document.getElementById('missao-r-jantar')?.value, 10) || 0;
+  const rBusca = parseInt(document.getElementById('missao-r-busca')?.value, 10) || 0;
+
+  const banhos = parseInt(document.getElementById('missao-rep-banhos')?.value, 10) || 0;
+  const cortes = parseInt(document.getElementById('missao-rep-cortes')?.value, 10) || 0;
+  const cultos = parseInt(document.getElementById('missao-rep-cultos')?.value, 10) || 0;
+  const buscaAtivaPessoas = parseInt(document.getElementById('missao-rep-busca-pessoas')?.value, 10) || pBusca;
+  const decisoes = parseInt(document.getElementById('missao-rep-decisoes')?.value, 10) || 0;
+  const reporter = document.getElementById('missao-rep-reporter')?.value.trim() || 'Pr. Marcos Lima';
+  const repId = document.getElementById('missao-rep-id')?.value;
+
+  const reportData = {
+    id: repId || `rep_missao_${dateVal}`,
+    unitId: 'missao',
+    unitName: 'Missão',
+    date: dateVal,
+    reporterName: reporter,
+    // Compatibilidade com censo geral de residentes
+    acolhidosPresentes: pUnidade,
+    novasTriagens: pBusca,
+    desligamentos: 0,
+    pessoasAtendidas: {
+      total: pTotal,
+      rua: pRua,
+      unidade: pUnidade,
+      buscaAtiva: pBusca
+    },
+    refeicoes: {
+      cafe: rCafe,
+      almoco: rAlmoco,
+      lanche: rLanche,
+      jantar: rJantar,
+      buscaAtiva: rBusca
+    },
+    banhos: banhos,
+    cortesCabelo: cortes,
+    cultos: cultos,
+    buscaAtivaPessoas: buscaAtivaPessoas,
+    decisoesCristo: decisoes,
+    status: 'concluido'
+  };
+
+  if (btn) btn.disabled = true;
+  showLoading('Sincronizando...');
+
+  try {
+    await dbManager.saveReport(reportData);
+    closeModal('modal-generic');
+    showToast(`Relatório da Missão (${formatDateBR(dateVal)}) salvo com sucesso!`, 'success');
+    if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
+    
+    // Atualiza Painel Diário e 7 bolinhas de progresso neon
+    if (typeof updateHeroMetrics === 'function') updateHeroMetrics();
+    if (typeof updateMissaoDots === 'function') updateMissaoDots();
+  } catch (err) {
+    showToast('Erro ao salvar relatório: ' + err.message, 'danger');
+  } finally {
+    hideLoading();
+    if (btn) btn.disabled = false;
+  }
+}
+window.handleSaveMissaoReport = handleSaveMissaoReport;
+
 // --- MÓDULOS DE UNIDADE (MISSÃO, MACEDÔNIA, FEMININA) ---
 function openUnitReportModal(unitId) {
+  if (unitId === 'missao') {
+    openMissaoFlow();
+    return;
+  }
   const unit = UNIT_PROFILES[unitId];
   if (!unit) return;
 

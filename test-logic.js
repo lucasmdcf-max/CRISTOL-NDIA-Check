@@ -123,4 +123,51 @@ assert.strictEqual(res3.acolhidos, 90, 'Acolhidos deve ser 0 + 60 + 30 = 90 quan
 assert.strictEqual(res3.refeicoes, 0, 'Refeições de hoje deve ser 0');
 assert.strictEqual(res3.triagens, 0, 'Triagens de hoje deve ser 0');
 
+// Teste de cálculo das 7 bolinhas neon da Missão
+function calculateMissaoDots(report) {
+  if (!report) return [false, false, false, false, false, false, false];
+  const pTotal = report.pessoasAtendidas?.total ?? report.acolhidosPresentes ?? 0;
+  const ref = report.refeicoes || {};
+  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0);
+  const banhos = report.banhos || 0;
+  const cortes = report.cortesCabelo || 0;
+  const cultos = report.cultos || 0;
+  const buscaAtiva = report.buscaAtivaPessoas || (report.pessoasAtendidas?.buscaAtiva || 0);
+  const decisoes = report.decisoesCristo || 0;
+
+  return [
+    pTotal > 0,
+    totalRef > 0,
+    banhos > 0,
+    cortes > 0,
+    cultos > 0,
+    buscaAtiva > 0,
+    decisoes > 0
+  ];
+}
+
+const mockMissaoCompleta = {
+  pessoasAtendidas: { total: 45, rua: 10, unidade: 20, buscaAtiva: 15 },
+  refeicoes: { cafe: 20, almoco: 30, lanche: 20, jantar: 20, buscaAtiva: 10 },
+  banhos: 18,
+  cortesCabelo: 5,
+  cultos: 2,
+  buscaAtivaPessoas: 15,
+  decisoesCristo: 3
+};
+const dotsCompleta = calculateMissaoDots(mockMissaoCompleta);
+assert.deepStrictEqual(dotsCompleta, [true, true, true, true, true, true, true], 'Todas as 7 bolinhas devem acender');
+
+const mockMissaoParcial = {
+  pessoasAtendidas: { total: 30, rua: 10, unidade: 20, buscaAtiva: 0 },
+  refeicoes: { cafe: 20, almoco: 30, lanche: 20, jantar: 20, buscaAtiva: 0 },
+  banhos: 0,
+  cortesCabelo: 0,
+  cultos: 1,
+  buscaAtivaPessoas: 0,
+  decisoesCristo: 0
+};
+const dotsParcial = calculateMissaoDots(mockMissaoParcial);
+assert.deepStrictEqual(dotsParcial, [true, true, false, false, true, false, false], 'Apenas pessoas, refeições e cultos devem acender');
+
 console.log('✅ Todos os testes de lógica de sanitização e dados passaram com 100% de sucesso!');

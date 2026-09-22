@@ -22,8 +22,8 @@
   <meta name="theme-color" content="#1E4D2B">
 
   <!-- Estilos CSS com Versionamento Anti-Cache -->
-  <link rel="stylesheet" href="css/main.css?v=20260922-v23">
-  <link rel="stylesheet" href="css/buttons-3d.css?v=20260922-v23">
+  <link rel="stylesheet" href="css/main.css?v=20260922-v24">
+  <link rel="stylesheet" href="css/buttons-3d.css?v=20260922-v24">
 </head>
 <body>
 
@@ -75,7 +75,17 @@
         <!-- LINHA SUPERIOR: 3 UNIDADES -->
 
         <!-- 1. Missão -->
-        <button class="btn-card-3d btn-missao" onclick="openUnitReportModal('missao')">
+        <button class="btn-card-3d btn-missao" onclick="openMissaoFlow()">
+          <!-- 7 Bolinhas de Progresso Neon correspondentes às 7 perguntas do relatório -->
+          <div class="btn-dots-progress" id="missao-dots-container" title="Progresso das 7 perguntas de hoje">
+            <span class="btn-dot" data-q="1" title="Pessoas atendidas"></span>
+            <span class="btn-dot" data-q="2" title="Refeições"></span>
+            <span class="btn-dot" data-q="3" title="Banhos"></span>
+            <span class="btn-dot" data-q="4" title="Corte de cabelo"></span>
+            <span class="btn-dot" data-q="5" title="Cultos realizados"></span>
+            <span class="btn-dot" data-q="6" title="Busca ativa"></span>
+            <span class="btn-dot" data-q="7" title="Decisões por Cristo"></span>
+          </div>
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
               <path d="M3 10L12 3L21 10"/>
@@ -185,10 +195,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- Scripts da Aplicação com Versionamento Anti-Cache -->
-  <script src="js/db.js?v=20260922-v23"></script>
-  <script src="js/modules.js?v=20260922-v23"></script>
-  <script src="js/pwa.js?v=20260922-v23"></script>
-  <script src="js/app.js?v=20260922-v23"></script>
+  <script src="js/db.js?v=20260922-v24"></script>
+  <script src="js/modules.js?v=20260922-v24"></script>
+  <script src="js/pwa.js?v=20260922-v24"></script>
+  <script src="js/app.js?v=20260922-v24"></script>
 
 </body>
 </html>
