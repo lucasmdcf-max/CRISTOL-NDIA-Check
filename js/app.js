@@ -325,13 +325,21 @@ function updateHeroMetrics() {
     const ref = r.refeicoes || {};
     refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
 
-    // Triagens (soma das triagens)
+    // Triagens (soma das triagens dos relatórios)
     triagens += (r.novasTriagens || 0);
   });
 
+  // Conta as triagens registradas no módulo de Triagem para a data de hoje
+  const triagensCadastradasHoje = (typeof dbManager.getTriagens === 'function') 
+    ? dbManager.getTriagens().filter(t => t.date === todayStr).length 
+    : 0;
+
+  // No painel diário, só é exibida a quantidade de triagens feitas no dia
+  const finalTriagensHoje = triagensCadastradasHoje > 0 ? triagensCadastradasHoje : triagens;
+
   state.totalPessoasAssistidasHoje = pessoasAssistidas;
   state.totalRefeicoesHoje = refeicoes;
-  state.novasTriagensHoje = triagens;
+  state.novasTriagensHoje = finalTriagensHoje;
 
   const elAssistidos = document.getElementById('metric-hero-acolhidos');
   const elRefeicoes = document.getElementById('metric-hero-refeicoes');
@@ -340,7 +348,7 @@ function updateHeroMetrics() {
 
   if (elAssistidos) elAssistidos.textContent = pessoasAssistidas;
   if (elRefeicoes) elRefeicoes.textContent = refeicoes;
-  if (elTriagens) elTriagens.textContent = triagens;
+  if (elTriagens) elTriagens.textContent = finalTriagensHoje;
   if (elRelatoriosCount) elRelatoriosCount.textContent = `${todayReports.length}/3`;
 
   // Mantém as bolinhas neon dos botões Missão, Macedônia e Feminina sincronizadas

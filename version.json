@@ -1,6 +1,6 @@
 {
-  "version": "1.0.38",
-  "build": "20260922_38",
+  "version": "1.0.39",
+  "build": "20260922_39",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Módulo de Relatórios totalmente renovado: filtros dinâmicos por unidade e período (24h, 7d, 30d, 3m, 6m, 1 ano), somatório acumulado automático dos dados no período, download direto de PDF em formato A4 vertical organizado e envio instantâneo e fiel para o WhatsApp."
+  "releaseNotes": "Módulo de Triagem na Unidade Missão: 3 botões em linha única (Histórico, Relatório, Triagem), lista cronológica com filtros de busca por nome e data, ficha completa com edição e as 8 perguntas oficiais de acolhimento social, integrado ao Painel Diário e Relatórios."
 }

@@ -392,6 +392,56 @@ assert.strictEqual(sumPessoas, 90, 'Soma de pessoas atendidas deve ser 40 + 50 =
 const sumDecisoes = filteredMissao7d.reduce((acc, r) => acc + (r.decisoesCristo || 0), 0);
 assert.strictEqual(sumDecisoes, 3, 'Soma de decisões deve ser 1 + 2 = 3');
 
-console.log('✅ Todos os testes de lógica de sanitização, períodos e relatórios passaram com 100% de sucesso!');
+// ==========================================================
+// TESTES DO MÓDULO DE TRIAGEM (UNIDADE MISSÃO)
+// ==========================================================
+const mockTriagensList = [
+  { id: 't1', nome: 'Carlos Eduardo Santos', date: '2026-09-20', idade: 42, moradia: 'rua', temDocumentos: true, primeiroAcolhimento: true, createdAt: 1000 },
+  { id: 't2', nome: 'Marcos Vinicius Pereira', date: '2026-09-22', idade: 29, moradia: 'casa', temDocumentos: false, primeiroAcolhimento: false, quantasVezes: 3, createdAt: 3000 },
+  { id: 't3', nome: 'João da Silva Santos', date: '2026-09-21', idade: 35, moradia: 'rua', temDocumentos: true, primeiroAcolhimento: true, createdAt: 2000 },
+  { id: 't4', nome: 'Ana Paula Ferreira', date: '2026-09-22', idade: 31, moradia: 'rua', temDocumentos: true, primeiroAcolhimento: true, createdAt: 3500 }
+];
+
+// 1. Teste de Ordenação Cronológica (mais recentes primeiro: 2026-09-22 antes de 2026-09-21 e 2026-09-20)
+const sortedTriagens = [...mockTriagensList].sort((a, b) => {
+  if (b.date !== a.date) return b.date.localeCompare(a.date);
+  return (b.createdAt || 0) - (a.createdAt || 0);
+});
+
+assert.strictEqual(sortedTriagens[0].id, 't4', 'A triagem mais recente de hoje (createdAt 3500) deve ser a primeira');
+assert.strictEqual(sortedTriagens[1].id, 't2', 'A segunda triagem de hoje deve ser a segunda');
+assert.strictEqual(sortedTriagens[2].id, 't3', 'A triagem de 21/09 deve vir antes da de 20/09');
+assert.strictEqual(sortedTriagens[3].id, 't1', 'A triagem de 20/09 deve ser a última');
+
+// 2. Teste de Busca por Nome (case-insensitive e parcial)
+const searchResult = mockTriagensList.filter(t => t.nome.toLowerCase().includes('santos'));
+assert.strictEqual(searchResult.length, 2, 'Deve encontrar 2 registros com "santos"');
+assert.strictEqual(searchResult[0].nome, 'Carlos Eduardo Santos');
+assert.strictEqual(searchResult[1].nome, 'João da Silva Santos');
+
+// 3. Teste de Filtro por Data
+const dateFiltered = mockTriagensList.filter(t => t.date === '2026-09-22');
+assert.strictEqual(dateFiltered.length, 2, 'Devem existir 2 triagens registradas em 2026-09-22');
+
+// 4. Teste de contagem exclusiva do dia para o Painel Diário
+const todayStrMock = '2026-09-22';
+const triagensFeitasHoje = mockTriagensList.filter(t => t.date === todayStrMock).length;
+assert.strictEqual(triagensFeitasHoje, 2, 'No painel diário só devem ser exibidas as 2 triagens feitas no dia de hoje');
+
+// 5. Teste de Sanitização e Edição de Triagem
+const triagemEditada = sanitize({
+  id: 't2',
+  nome: 'Marcos Vinicius Pereira Silva',
+  idade: 30,
+  demandaSaude: undefined,
+  quaisDocumentos: undefined,
+  updatedAt: Date.now()
+});
+assert.strictEqual(triagemEditada.demandaSaude, null, 'Campos undefined na triagem devem ser sanitizados para null');
+assert.strictEqual(triagemEditada.nome, 'Marcos Vinicius Pereira Silva');
+assert.strictEqual(triagemEditada.idade, 30);
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios e triagens passaram com 100% de sucesso!');
+
 
 

@@ -91,7 +91,7 @@ function openMissaoFlow() {
       <!-- Opção 1: Histórico com Calendário Mensal -->
       <div class="btn-choice-card" onclick="openMissaoCalendar()">
         <div class="btn-choice-icon">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
             <line x1="16" y1="2" x2="16" y2="6"/>
             <line x1="8" y1="2" x2="8" y2="6"/>
@@ -99,19 +99,32 @@ function openMissaoFlow() {
           </svg>
         </div>
         <div class="btn-choice-title">Histórico</div>
-        <div class="btn-choice-desc">Consulta por calendário mensal</div>
+        <div class="btn-choice-desc">Calendário mensal</div>
       </div>
 
       <!-- Opção 2: Novo Relatório -->
       <div class="btn-choice-card" onclick="openMissaoForm()">
         <div class="btn-choice-icon">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 20h9"/>
             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
           </svg>
         </div>
-        <div class="btn-choice-title">Novo Relatório</div>
-        <div class="btn-choice-desc">Preencher o relatório diário</div>
+        <div class="btn-choice-title">Relatório</div>
+        <div class="btn-choice-desc">Diário de 7 perguntas</div>
+      </div>
+
+      <!-- Opção 3: Triagem -->
+      <div class="btn-choice-card" onclick="openMissaoTriagens()">
+        <div class="btn-choice-icon" style="color:var(--gold-primary);">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <polyline points="16 11 18 13 22 9"/>
+          </svg>
+        </div>
+        <div class="btn-choice-title" style="color:var(--gold-primary);">Triagem</div>
+        <div class="btn-choice-desc">Lista e acolhimento</div>
       </div>
     </div>
   `;
@@ -1008,6 +1021,537 @@ async function handleSaveMissaoReport() {
   }
 }
 window.handleSaveMissaoReport = handleSaveMissaoReport;
+
+// ==========================================================================
+// MÓDULO EXCLUSIVO: TRIAGEM • UNIDADE MISSÃO (ACOLHIMENTO INDIVIDUAL)
+// ==========================================================================
+
+let _triagemFilterDate = '';
+let _triagemSearchTerm = '';
+
+function openMissaoTriagens(dateFilter = null, searchTerm = '') {
+  window._currentScreen = { type: 'missao-triagens' };
+  _triagemFilterDate = dateFilter || '';
+  _triagemSearchTerm = searchTerm || '';
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.className = 'modal-header';
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openMissaoFlow()" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;" title="Voltar para Unidade Missão">←</button>
+      <div class="modal-unit-icon" style="color:var(--gold-primary);">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <polyline points="16 11 18 13 22 9"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Triagens • Missão</h2>
+        <p style="font-size:0.75rem;">Fichas e Histórico de Acolhimento</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <!-- Topo da Lista: Botão Nova Triagem -->
+    <div class="triagem-top-actions">
+      <button type="button" class="btn-primary-action" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="openTriagemForm()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nova Triagem
+      </button>
+    </div>
+
+    <!-- Barra de Filtros: Pesquisa por Nome e Filtro por Data -->
+    <div class="triagem-filter-bar">
+      <div class="triagem-filter-row">
+        <input 
+          type="text" 
+          id="triagem-search-input" 
+          class="triagem-search-input" 
+          placeholder="🔍 Pesquisar por nome..." 
+          value="${_triagemSearchTerm}"
+          oninput="handleTriagemSearch(this.value)"
+        >
+      </div>
+      <div class="triagem-filter-row">
+        <div style="flex:1; display:flex; align-items:center; gap:6px;">
+          <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Data:</label>
+          <input 
+            type="date" 
+            id="triagem-date-filter" 
+            class="triagem-date-filter" 
+            value="${_triagemFilterDate}"
+            onchange="handleTriagemDateFilter(this.value)"
+          >
+        </div>
+        ${(_triagemFilterDate || _triagemSearchTerm) ? `
+          <button type="button" class="btn-filter-clear" onclick="clearTriagemFilters()">Limpar Filtros</button>
+        ` : ''}
+      </div>
+    </div>
+
+    <!-- Lista de Triagens -->
+    <div id="triagem-list-container" class="triagem-list">
+      <!-- Injetado por renderTriagensList() -->
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="openMissaoFlow()">← Voltar para Missão</button>
+  `;
+
+  renderTriagensList();
+  openModal('modal-generic');
+}
+window.openMissaoTriagens = openMissaoTriagens;
+
+function handleTriagemSearch(term) {
+  _triagemSearchTerm = term;
+  renderTriagensList();
+}
+window.handleTriagemSearch = handleTriagemSearch;
+
+function handleTriagemDateFilter(dateVal) {
+  _triagemFilterDate = dateVal;
+  renderTriagensList();
+}
+window.handleTriagemDateFilter = handleTriagemDateFilter;
+
+function clearTriagemFilters() {
+  _triagemFilterDate = '';
+  _triagemSearchTerm = '';
+  const searchInput = document.getElementById('triagem-search-input');
+  const dateInput = document.getElementById('triagem-date-filter');
+  if (searchInput) searchInput.value = '';
+  if (dateInput) dateInput.value = '';
+  renderTriagensList();
+}
+window.clearTriagemFilters = clearTriagemFilters;
+
+function renderTriagensList() {
+  const container = document.getElementById('triagem-list-container');
+  if (!container) return;
+
+  let list = dbManager.getTriagens();
+
+  // Filtro por Data
+  if (_triagemFilterDate) {
+    list = list.filter(t => t.date === _triagemFilterDate);
+  }
+
+  // Pesquisa por Nome (case-insensitive)
+  if (_triagemSearchTerm) {
+    const term = _triagemSearchTerm.trim().toLowerCase();
+    list = list.filter(t => (t.nome || '').toLowerCase().includes(term));
+  }
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px 16px; background:var(--bg-main); border-radius:10px; color:var(--text-muted);">
+        <p style="font-weight:700; color:var(--text-main); font-size:0.88rem; margin-bottom:4px;">Nenhuma triagem encontrada</p>
+        <p style="font-size:0.76rem;">${(_triagemFilterDate || _triagemSearchTerm) ? 'Nenhum acolhido corresponde aos filtros informados.' : 'Nenhuma triagem registrada ainda na Unidade Missão.'}</p>
+        <button type="button" class="btn-primary-action" style="margin-top:10px; padding:6px 14px; font-size:0.75rem;" onclick="openTriagemForm()">+ Cadastrar Nova Triagem</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = list.map(t => {
+    const moradiaBadge = t.moradia === 'rua' 
+      ? `<span class="triagem-badge badge-rua">Rua</span>` 
+      : `<span class="triagem-badge badge-casa">Casa</span>`;
+
+    const primeiroBadge = t.primeiroAcolhimento 
+      ? `<span class="triagem-badge badge-primeiro">1º Acolhimento</span>` 
+      : `<span class="triagem-badge badge-retorno">${t.quantasVezes ? t.quantasVezes + 'ª vez' : 'Retorno'}</span>`;
+
+    return `
+      <div class="triagem-card" onclick="viewTriagemDetails('${t.id}')" title="Toque para ver a ficha completa">
+        <div class="triagem-card-header">
+          <span class="triagem-card-name">${t.nome}</span>
+          <span class="triagem-card-date">${formatDateBR(t.date)}</span>
+        </div>
+        <div class="triagem-card-tags">
+          ${t.idade ? `<span style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">${t.idade} anos</span> •` : ''}
+          ${moradiaBadge}
+          ${primeiroBadge}
+          ${t.demandaSaude ? `<span style="font-size:0.70rem; color:#D32F2F; font-weight:700;">🩺 Saúde</span>` : ''}
+          ${t.demandaJuridica ? `<span style="font-size:0.70rem; color:#1976D2; font-weight:700;">⚖️ Jurídico</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderTriagensList = renderTriagensList;
+
+// Visualização de Dados Completos da Triagem
+function viewTriagemDetails(id) {
+  const t = dbManager.getTriagemById(id);
+  if (!t) {
+    showToast('Triagem não encontrada.', 'danger');
+    openMissaoTriagens();
+    return;
+  }
+
+  window._currentScreen = { type: 'missao-triagem-details', triagemId: id };
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  modalHeader.className = 'modal-header';
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="openMissaoTriagens('${_triagemFilterDate}', '${_triagemSearchTerm}')" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;" title="Voltar para a lista">←</button>
+      <div class="modal-unit-icon" style="color:var(--gold-primary);">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <polyline points="16 11 18 13 22 9"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Ficha de Triagem</h2>
+        <p style="font-size:0.75rem;">${t.nome} • ${formatDateBR(t.date)}</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <div class="triagem-details-box">
+      <div class="triagem-detail-row">
+        <span class="triagem-detail-label">Nome Completo do Acolhido</span>
+        <span class="triagem-detail-val" style="font-size:1.05rem; font-weight:800; color:var(--green-primary);">${t.nome}</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="triagem-detail-row">
+          <span class="triagem-detail-label">Data da Triagem</span>
+          <span class="triagem-detail-val">${formatDateBR(t.date)}</span>
+        </div>
+        <div class="triagem-detail-row">
+          <span class="triagem-detail-label">Idade</span>
+          <span class="triagem-detail-val">${t.idade ? t.idade + ' anos' : 'Não informada'}</span>
+        </div>
+      </div>
+
+      <div class="triagem-detail-row">
+        <span class="triagem-detail-label">Rua ou Casa</span>
+        <span class="triagem-detail-val">
+          ${t.moradia === 'rua' 
+            ? '⛺ Situação de Rua' 
+            : (t.moradia === 'casa' ? '🏠 Possui Casa / Família' : (t.moradia || 'Não informado'))}
+        </span>
+      </div>
+
+      <div class="triagem-detail-row">
+        <span class="triagem-detail-label">Tem documentos? Quais?</span>
+        <span class="triagem-detail-val">
+          ${t.temDocumentos 
+            ? `✓ Sim (${t.quaisDocumentos || 'Não especificados'})` 
+            : '✗ Não possui documentos'}
+        </span>
+      </div>
+
+      <div class="triagem-detail-row">
+        <span class="triagem-detail-label">Tem alguma demanda de saúde? Qual?</span>
+        <span class="triagem-detail-val">
+          ${t.demandaSaude 
+            ? `🩺 Sim (${t.qualDemandaSaude || 'Não especificada'})` 
+            : '✓ Não possui demanda de saúde'}
+        </span>
+      </div>
+
+      <div class="triagem-detail-row">
+        <span class="triagem-detail-label">Tem alguma demanda jurídica?</span>
+        <span class="triagem-detail-val">
+          ${t.demandaJuridica 
+            ? `⚖️ Sim ${t.qualDemandaJuridica ? '(' + t.qualDemandaJuridica + ')' : ''}` 
+            : '✓ Não possui demanda jurídica'}
+        </span>
+      </div>
+
+      <div class="triagem-detail-row">
+        <span class="triagem-detail-label">É o primeiro acolhimento na Cristolândia?</span>
+        <span class="triagem-detail-val">
+          ${t.primeiroAcolhimento 
+            ? '✓ Sim (Primeira vez na Cristolândia)' 
+            : `Retorno (Já passou ${t.quantasVezes || 'mais de 1'} vez(es))`}
+        </span>
+      </div>
+    </div>
+  `;
+
+  modalFooter.innerHTML = `
+    <div style="display:flex; gap:8px; width:100%;">
+      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openMissaoTriagens('${_triagemFilterDate}', '${_triagemSearchTerm}')">← Voltar</button>
+      <button type="button" class="btn-primary-action" style="flex:1.2; display:flex; align-items:center; justify-content:center; gap:6px;" onclick="openTriagemForm('${t.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        Editar Triagem
+      </button>
+    </div>
+  `;
+}
+window.viewTriagemDetails = viewTriagemDetails;
+
+// Formulário de Cadastro e Edição de Triagem (8 Perguntas Oficiais)
+function openTriagemForm(triagemId = null) {
+  window._currentScreen = { type: 'missao-triagem-form', triagemId };
+
+  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  const existing = triagemId ? dbManager.getTriagemById(triagemId) : null;
+
+  const modalBody = document.getElementById('modal-generic-body');
+  const modalHeader = document.getElementById('modal-generic-header');
+  const modalFooter = document.getElementById('modal-generic-footer');
+
+  const nome = existing ? (existing.nome || '') : '';
+  const idade = existing && existing.idade ? existing.idade : '';
+  const moradia = existing ? (existing.moradia || 'rua') : 'rua';
+  const temDocumentos = existing ? !!existing.temDocumentos : false;
+  const quaisDocumentos = existing ? (existing.quaisDocumentos || '') : '';
+  const demandaSaude = existing ? !!existing.demandaSaude : false;
+  const qualDemandaSaude = existing ? (existing.qualDemandaSaude || '') : '';
+  const demandaJuridica = existing ? !!existing.demandaJuridica : false;
+  const qualDemandaJuridica = existing ? (existing.qualDemandaJuridica || '') : '';
+  const primeiroAcolhimento = existing ? (existing.primeiroAcolhimento !== false) : true;
+  const quantasVezes = existing && existing.quantasVezes ? existing.quantasVezes : '';
+  const dataTriagem = existing ? (existing.date || todayStr) : todayStr;
+
+  modalHeader.className = 'modal-header';
+  modalHeader.innerHTML = `
+    <div class="modal-header-title">
+      <button type="button" class="btn-step" onclick="${triagemId ? `viewTriagemDetails('${triagemId}')` : `openMissaoTriagens('${_triagemFilterDate}', '${_triagemSearchTerm}')`}" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
+      <div class="modal-unit-icon" style="color:var(--gold-primary);">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+      </div>
+      <div>
+        <h2>${triagemId ? 'Editar Triagem' : 'Nova Triagem'}</h2>
+        <p style="font-size:0.75rem;">Acolhimento e Cadastro Individual</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  modalBody.innerHTML = `
+    <form id="triagem-form" onsubmit="event.preventDefault();" style="display:flex; flex-direction:column; gap:12px;">
+
+      <!-- 1. Nome -->
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" style="font-weight:700;">Nome Completo: *</label>
+        <input type="text" id="trg-nome" class="form-input" value="${nome}" placeholder="Ex: João da Silva" required>
+      </div>
+
+      <!-- 2. Idade e Data da Triagem -->
+      <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap:8px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:700;">Idade:</label>
+          <input type="number" id="trg-idade" class="form-input" value="${idade}" placeholder="Ex: 38" min="0" max="120">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:700;">Data da Triagem:</label>
+          <input type="date" id="trg-date" class="form-input" value="${dataTriagem}" required>
+        </div>
+      </div>
+
+      <!-- 3. Rua ou Casa -->
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label" style="font-weight:700;">Rua ou Casa:</label>
+        <div class="form-radio-pills">
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-moradia" value="rua" ${moradia === 'rua' ? 'checked' : ''}>
+            ⛺ Rua
+          </label>
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-moradia" value="casa" ${moradia === 'casa' ? 'checked' : ''}>
+            🏠 Casa
+          </label>
+        </div>
+      </div>
+
+      <!-- 4. Tem documentos? Quais? -->
+      <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
+        <label class="form-label" style="font-weight:700;">Tem documentos?</label>
+        <div class="form-radio-pills" style="margin-bottom:8px;">
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-tem-docs" value="sim" ${temDocumentos ? 'checked' : ''} onchange="toggleTriagemField('trg-quais-docs-box', true)">
+            Sim
+          </label>
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-tem-docs" value="nao" ${!temDocumentos ? 'checked' : ''} onchange="toggleTriagemField('trg-quais-docs-box', false)">
+            Não
+          </label>
+        </div>
+        <div id="trg-quais-docs-box" style="display:${temDocumentos ? 'block' : 'none'};">
+          <label class="form-label" style="font-size:0.74rem;">Quais documentos?</label>
+          <input type="text" id="trg-quais-docs" class="form-input" value="${quaisDocumentos}" placeholder="Ex: RG, CPF, Certidão de Nascimento">
+        </div>
+      </div>
+
+      <!-- 5. Tem alguma demanda de saúde? Qual? -->
+      <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
+        <label class="form-label" style="font-weight:700;">Tem alguma demanda de saúde?</label>
+        <div class="form-radio-pills" style="margin-bottom:8px;">
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-demanda-saude" value="sim" ${demandaSaude ? 'checked' : ''} onchange="toggleTriagemField('trg-qual-saude-box', true)">
+            Sim
+          </label>
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-demanda-saude" value="nao" ${!demandaSaude ? 'checked' : ''} onchange="toggleTriagemField('trg-qual-saude-box', false)">
+            Não
+          </label>
+        </div>
+        <div id="trg-qual-saude-box" style="display:${demandaSaude ? 'block' : 'none'};">
+          <label class="form-label" style="font-size:0.74rem;">Qual demanda de saúde?</label>
+          <input type="text" id="trg-qual-saude" class="form-input" value="${qualDemandaSaude}" placeholder="Ex: Hipertensão, curativo, medicação controlada">
+        </div>
+      </div>
+
+      <!-- 6. Tem alguma demanda jurídica? -->
+      <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
+        <label class="form-label" style="font-weight:700;">Tem alguma demanda jurídica?</label>
+        <div class="form-radio-pills" style="margin-bottom:8px;">
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-demanda-juridica" value="sim" ${demandaJuridica ? 'checked' : ''} onchange="toggleTriagemField('trg-qual-juridica-box', true)">
+            Sim
+          </label>
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-demanda-juridica" value="nao" ${!demandaJuridica ? 'checked' : ''} onchange="toggleTriagemField('trg-qual-juridica-box', false)">
+            Não
+          </label>
+        </div>
+        <div id="trg-qual-juridica-box" style="display:${demandaJuridica ? 'block' : 'none'};">
+          <label class="form-label" style="font-size:0.74rem;">Qual demanda jurídica?</label>
+          <input type="text" id="trg-qual-juridica" class="form-input" value="${qualDemandaJuridica}" placeholder="Ex: Processo em andamento, certidão de antecedentes">
+        </div>
+      </div>
+
+      <!-- 7 & 8. Primeiro acolhimento e passagens anteriores -->
+      <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
+        <label class="form-label" style="font-weight:700;">É o primeiro acolhimento na Cristolândia?</label>
+        <div class="form-radio-pills" style="margin-bottom:8px;">
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-primeiro" value="sim" ${primeiroAcolhimento ? 'checked' : ''} onchange="toggleTriagemField('trg-quantas-vezes-box', false)">
+            Sim
+          </label>
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-primeiro" value="nao" ${!primeiroAcolhimento ? 'checked' : ''} onchange="toggleTriagemField('trg-quantas-vezes-box', true)">
+            Não
+          </label>
+        </div>
+        <div id="trg-quantas-vezes-box" style="display:${!primeiroAcolhimento ? 'block' : 'none'};">
+          <label class="form-label" style="font-size:0.74rem;">Se não, quantas vezes já passou?</label>
+          <input type="number" id="trg-quantas-vezes" class="form-input" value="${quantasVezes}" placeholder="Ex: 2" min="1">
+        </div>
+      </div>
+
+    </form>
+  `;
+
+  modalFooter.innerHTML = `
+    <div style="display:flex; gap:8px; width:100%;">
+      <button type="button" class="btn-secondary-action" style="flex:1;" onclick="${triagemId ? `viewTriagemDetails('${triagemId}')` : `openMissaoTriagens('${_triagemFilterDate}', '${_triagemSearchTerm}')`}">Cancelar</button>
+      <button type="button" id="btn-save-triagem" class="btn-primary-action" style="flex:1.5;" onclick="handleSaveTriagem('${triagemId || ''}')">
+        Salvar Triagem
+      </button>
+    </div>
+  `;
+}
+window.openTriagemForm = openTriagemForm;
+
+function toggleTriagemField(elementId, show) {
+  const el = document.getElementById(elementId);
+  if (el) el.style.display = show ? 'block' : 'none';
+}
+window.toggleTriagemField = toggleTriagemField;
+
+async function handleSaveTriagem(triagemId) {
+  const btn = document.getElementById('btn-save-triagem');
+  const nome = document.getElementById('trg-nome')?.value.trim();
+  const idadeVal = document.getElementById('trg-idade')?.value.trim();
+  const dateVal = document.getElementById('trg-date')?.value || (typeof getLocalDateStr === 'function' ? getLocalDateStr() : new Date().toISOString().split('T')[0]);
+  
+  if (!nome) {
+    showToast('Por favor, informe o nome do acolhido.', 'warning');
+    document.getElementById('trg-nome')?.focus();
+    return;
+  }
+
+  const moradiaEl = document.querySelector('input[name="trg-moradia"]:checked');
+  const moradia = moradiaEl ? moradiaEl.value : 'rua';
+
+  const temDocsEl = document.querySelector('input[name="trg-tem-docs"]:checked');
+  const temDocumentos = temDocsEl ? (temDocsEl.value === 'sim') : false;
+  const quaisDocumentos = temDocumentos ? (document.getElementById('trg-quais-docs')?.value.trim() || '') : '';
+
+  const demandaSaudeEl = document.querySelector('input[name="trg-demanda-saude"]:checked');
+  const demandaSaude = demandaSaudeEl ? (demandaSaudeEl.value === 'sim') : false;
+  const qualDemandaSaude = demandaSaude ? (document.getElementById('trg-qual-saude')?.value.trim() || '') : '';
+
+  const demandaJuridicaEl = document.querySelector('input[name="trg-demanda-juridica"]:checked');
+  const demandaJuridica = demandaJuridicaEl ? (demandaJuridicaEl.value === 'sim') : false;
+  const qualDemandaJuridica = demandaJuridica ? (document.getElementById('trg-qual-juridica')?.value.trim() || '') : '';
+
+  const primeiroEl = document.querySelector('input[name="trg-primeiro"]:checked');
+  const primeiroAcolhimento = primeiroEl ? (primeiroEl.value === 'sim') : true;
+  const quantasVezesVal = !primeiroAcolhimento ? (document.getElementById('trg-quantas-vezes')?.value.trim() || '') : '';
+
+  const triagemData = {
+    id: triagemId || undefined,
+    unitId: 'missao',
+    unitName: 'Missão',
+    date: dateVal,
+    nome: nome,
+    idade: idadeVal ? parseInt(idadeVal, 10) : null,
+    moradia: moradia,
+    temDocumentos: temDocumentos,
+    quaisDocumentos: quaisDocumentos,
+    demandaSaude: demandaSaude,
+    qualDemandaSaude: qualDemandaSaude,
+    demandaJuridica: demandaJuridica,
+    qualDemandaJuridica: qualDemandaJuridica,
+    primeiroAcolhimento: primeiroAcolhimento,
+    quantasVezes: quantasVezesVal ? parseInt(quantasVezesVal, 10) : null
+  };
+
+  if (btn) btn.disabled = true;
+  showLoading('Salvando triagem...');
+
+  try {
+    const saved = await dbManager.saveTriagem(triagemData);
+    showToast(`Triagem de ${nome} salva com sucesso!`, 'success');
+    if (navigator.vibrate) navigator.vibrate([15, 30, 15]);
+
+    // Atualiza Painel Diário (métrica de Triagens)
+    if (typeof updateHeroMetrics === 'function') {
+      updateHeroMetrics();
+    }
+
+    viewTriagemDetails(saved.id);
+  } catch (err) {
+    console.error('Erro ao salvar triagem:', err);
+    showToast('Erro ao salvar triagem: ' + err.message, 'danger');
+  } finally {
+    hideLoading();
+    if (btn) btn.disabled = false;
+  }
+}
+window.handleSaveTriagem = handleSaveTriagem;
 
 // ==========================================================================
 // MÓDULO EXCLUSIVO: UNIDADES MACEDÔNIA & FEMININA
@@ -3253,6 +3797,7 @@ function renderReportsHistory() {
 
     matchedReports.forEach(r => {
       // Pessoas atendidas
+      // Pessoas atendidas
       const p = r.pessoasAtendidas || {};
       pTotal += (p.total || (r.acolhidosPresentes || 0));
       pRua += (p.rua || 0);
@@ -3276,12 +3821,18 @@ function renderReportsHistory() {
       decisoes += (r.decisoesCristo || 0);
     });
 
+    // Quantidade de triagens individuais registradas no período
+    const triagensNoPeriodo = (typeof dbManager.getTriagens === 'function') 
+      ? dbManager.getTriagens().filter(t => t.date >= range.start && t.date <= range.end).length 
+      : 0;
+    const finalTriagensMissao = Math.max(pBusca, triagensNoPeriodo);
+
     html += `
-      <!-- Card: Pessoas Atendidas -->
+      <!-- Card: Pessoas Atendidas e Triagens -->
       <div class="report-section-card">
         <div class="report-section-header">
-          <span class="report-section-title">👥 Pessoas Atendidas</span>
-          <span class="report-section-badge">${pTotal} total</span>
+          <span class="report-section-title">👥 Pessoas Atendidas & Triagens</span>
+          <span class="report-section-badge">${pTotal} atend. | ${finalTriagensMissao} triagens</span>
         </div>
         <div class="report-subitems-grid">
           <div class="report-subitem-pill">
@@ -3293,8 +3844,8 @@ function renderReportsHistory() {
             <div class="report-subitem-text">Na Unidade</div>
           </div>
           <div class="report-subitem-pill">
-            <div class="report-subitem-num">${pBusca}</div>
-            <div class="report-subitem-text">Busca Ativa</div>
+            <div class="report-subitem-num" style="color:var(--gold-primary);">${finalTriagensMissao}</div>
+            <div class="report-subitem-text">Triagens (Geral)</div>
           </div>
         </div>
       </div>
@@ -3530,6 +4081,12 @@ function renderReportsHistory() {
       }
     });
 
+    // Quantidade geral de triagens cadastradas no período
+    const triagensIndividuaisTotal = (typeof dbManager.getTriagens === 'function') 
+      ? dbManager.getTriagens().filter(t => t.date >= range.start && t.date <= range.end).length 
+      : 0;
+    const finalTotalTriagens = Math.max(totalTriagens, triagensIndividuaisTotal);
+
     html += `
       <!-- Card: Consolidação Geral -->
       <div class="report-section-card">
@@ -3547,8 +4104,8 @@ function renderReportsHistory() {
             <span class="report-kpi-lbl">Pessoas Assistidas (CUIDAR)</span>
           </div>
           <div class="report-kpi-box">
-            <span class="report-kpi-val">${totalTriagens}</span>
-            <span class="report-kpi-lbl">Triagens Realizadas</span>
+            <span class="report-kpi-val">${finalTotalTriagens}</span>
+            <span class="report-kpi-lbl">Triagens Realizadas (Geral)</span>
           </div>
           <div class="report-kpi-box">
             <span class="report-kpi-val">${totalCultosEstudos}</span>
@@ -3711,6 +4268,10 @@ async function downloadReportsPDF() {
             <tr>
               <td style="padding:6px 10px; border:1px solid #E2D9C8;">Atendimentos em Busca Ativa</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${pBusca}</td>
+            </tr>
+            <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Triagens Realizadas no Período (Geral)</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${Math.max(pBusca, (typeof dbManager.getTriagens === 'function' ? dbManager.getTriagens().filter(t => t.date >= range.start && t.date <= range.end).length : 0))}</td>
             </tr>
           </table>
 
@@ -3901,7 +4462,7 @@ async function downloadReportsPDF() {
             </tr>
             <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Total de Refeições Servidas</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalRefeicoes}</td></tr>
             <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Pessoas Assistidas (CUIDAR)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalAssistidas}</td></tr>
-            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Novas Triagens Realizadas</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalTriagens}</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Triagens Realizadas no Período (Geral)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${Math.max(totalTriagens, (typeof dbManager.getTriagens === 'function' ? dbManager.getTriagens().filter(t => t.date >= range.start && t.date <= range.end).length : 0))}</td></tr>
             <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Cultos, Vigílias & Estudos Bíblicos</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalCultos}</td></tr>
             <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;"><td style="padding:8px 10px; border:1px solid #E2D9C8;">Total de Decisões por Cristo</td><td style="padding:8px 10px; border:1px solid #E2D9C8; text-align:center; font-size:14px;">${totalDecisoes}</td></tr>
           </table>
@@ -4178,7 +4739,7 @@ function shareReportsWhatsApp() {
     text += `*1. CONSOLIDADO GERAL (3 UNIDADES)*\n`;
     text += `• Total de Refeições: ${totalRefeicoes}\n`;
     text += `• Pessoas Assistidas (CUIDAR): ${totalAssistidas}\n`;
-    text += `• Novas Triagens: ${totalTriagens}\n`;
+    text += `• Triagens Realizadas (Geral): ${Math.max(totalTriagens, (typeof dbManager.getTriagens === 'function' ? dbManager.getTriagens().filter(t => t.date >= range.start && t.date <= range.end).length : 0))}\n`;
     text += `• Cultos, Vigílias e Estudos: ${totalCultos}\n`;
     text += `• ✨ *Decisões por Cristo:* ${totalDecisoes}\n\n`;
 

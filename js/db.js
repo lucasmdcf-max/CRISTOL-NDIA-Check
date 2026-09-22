@@ -9,6 +9,7 @@ const DB_KEYS = {
   CHURCHES: 'cristolandia_check_churches_v1',
   ACTIVITIES: 'cristolandia_check_activities_v1',
   NOTICES: 'cristolandia_check_notices_v1',
+  TRIAGENS: 'cristolandia_check_triagens_v1',
   FIREBASE_CONFIG: 'cristolandia_check_firebase_cfg_v1',
   APP_CONFIG: 'cristolandia_check_app_cfg_v1'
 };
@@ -412,6 +413,11 @@ class CristolandiaDB {
       } else {
         localStorage.setItem(DB_KEYS.NOTICES, JSON.stringify([]));
       }
+      if (data.triagens !== undefined) {
+        localStorage.setItem(DB_KEYS.TRIAGENS, JSON.stringify(toArray(data.triagens)));
+      } else {
+        localStorage.setItem(DB_KEYS.TRIAGENS, JSON.stringify([]));
+      }
 
       // Atualiza timestamps de last_update por unidade
       if (data.stock_last_update) {
@@ -445,13 +451,15 @@ class CristolandiaDB {
       const churches = this.getChurches();
       const activities = this.getActivities();
       const notices = this.getNotices(false); // todos incluindo recentes
+      const triagens = this.getTriagens();
 
       const payload = {
         reports: {},
         stock: {},
         churches: {},
         activities: {},
-        notices: {}
+        notices: {},
+        triagens: {}
       };
 
       reports.forEach(r => { if (r && r.id) payload.reports[r.id] = this.sanitize(r); });
@@ -459,6 +467,7 @@ class CristolandiaDB {
       churches.forEach(c => { if (c && c.id) payload.churches[c.id] = this.sanitize(c); });
       activities.forEach(a => { if (a && a.id) payload.activities[a.id] = this.sanitize(a); });
       notices.forEach(n => { if (n && n.id) payload.notices[n.id] = this.sanitize(n); });
+      triagens.forEach(t => { if (t && t.id) payload.triagens[t.id] = this.sanitize(t); });
 
       this._lastLocalWrite = Date.now();
       await this.firebaseDb.ref('cristolandia_check').set(payload);
@@ -847,6 +856,76 @@ class CristolandiaDB {
     }
   }
 
+  // --- MÉTODOS DE TRIAGENS (UNIDADE MISSÃO / GERAL) ---
+  getTriagens() {
+    try {
+      const raw = localStorage.getItem(DB_KEYS.TRIAGENS);
+      const list = raw ? JSON.parse(raw) : [];
+      // Ordenação cronológica: mais recentes primeiro (data decrescente, e timestamp decrescente)
+      return list.sort((a, b) => {
+        const dateA = a.date || '';
+        const dateB = b.date || '';
+        if (dateB !== dateA) {
+          return dateB.localeCompare(dateA);
+        }
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  getTriagemById(id) {
+    const list = this.getTriagens();
+    return list.find(t => t.id === id) || null;
+  }
+
+  async saveTriagem(triagemData) {
+    const triagens = this.getTriagens();
+    const finalId = triagemData.id || `trg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const sanitized = this.sanitize({
+      ...triagemData,
+      id: finalId,
+      createdAt: triagemData.createdAt || Date.now(),
+      updatedAt: Date.now()
+    });
+
+    const index = triagens.findIndex(t => t.id === sanitized.id);
+    if (index >= 0) {
+      triagens[index] = sanitized;
+    } else {
+      triagens.unshift(sanitized);
+    }
+
+    localStorage.setItem(DB_KEYS.TRIAGENS, JSON.stringify(triagens));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/triagens/${sanitized.id}`).set(sanitized);
+      } catch (e) {
+        console.warn('Firebase pendente (triagem salva localmente):', e);
+      }
+    }
+
+    return sanitized;
+  }
+
+  async deleteTriagem(id) {
+    let triagens = this.getTriagens();
+    triagens = triagens.filter(t => t.id !== id);
+    localStorage.setItem(DB_KEYS.TRIAGENS, JSON.stringify(triagens));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/triagens/${id}`).remove();
+      } catch (e) {
+        console.warn('Erro ao remover triagem no Firebase:', e);
+      }
+    }
+  }
+
   // Configuração do Firebase
   setFirebaseConfig(config) {
     localStorage.setItem(DB_KEYS.FIREBASE_CONFIG, JSON.stringify(config));
@@ -874,6 +953,7 @@ class CristolandiaDB {
     localStorage.removeItem(DB_KEYS.CHURCHES);
     localStorage.removeItem(DB_KEYS.ACTIVITIES);
     localStorage.removeItem(DB_KEYS.NOTICES);
+    localStorage.removeItem(DB_KEYS.TRIAGENS);
     this.ensureLocalSeed();
   }
 }

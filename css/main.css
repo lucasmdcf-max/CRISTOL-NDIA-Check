@@ -1409,43 +1409,45 @@ body::before {
    MÓDULO MISSÃO: MENU DE ESCOLHA, CALENDÁRIO MENSAL & RELATÓRIO OFICIAL
    ========================================================================== */
 
-/* Menu de Escolha: Histórico vs Novo Relatório */
+/* Menu de Escolha: 3 Opções em Linha Única (Histórico, Novo Relatório e Triagem) */
 .missao-choice-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 10px 0 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0 16px;
 }
 
 .btn-choice-card {
   background: var(--bg-surface);
   border: 1.5px solid var(--border-beige);
-  border-radius: 16px;
-  padding: 16px 12px;
+  border-radius: 14px;
+  padding: 12px 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-tap-highlight-color: transparent;
+  min-height: 125px;
+  justify-content: flex-start;
 }
 
 .btn-choice-card:hover {
   border-color: var(--green-primary);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(30, 77, 43, 0.12);
+  box-shadow: 0 6px 14px rgba(30, 77, 43, 0.12);
 }
 
 .btn-choice-card:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .btn-choice-icon {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1453,19 +1455,26 @@ body::before {
   background: var(--bg-cream);
   color: var(--green-primary);
   border: 1px solid var(--border-beige);
+  flex-shrink: 0;
+}
+
+.btn-choice-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
 .btn-choice-title {
   font-family: var(--font-gothic);
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: var(--green-primary);
+  line-height: 1.15;
 }
 
 .btn-choice-desc {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 /* --- CALENDÁRIO MENSAL DA MISSÃO --- */
@@ -2274,6 +2283,229 @@ body::before {
 .report-day-row:last-child {
   border-bottom: none;
 }
+
+/* ==========================================================================
+   MÓDULO DE TRIAGEM • UNIDADE MISSÃO (ACOLHIMENTO INDIVIDUAL)
+   ========================================================================== */
+.triagem-top-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.triagem-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-beige);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.triagem-filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.triagem-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-beige);
+  font-size: 0.82rem;
+  font-family: inherit;
+  background: #FFFFFF;
+  color: var(--text-main);
+  outline: none;
+}
+
+.triagem-search-input:focus {
+  border-color: var(--green-primary);
+  box-shadow: 0 0 0 2px rgba(30, 77, 43, 0.15);
+}
+
+.triagem-date-filter {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-beige);
+  font-size: 0.78rem;
+  font-family: inherit;
+  background: #FFFFFF;
+  color: var(--text-main);
+}
+
+.btn-filter-clear {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-beige);
+  background: var(--bg-main);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.triagem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.triagem-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-beige);
+  border-left: 3.5px solid var(--green-primary);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.triagem-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--green-primary);
+  box-shadow: 0 3px 8px rgba(30, 77, 43, 0.08);
+}
+
+.triagem-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.triagem-card-name {
+  font-family: var(--font-gothic);
+  font-size: 0.90rem;
+  font-weight: 800;
+  color: var(--green-primary);
+}
+
+.triagem-card-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.triagem-card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.triagem-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-rua {
+  background: rgba(197, 137, 8, 0.14);
+  color: #A36F04;
+}
+
+.badge-casa {
+  background: rgba(30, 77, 43, 0.12);
+  color: var(--green-primary);
+}
+
+.badge-primeiro {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.badge-retorno {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+/* Modal de Detalhes da Triagem */
+.triagem-details-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-beige);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.triagem-detail-row {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 7px;
+}
+
+.triagem-detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.triagem-detail-label {
+  font-size: 0.70rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.triagem-detail-val {
+  font-size: 0.88rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Radio Pills para o formulário de Triagem */
+.form-radio-pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.radio-pill-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 1px solid var(--border-beige);
+  border-radius: 8px;
+  font-size: 0.80rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  text-align: center;
+}
+
+.radio-pill-label input[type="radio"] {
+  display: none;
+}
+
+.radio-pill-label:has(input[type="radio"]:checked) {
+  background: var(--green-primary);
+  color: #FFFFFF;
+  border-color: var(--green-primary);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(30, 77, 43, 0.25);
+}
+
 
 
 
