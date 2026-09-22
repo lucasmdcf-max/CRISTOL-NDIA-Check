@@ -1,6 +1,6 @@
 {
-  "version": "1.0.39",
-  "build": "20260922_39",
+  "version": "1.0.40",
+  "build": "20260922_40",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Módulo de Triagem na Unidade Missão: 3 botões em linha única (Histórico, Relatório, Triagem), lista cronológica com filtros de busca por nome e data, ficha completa com edição e as 8 perguntas oficiais de acolhimento social, integrado ao Painel Diário e Relatórios."
+  "releaseNotes": "Atualizado ícone do botão WhatsApp na janela de relatórios para seta de compartilhamento."
 }
