@@ -1811,7 +1811,7 @@ body::before {
    SEÇÃO INFERIOR: AVISOS DO DIA! (BALÃO DOURADO 20%, LETRAS CINZA, CENTURY FINA)
    ========================================================================== */
 .daily-notices-section {
-  margin-top: -50px; /* Subir correspondente à metade da altura da caixa (~54px) */
+  margin-top: -6px; /* Encaixe harmonioso logo após os botões */
   margin-bottom: 8px;
   width: 100%;
 }

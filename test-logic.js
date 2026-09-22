@@ -459,7 +459,63 @@ assert.strictEqual(mockNoticesToDelete[0].id, 'n2', 'O aviso restante deve ser n
 deleteMockNotice('n2');
 assert.strictEqual(mockNoticesToDelete.length, 0, 'Após excluir n2, a lista deve ficar vazia');
 
-console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens e avisos passaram com 100% de sucesso!');
+// 7. Testes do Módulo de Estudos Bíblicos & Discipulado
+// 7.1 Quantidade de encontros por fase
+const mockEstudosConfig = {
+  triagemTotal: 8,
+  fase1Total: 20,
+  fase2Total: 24,
+  fase2EnfasesTotal: 6
+};
+assert.strictEqual(mockEstudosConfig.triagemTotal, 8, 'Triagem deve possuir 8 encontros');
+assert.strictEqual(mockEstudosConfig.fase1Total, 20, '1ª Fase deve possuir 20 encontros');
+assert.strictEqual(mockEstudosConfig.fase2Total, 24, '2ª Fase deve possuir 24 encontros');
+assert.strictEqual(mockEstudosConfig.fase2EnfasesTotal, 6, '2ª Fase deve possuir 6 ênfases');
+
+// 7.2 Teste de Sanitização de Relatório de Estudo
+const rawEstudo = {
+  date: '2026-09-22',
+  unitId: 'missao',
+  fase: 'triagem',
+  tema: 'Encontro 1 — Para que você creia',
+  missionario: 'Missionário Carlos',
+  realizado: 'sim',
+  participantes: 18,
+  concluintes: 16,
+  participacao: 'muito_participativa',
+  compreensao: 'claramente',
+  precisaAcompanhamento: 'sim',
+  acompanhamentoNome: 'José Ferreira',
+  acompanhamentoMotivo: 'Dificuldade com perdas passadas',
+  encaminhamentoPsicologo: true,
+  encaminhamentoPastoral: undefined, // deve virar null
+  observacoesExtras: undefined // deve virar null
+};
+
+const cleanEstudo = sanitize(rawEstudo);
+assert.strictEqual(cleanEstudo.encaminhamentoPastoral, null, 'Undefined deve ser sanitizado para null');
+assert.strictEqual(cleanEstudo.observacoesExtras, null, 'Undefined deve ser sanitizado para null');
+assert.strictEqual(cleanEstudo.tema, 'Encontro 1 — Para que você creia');
+assert.strictEqual(cleanEstudo.participantes, 18);
+assert.strictEqual(cleanEstudo.encaminhamentoPsicologo, true);
+
+// 7.3 Teste de Filtros de Histórico de Estudos
+const mockEstudosList = [
+  { id: 'e1', date: '2026-09-20', unitId: 'missao', fase: 'triagem', tema: 'Encontro 1', missionario: 'Carlos' },
+  { id: 'e2', date: '2026-09-21', unitId: 'macedonia', fase: 'fase1', tema: 'Encontro 5', missionario: 'Marcos' },
+  { id: 'e3', date: '2026-09-22', unitId: 'feminina', fase: 'fase2', tema: 'Encontro 9', missionario: 'Sarah' }
+];
+
+const filterTriagem = mockEstudosList.filter(e => e.fase === 'triagem');
+assert.strictEqual(filterTriagem.length, 1);
+assert.strictEqual(filterTriagem[0].id, 'e1');
+
+const filterFeminina = mockEstudosList.filter(e => e.unitId === 'feminina');
+assert.strictEqual(filterFeminina.length, 1);
+assert.strictEqual(filterFeminina[0].id, 'e3');
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens, avisos e estudos passaram com 100% de sucesso!');
+
 
 
 

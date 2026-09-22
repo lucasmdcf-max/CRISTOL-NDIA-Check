@@ -22,8 +22,8 @@
   <meta name="theme-color" content="#1E4D2B">
 
   <!-- Estilos CSS com Versionamento Anti-Cache -->
-  <link rel="stylesheet" href="css/main.css?v=20260922-v41">
-  <link rel="stylesheet" href="css/buttons-3d.css?v=20260922-v41">
+  <link rel="stylesheet" href="css/main.css?v=20260922-v42">
+  <link rel="stylesheet" href="css/buttons-3d.css?v=20260922-v42">
 </head>
 <body>
 
@@ -179,18 +179,20 @@
           <div class="btn-title">Estoque</div>
         </button>
 
-        <!-- 5. Relatórios -->
-        <button class="btn-card-3d btn-relatorios" onclick="openReportsModal()">
+        <!-- 5. Estudos (No lugar anterior de Relatórios) -->
+        <button class="btn-card-3d btn-estudos" onclick="openEstudosModal()">
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
-              <path d="M9 3H15M9 3C9 2 10 1 12 1C14 1 15 2 15 3M9 3H6C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V5C20 3.89543 19.1046 3 18 3H15"/>
-              <path d="M8 12L11 15L16 9"/>
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <line x1="12" y1="6" x2="12" y2="12"/>
+              <line x1="9.5" y1="8.5" x2="14.5" y2="8.5"/>
             </svg>
           </div>
-          <div class="btn-title">Relatórios</div>
+          <div class="btn-title">Estudos</div>
         </button>
 
-        <!-- 6. Igrejas -->
+        <!-- 6. Igrejas / Instituições -->
         <button class="btn-card-3d btn-igreja" onclick="openInstituicoesModal()">
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
@@ -201,6 +203,17 @@
             </svg>
           </div>
           <div class="btn-title">Institui&#231;&#245;es</div>
+        </button>
+
+        <!-- 7. Relatórios (Abaixo do botão Estoque, coluna 1 da 3ª linha) -->
+        <button class="btn-card-3d btn-relatorios" onclick="openReportsModal()">
+          <div class="btn-icon-wrapper">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 3H15M9 3C9 2 10 1 12 1C14 1 15 2 15 3M9 3H6C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V5C20 3.89543 19.1046 3 18 3H15"/>
+              <path d="M8 12L11 15L16 9"/>
+            </svg>
+          </div>
+          <div class="btn-title">Relatórios</div>
         </button>
 
       </div>
@@ -274,10 +287,10 @@
   <script src="js/html2pdf.bundle.min.js"></script>
 
   <!-- Scripts da Aplicação com Versionamento Anti-Cache -->
-  <script src="js/db.js?v=20260922-v41"></script>
-  <script src="js/modules.js?v=20260922-v41"></script>
-  <script src="js/pwa.js?v=20260922-v41"></script>
-  <script src="js/app.js?v=20260922-v41"></script>
+  <script src="js/db.js?v=20260922-v42"></script>
+  <script src="js/modules.js?v=20260922-v42"></script>
+  <script src="js/pwa.js?v=20260922-v42"></script>
+  <script src="js/app.js?v=20260922-v42"></script>
 
 </body>
 </html>

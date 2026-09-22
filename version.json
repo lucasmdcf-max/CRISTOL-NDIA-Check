@@ -1,6 +1,6 @@
 {
-  "version": "1.0.41",
-  "build": "20260922_41",
+  "version": "1.0.42",
+  "build": "20260922_42",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Adicionada opção de excluir aviso do dia com confirmação de segurança e sincronização em tempo real."
+  "releaseNotes": "Adicionado módulo de Estudos Bíblicos e Discipulado (Triagem, Fase 1 e Fase 2), formulário de Novo Estudo com perguntas e acompanhamento individual, Histórico, novo botão Estudos em preto 80% e reposicionamento de Relatórios abaixo do Estoque."
 }

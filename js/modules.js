@@ -5247,3 +5247,1001 @@ function formatDateBR(dateStr) {
   if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
   return dateStr;
 }
+
+/* ==========================================================================
+   MÓDULO DE ESTUDOS BÍBLICOS & DISCIPULADO (TRIAGEM, 1ª FASE E 2ª FASE)
+   ========================================================================== */
+
+const ESTUDOS_CONFIG = {
+  triagem: {
+    id: 'triagem',
+    title: 'Triagem',
+    subtitle: 'Primeiros Passos de Fé',
+    badge: '1 Mês • 8 Encontros',
+    objetivo: 'Conduzir o acolhido aos primeiros passos de fé, levando-o a conhecer Jesus, confiar em sua Palavra e responder ao chamado para uma nova vida.',
+    frequencia: '2 vezes por semana',
+    dias: 'Segunda e quarta-feira',
+    duracao: '1 mês',
+    totalEncontros: 8,
+    encontros: [
+      { id: 1, titulo: 'Encontro 1 — Para que você creia' },
+      { id: 2, titulo: 'Encontro 2 — Façam tudo o que Ele mandar' },
+      { id: 3, titulo: 'Encontro 3 — Confie na Palavra de Jesus' },
+      { id: 4, titulo: 'Encontro 4 — Desta vez você consegue: Levante-se!' },
+      { id: 5, titulo: 'Encontro 5 — Consagre o que você tem' },
+      { id: 6, titulo: 'Encontro 6 — Jesus precisa estar no barco' },
+      { id: 7, titulo: 'Encontro 7 — Levante-se: o tanque do Enviado' },
+      { id: 8, titulo: 'Encontro 8 — Ouça Jesus chamando seu nome' }
+    ]
+  },
+  fase1: {
+    id: 'fase1',
+    title: 'Discipulado da 1ª Fase',
+    subtitle: 'Fundamentos da Vida Transformada',
+    badge: '5 Meses • 20 Encontros',
+    objetivo: 'Fortalecer os fundamentos da fé cristã e ajudar o acolhido a compreender sua nova identidade, desenvolver relacionamento com Deus, trabalhar questões da vida e aprender a viver uma vida transformada.',
+    frequencia: '2 vezes por semana',
+    dias: 'Segunda e quarta-feira',
+    duracao: '5 meses',
+    totalEncontros: 20,
+    encontros: [
+      { id: 1, titulo: 'Encontro 1 — Os Dois Alicerces' },
+      { id: 2, titulo: 'Encontro 2 — Abrace Esta Nova Oportunidade' },
+      { id: 3, titulo: 'Encontro 3 — Graça e Misericórdia: o Agir de Deus' },
+      { id: 4, titulo: 'Encontro 4 — A Marca Maior: o Selo do Espírito Santo' },
+      { id: 5, titulo: 'Encontro 5 — Contra o que Lutamos? — Luta Interna' },
+      { id: 6, titulo: 'Encontro 6 — Contra o que Lutamos? — Luta Externa' },
+      { id: 7, titulo: 'Encontro 7 — Como Sentir a Verdadeira Paz de Deus — Oração' },
+      { id: 8, titulo: 'Encontro 8 — Ouça Deus Todos os Dias — A Palavra de Deus' },
+      { id: 9, titulo: 'Encontro 9 — As 3 Dimensões de Nossos Relacionamentos' },
+      { id: 10, titulo: 'Encontro 10 — Inventário de Vida e o Perdão — Introdução' },
+      { id: 11, titulo: 'Encontro 11 — Inventário de Vida — Pessoas' },
+      { id: 12, titulo: 'Encontro 12 — Perdão — A Estrutura da Alma' },
+      { id: 13, titulo: 'Encontro 13 — Inventário das Emoções, Sentimentos e Atitudes' },
+      { id: 14, titulo: 'Encontro 14 — Perdão — Quando Sofremos Perdas' },
+      { id: 15, titulo: 'Encontro 15 — Inventário de Vida — A Culpa' },
+      { id: 16, titulo: 'Encontro 16 — Inventário de Vida — Filhos Amados de Deus' },
+      { id: 17, titulo: 'Encontro 17 — Perdão — O Processo do Perdão' },
+      { id: 18, titulo: 'Encontro 18 — Abençoados para Abençoar — Ressignificado de Vida' },
+      { id: 19, titulo: 'Encontro 19 — Mantenha Contas Curtas com Deus' },
+      { id: 20, titulo: 'Encontro 20 — Blindando a Mente' }
+    ]
+  },
+  fase2: {
+    id: 'fase2',
+    title: 'Discipulado da 2ª Fase',
+    subtitle: 'Vida Cristã Madura e Multiplicadora',
+    badge: '6 Meses • 24 Encontros',
+    objetivo: 'Preparar o acolhido para uma vida cristã madura, responsável e multiplicadora, trabalhando família, trabalho, finanças, caráter, sexualidade, amizades, igreja e missão.',
+    frequencia: '2 vezes por semana',
+    dias: 'Segunda e quarta-feira',
+    duracao: '6 meses',
+    totalEncontros: 24,
+    enfases: [
+      {
+        nome: '👨‍👩‍👧 Ênfase 1 — Família',
+        encontros: [
+          { id: 1, titulo: 'Encontro 1 — Deus Pensa em Termos de Família' },
+          { id: 2, titulo: 'Encontro 2 — Paternidade e Maternidade Responsáveis' },
+          { id: 3, titulo: 'Encontro 3 — Bênçãos e Mandamentos Familiares' },
+          { id: 4, titulo: 'Encontro 4 — A Família na Escala de Valores' }
+        ]
+      },
+      {
+        nome: '💼 Ênfase 2 — Trabalho e Finanças',
+        encontros: [
+          { id: 5, titulo: 'Encontro 5 — Dignidade do Trabalho' },
+          { id: 6, titulo: 'Encontro 6 — Administração Financeira sob Princípios Bíblicos' },
+          { id: 7, titulo: 'Encontro 7 — Vencendo a Mentalidade de Escassez e Aprendendo a Ofertar' },
+          { id: 8, titulo: 'Encontro 8 — Disciplina e Ética no Trabalho' }
+        ]
+      },
+      {
+        nome: '👑 Ênfase 3 — Homens e Mulheres de Valor',
+        encontros: [
+          { id: 9, titulo: 'Encontro 9 — Daniel e a Mulher Virtuosa: Padrão de Excelência' },
+          { id: 10, titulo: 'Encontro 10 — Davi: Arrependimento de Pecado' },
+          { id: 11, titulo: 'Encontro 11 — Paulo e a Mulher Adúltera: Condutas Transformadas' },
+          { id: 12, titulo: 'Encontro 12 — Moisés: Líder Escolhido por Deus' }
+        ]
+      },
+      {
+        nome: '🛡️ Ênfase 4 — Sexualidade e Pureza',
+        encontros: [
+          { id: 13, titulo: 'Encontro 13 — Plano de Deus para a Sexualidade' },
+          { id: 14, titulo: 'Encontro 14 — Batalha contra a Pornografia' },
+          { id: 15, titulo: 'Encontro 15 — Relacionamentos Saudáveis e Namoro Cristão' },
+          { id: 16, titulo: 'Encontro 16 — Duas Metáforas que Edificam' }
+        ]
+      },
+      {
+        nome: '🤝 Ênfase 5 — Amizade Sincera',
+        encontros: [
+          { id: 17, titulo: 'Encontro 17 — O Valor da Amizade' },
+          { id: 18, titulo: 'Encontro 18 — Amigos' },
+          { id: 19, titulo: 'Encontro 19 — Como Escolher Amigos' },
+          { id: 20, titulo: 'Encontro 20 — A Importância da Igreja como Comunidade de Fé' }
+        ]
+      },
+      {
+        nome: '🌎 Ênfase 6 — Igreja Multiplicadora',
+        encontros: [
+          { id: 21, titulo: 'Encontro 21 — Os Cinco Princípios — Parte 1' },
+          { id: 22, titulo: 'Encontro 22 — Os Cinco Princípios — Parte 2' },
+          { id: 23, titulo: 'Encontro 23 — Relacionamento Discipulador' },
+          { id: 24, titulo: 'Encontro 24 — Cartão Alvo de Oração' }
+        ]
+      }
+    ],
+    encontros: [
+      { id: 1, titulo: 'Encontro 1 — Deus Pensa em Termos de Família' },
+      { id: 2, titulo: 'Encontro 2 — Paternidade e Maternidade Responsáveis' },
+      { id: 3, titulo: 'Encontro 3 — Bênçãos e Mandamentos Familiares' },
+      { id: 4, titulo: 'Encontro 4 — A Família na Escala de Valores' },
+      { id: 5, titulo: 'Encontro 5 — Dignidade do Trabalho' },
+      { id: 6, titulo: 'Encontro 6 — Administração Financeira sob Princípios Bíblicos' },
+      { id: 7, titulo: 'Encontro 7 — Vencendo a Mentalidade de Escassez e Aprendendo a Ofertar' },
+      { id: 8, titulo: 'Encontro 8 — Disciplina e Ética no Trabalho' },
+      { id: 9, titulo: 'Encontro 9 — Daniel e a Mulher Virtuosa: Padrão de Excelência' },
+      { id: 10, titulo: 'Encontro 10 — Davi: Arrependimento de Pecado' },
+      { id: 11, titulo: 'Encontro 11 — Paulo e a Mulher Adúltera: Condutas Transformadas' },
+      { id: 12, titulo: 'Encontro 12 — Moisés: Líder Escolhido por Deus' },
+      { id: 13, titulo: 'Encontro 13 — Plano de Deus para a Sexualidade' },
+      { id: 14, titulo: 'Encontro 14 — Batalha contra a Pornografia' },
+      { id: 15, titulo: 'Encontro 15 — Relacionamentos Saudáveis e Namoro Cristão' },
+      { id: 16, titulo: 'Encontro 16 — Duas Metáforas que Edificam' },
+      { id: 17, titulo: 'Encontro 17 — O Valor da Amizade' },
+      { id: 18, titulo: 'Encontro 18 — Amigos' },
+      { id: 19, titulo: 'Encontro 19 — Como Escolher Amigos' },
+      { id: 20, titulo: 'Encontro 20 — A Importância da Igreja como Comunidade de Fé' },
+      { id: 21, titulo: 'Encontro 21 — Os Cinco Princípios — Parte 1' },
+      { id: 22, titulo: 'Encontro 22 — Os Cinco Princípios — Parte 2' },
+      { id: 23, titulo: 'Encontro 23 — Relacionamento Discipulador' },
+      { id: 24, titulo: 'Encontro 24 — Cartão Alvo de Oração' }
+    ]
+  }
+};
+
+let _currentEstudoFase = 'triagem';
+
+function openEstudosModal(faseAtiva = 'triagem') {
+  _currentEstudoFase = faseAtiva;
+  const modal = document.getElementById('modal-generic');
+  const header = document.getElementById('modal-generic-header');
+  const body = document.getElementById('modal-generic-body');
+  const footer = document.getElementById('modal-generic-footer');
+  if (!modal || !header || !body || !footer) return;
+
+  header.className = 'modal-header';
+  header.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon" style="background:rgba(20, 20, 20, 0.88); color:#F1D28A; border:1px solid rgba(197, 137, 8, 0.4);">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          <line x1="12" y1="6" x2="12" y2="12"/>
+          <line x1="9.5" y1="8.5" x2="14.5" y2="8.5"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Estudos Bíblicos & Discipulado</h2>
+        <p style="margin-bottom:0;">Cristolândia • Formação e Edificação Espiritual</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  renderEstudosMainContent(body);
+
+  footer.className = 'modal-footer';
+  footer.innerHTML = `
+    <button type="button" class="btn-secondary-action" style="flex:1;" onclick="closeModal('modal-generic')">Fechar</button>
+  `;
+
+  openModal('modal-generic');
+}
+
+function selectEstudoFase(fase) {
+  _currentEstudoFase = fase;
+  const body = document.getElementById('modal-generic-body');
+  if (body) {
+    renderEstudosMainContent(body);
+  }
+}
+
+function renderEstudosMainContent(container) {
+  const cfg = ESTUDOS_CONFIG[_currentEstudoFase] || ESTUDOS_CONFIG.triagem;
+
+  let encontrosHtml = '';
+  if (cfg.enfases && cfg.enfases.length > 0) {
+    encontrosHtml = cfg.enfases.map(enf => `
+      <div style="margin-bottom:12px;">
+        <div style="font-size:0.8rem; font-weight:800; color:var(--gold-primary); margin-bottom:6px; font-family:var(--font-gothic); border-bottom:1px dashed rgba(197, 137, 8, 0.3); padding-bottom:3px;">
+          ${enf.nome}
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          ${enf.encontros.map(e => `
+            <div style="font-size:0.75rem; color:var(--text-main); background:rgba(0,0,0,0.02); padding:5px 8px; border-radius:6px; border-left:3px solid var(--gold-primary);">
+              ${e.titulo}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  } else {
+    encontrosHtml = `
+      <div style="display:flex; flex-direction:column; gap:5px;">
+        ${cfg.encontros.map(e => `
+          <div style="font-size:0.76rem; color:var(--text-main); background:rgba(0,0,0,0.02); padding:6px 9px; border-radius:6px; border-left:3px solid var(--gold-primary);">
+            ${e.titulo}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  container.innerHTML = `
+    <!-- Navegação de Abas: Triagem, Fase 1 e Fase 2 -->
+    <div style="display:flex; gap:6px; margin-bottom:14px; background:rgba(0,0,0,0.03); padding:4px; border-radius:12px; border:1px solid var(--border-beige);">
+      <button type="button" class="btn-period-pill ${_currentEstudoFase === 'triagem' ? 'active' : ''}" style="flex:1; text-align:center; padding:7px 4px; font-size:0.75rem;" onclick="selectEstudoFase('triagem')">
+        Triagem
+      </button>
+      <button type="button" class="btn-period-pill ${_currentEstudoFase === 'fase1' ? 'active' : ''}" style="flex:1; text-align:center; padding:7px 4px; font-size:0.75rem;" onclick="selectEstudoFase('fase1')">
+        1ª Fase
+      </button>
+      <button type="button" class="btn-period-pill ${_currentEstudoFase === 'fase2' ? 'active' : ''}" style="flex:1; text-align:center; padding:7px 4px; font-size:0.75rem;" onclick="selectEstudoFase('fase2')">
+        2ª Fase
+      </button>
+    </div>
+
+    <!-- Dois Botões de Ação de Destaque Superior: Histórico e Novo Estudo -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:14px;">
+      <button type="button" class="btn-secondary-action" style="display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 8px; font-weight:700; font-size:0.80rem; border-color:var(--border-gold);" onclick="openHistoricoEstudosModal('${_currentEstudoFase}')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Histórico
+      </button>
+
+      <button type="button" class="btn-primary-action" style="display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 8px; font-weight:700; font-size:0.80rem;" onclick="openNovoEstudoModal('${_currentEstudoFase}')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Novo Estudo
+      </button>
+    </div>
+
+    <!-- Card de Resumo da Dinâmica da Fase -->
+    <div style="background:var(--bg-surface); border:1px solid var(--border-gold); border-radius:14px; padding:12px 14px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h3 style="margin:0; font-family:var(--font-gothic); font-size:0.95rem; font-weight:800; color:var(--green-primary);">
+          ${cfg.title}
+        </h3>
+        <span style="background:rgba(197, 137, 8, 0.15); color:var(--gold-primary); font-size:0.68rem; font-weight:800; padding:3px 8px; border-radius:12px; border:1px solid rgba(197, 137, 8, 0.3);">
+          ${cfg.badge}
+        </span>
+      </div>
+
+      <div style="background:rgba(30, 77, 43, 0.05); border-left:3px solid var(--green-primary); padding:8px 10px; border-radius:6px; margin-bottom:10px;">
+        <div style="font-size:0.74rem; font-weight:800; color:var(--green-primary); margin-bottom:2px; font-family:var(--font-gothic);">🎯 OBJETIVO:</div>
+        <div style="font-size:0.77rem; color:var(--text-main); line-height:1.4;">${cfg.objetivo}</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:0.73rem; margin-bottom:12px; background:rgba(0,0,0,0.02); padding:8px 10px; border-radius:8px;">
+        <div><strong>🗓️ Frequência:</strong> ${cfg.frequencia}</div>
+        <div><strong>📅 Dias:</strong> ${cfg.dias}</div>
+        <div><strong>⏳ Duração:</strong> ${cfg.duracao}</div>
+        <div><strong>📖 Total:</strong> ${cfg.totalEncontros} encontros</div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; cursor:pointer;" onclick="toggleEstudosListaDetails()">
+        <span style="font-size:0.78rem; font-weight:800; color:var(--text-main); font-family:var(--font-gothic);">
+          📖 Lista dos ${cfg.totalEncontros} Encontros
+        </span>
+        <span id="estudo-lista-toggle-icon" style="font-size:0.72rem; color:var(--gold-primary); font-weight:700;">Toque para ver</span>
+      </div>
+
+      <div id="estudo-encontros-scroll-box" style="max-height:190px; overflow-y:auto; border:1px solid var(--border-beige); border-radius:8px; padding:8px; background:var(--white);">
+        ${encontrosHtml}
+      </div>
+    </div>
+  `;
+}
+
+function toggleEstudosListaDetails() {
+  const box = document.getElementById('estudo-encontros-scroll-box');
+  const icon = document.getElementById('estudo-lista-toggle-icon');
+  if (!box) return;
+  if (box.style.display === 'none') {
+    box.style.display = 'block';
+    if (icon) icon.innerText = 'Recolher';
+  } else {
+    box.style.display = 'none';
+    if (icon) icon.innerText = 'Expandir';
+  }
+}
+
+/* ==========================================================================
+   FORMULÁRIO "NOVO ESTUDO" (RELATÓRIO DO ENCONTRO)
+   ========================================================================== */
+
+function openNovoEstudoModal(faseSugerida = 'triagem', estudoParaEditar = null) {
+  const modal = document.getElementById('modal-generic');
+  const header = document.getElementById('modal-generic-header');
+  const body = document.getElementById('modal-generic-body');
+  const footer = document.getElementById('modal-generic-footer');
+  if (!modal || !header || !body || !footer) return;
+
+  const editId = estudoParaEditar ? (estudoParaEditar.id || null) : null;
+  const isEditing = !!editId;
+  const selectedFase = estudoParaEditar ? (estudoParaEditar.fase || faseSugerida) : faseSugerida;
+  const initialDate = estudoParaEditar ? (estudoParaEditar.date || getLocalDateStr()) : getLocalDateStr();
+  const initialUnit = estudoParaEditar ? (estudoParaEditar.unitId || 'missao') : 'missao';
+  const initialMissionario = estudoParaEditar ? (estudoParaEditar.missionario || '') : '';
+  const initialTema = estudoParaEditar ? (estudoParaEditar.tema || '') : '';
+  const initialRealizado = estudoParaEditar ? (estudoParaEditar.realizado || 'sim') : 'sim';
+  const initialParticipantes = estudoParaEditar ? (estudoParaEditar.participantes ?? '') : '';
+  const initialConcluintes = estudoParaEditar ? (estudoParaEditar.concluintes ?? '') : '';
+  const initialParticipacao = estudoParaEditar ? (estudoParaEditar.participacao || 'participativa') : 'participativa';
+  const initialCompreensao = estudoParaEditar ? (estudoParaEditar.compreensao || 'a_maioria') : 'a_maioria';
+  const initialPrecisaAcompanhamento = estudoParaEditar ? (estudoParaEditar.precisaAcompanhamento || 'nao') : 'nao';
+  const initialAcompNome = estudoParaEditar ? (estudoParaEditar.acompanhamentoNome || '') : '';
+  const initialAcompMotivo = estudoParaEditar ? (estudoParaEditar.acompanhamentoMotivo || '') : '';
+  const initialEncPsico = estudoParaEditar ? !!estudoParaEditar.encaminhamentoPsicologo : false;
+  const initialEncPastoral = estudoParaEditar ? !!estudoParaEditar.encaminhamentoPastoral : false;
+
+  header.className = 'modal-header';
+  header.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon" style="background:rgba(20, 20, 20, 0.88); color:#F1D28A;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h2>${isEditing ? 'Editar Relatório do Encontro' : 'Relatório do Encontro'}</h2>
+        <p style="margin-bottom:0;">Registro oficial da aplicação do estudo</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  body.innerHTML = `
+    <form id="form-novo-estudo" onsubmit="event.preventDefault(); handleSaveEstudo('${editId || ''}');">
+      <!-- 1. Data e Unidade -->
+      <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:9px; margin-bottom:12px;">
+        <div>
+          <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--text-main); margin-bottom:4px; font-family:var(--font-gothic);">
+            📅 Data da Aplicação *
+          </label>
+          <input type="date" id="estudo-input-date" class="form-input" value="${initialDate}" required style="width:100%;">
+        </div>
+        <div>
+          <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--text-main); margin-bottom:4px; font-family:var(--font-gothic);">
+            🏢 Unidade *
+          </label>
+          <select id="estudo-input-unit" class="form-select" required style="width:100%;">
+            <option value="missao" ${initialUnit === 'missao' ? 'selected' : ''}>Unidade Missão</option>
+            <option value="macedonia" ${initialUnit === 'macedonia' ? 'selected' : ''}>Unidade Macedônia</option>
+            <option value="feminina" ${initialUnit === 'feminina' ? 'selected' : ''}>Unidade Feminina</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 2. Fase e Tema do Encontro -->
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--text-main); margin-bottom:4px; font-family:var(--font-gothic);">
+          📖 Fase do Estudo *
+        </label>
+        <select id="estudo-input-fase" class="form-select" onchange="updateEstudoEncontrosDropdown(this.value)" required style="width:100%;">
+          <option value="triagem" ${selectedFase === 'triagem' ? 'selected' : ''}>Triagem (8 Encontros)</option>
+          <option value="fase1" ${selectedFase === 'fase1' ? 'selected' : ''}>Discipulado 1ª Fase (20 Encontros)</option>
+          <option value="fase2" ${selectedFase === 'fase2' ? 'selected' : ''}>Discipulado 2ª Fase (24 Encontros)</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--text-main); margin-bottom:4px; font-family:var(--font-gothic);">
+          🎯 Tema do Encontro Realizado *
+        </label>
+        <select id="estudo-input-tema" class="form-select" required style="width:100%;">
+          <!-- Preenchido dinamicamente por updateEstudoEncontrosDropdown -->
+        </select>
+      </div>
+
+      <!-- 3. Missionário que aplicou -->
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--text-main); margin-bottom:4px; font-family:var(--font-gothic);">
+          👤 Missionário que aplicou o estudo *
+        </label>
+        <input type="text" id="estudo-input-missionario" class="form-input" placeholder="Ex: Missionário Carlos, Pr. Marcos..." value="${escapeHtml(initialMissionario)}" required style="width:100%;">
+      </div>
+
+      <div style="border-top:1px dashed var(--border-beige); margin:12px 0;"></div>
+
+      <!-- Pergunta 1: O encontro foi realizado? -->
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.80rem; font-weight:800; color:var(--green-primary); margin-bottom:6px; font-family:var(--font-gothic);">
+          1. O encontro foi realizado?
+        </label>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.78rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:8px 6px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_realizado" value="sim" ${initialRealizado === 'sim' ? 'checked' : ''} required>
+            <span>Sim</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.78rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:8px 6px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_realizado" value="nao" ${initialRealizado === 'nao' ? 'checked' : ''}>
+            <span>Não</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.78rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:8px 6px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_realizado" value="parcialmente" ${initialRealizado === 'parcialmente' ? 'checked' : ''}>
+            <span>Parcialmente</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Perguntas 2 e 3: Participantes e Concluintes -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:14px;">
+        <div>
+          <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--green-primary); margin-bottom:4px; font-family:var(--font-gothic);">
+            2. Qtd. de participantes
+          </label>
+          <input type="number" min="0" id="estudo-input-participantes" class="form-input" placeholder="0" value="${initialParticipantes}" required style="width:100%;">
+        </div>
+        <div>
+          <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--green-primary); margin-bottom:4px; font-family:var(--font-gothic);">
+            3. Qtd. que concluíram
+          </label>
+          <input type="number" min="0" id="estudo-input-concluintes" class="form-input" placeholder="0" value="${initialConcluintes}" required style="width:100%;">
+        </div>
+      </div>
+
+      <!-- Pergunta 4: Como foi a participação? -->
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.80rem; font-weight:800; color:var(--green-primary); margin-bottom:6px; font-family:var(--font-gothic);">
+          4. Como foi a participação?
+        </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:7px 8px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_participacao" value="muito_participativa" ${initialParticipacao === 'muito_participativa' ? 'checked' : ''} required>
+            <span>Muito participativa</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:7px 8px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_participacao" value="participativa" ${initialParticipacao === 'participativa' ? 'checked' : ''}>
+            <span>Participativa</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:7px 8px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_participacao" value="regular" ${initialParticipacao === 'regular' ? 'checked' : ''}>
+            <span>Regular</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:7px 8px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_participacao" value="baixa" ${initialParticipacao === 'baixa' ? 'checked' : ''}>
+            <span>Baixa</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Pergunta 5: Os acolhidos compreenderam o conteúdo? -->
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.80rem; font-weight:800; color:var(--green-primary); margin-bottom:6px; font-family:var(--font-gothic);">
+          5. Os acolhidos compreenderam o conteúdo?
+        </label>
+        <div style="display:flex; flex-direction:column; gap:5px;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:7px 9px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_compreensao" value="claramente" ${initialCompreensao === 'claramente' ? 'checked' : ''} required>
+            <span>Sim, claramente</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:7px 9px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_compreensao" value="a_maioria" ${initialCompreensao === 'a_maioria' ? 'checked' : ''}>
+            <span>A maioria compreendeu</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:7px 9px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_compreensao" value="alguns" ${initialCompreensao === 'alguns' ? 'checked' : ''}>
+            <span>Alguns compreenderam</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; background:rgba(0,0,0,0.02); border:1px solid var(--border-beige); padding:7px 9px; border-radius:8px; cursor:pointer;">
+            <input type="radio" name="estudo_compreensao" value="resistencia" ${initialCompreensao === 'resistencia' ? 'checked' : ''}>
+            <span>Houve resistência</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Pergunta 6: Algum acolhido precisa de acompanhamento individual? -->
+      <div style="margin-bottom:14px; background:rgba(197, 137, 8, 0.06); border:1px solid rgba(197, 137, 8, 0.25); padding:10px 12px; border-radius:12px;">
+        <label style="display:block; font-size:0.80rem; font-weight:800; color:var(--text-main); margin-bottom:6px; font-family:var(--font-gothic);">
+          6. Algum acolhido precisa de acompanhamento individual?
+        </label>
+        <div style="display:flex; gap:12px; margin-bottom:8px;">
+          <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; cursor:pointer;">
+            <input type="radio" name="estudo_acompanhamento" value="nao" ${initialPrecisaAcompanhamento === 'nao' ? 'checked' : ''} onchange="toggleEstudoAcompanhamento('nao')">
+            <span>Não</span>
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; cursor:pointer;">
+            <input type="radio" name="estudo_acompanhamento" value="sim" ${initialPrecisaAcompanhamento === 'sim' ? 'checked' : ''} onchange="toggleEstudoAcompanhamento('sim')">
+            <span style="font-weight:700; color:var(--green-primary);">Sim</span>
+          </label>
+        </div>
+
+        <!-- Seção Expansível de Acompanhamento Individual -->
+        <div id="estudo-box-acompanhamento" style="display:${initialPrecisaAcompanhamento === 'sim' ? 'block' : 'none'}; padding-top:8px; border-top:1px dashed rgba(197, 137, 8, 0.3);">
+          <div style="margin-bottom:8px;">
+            <label style="display:block; font-size:0.74rem; font-weight:700; color:var(--text-main); margin-bottom:3px;">
+              Nome do Acolhido:
+            </label>
+            <input type="text" id="estudo-input-acomp-nome" class="form-input" placeholder="Nome completo do acolhido" value="${escapeHtml(initialAcompNome)}" style="width:100%;">
+          </div>
+
+          <div style="margin-bottom:8px;">
+            <label style="display:block; font-size:0.74rem; font-weight:700; color:var(--text-main); margin-bottom:3px;">
+              Motivo:
+            </label>
+            <input type="text" id="estudo-input-acomp-motivo" class="form-input" placeholder="Ex: Dificuldade familiar, luto, crise emocional..." value="${escapeHtml(initialAcompMotivo)}" style="width:100%;">
+          </div>
+
+          <div>
+            <label style="display:block; font-size:0.74rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">
+              Encaminhamento:
+            </label>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <label style="display:flex; align-items:center; gap:6px; font-size:0.76rem; cursor:pointer;">
+                <input type="checkbox" id="estudo-chk-enc-psicologo" ${initialEncPsico ? 'checked' : ''}>
+                <span>Psicólogo</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:0.76rem; cursor:pointer;">
+                <input type="checkbox" id="estudo-chk-enc-pastoral" ${initialEncPastoral ? 'checked' : ''}>
+                <span>Aconselhamento pastoral</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  `;
+
+  footer.className = 'modal-footer';
+  footer.innerHTML = `
+    <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openEstudosModal('${selectedFase}')">Voltar</button>
+    <button type="button" id="btn-save-estudo" class="btn-primary-action" style="flex:1.5;" onclick="handleSaveEstudo('${editId || ''}')">
+      ${isEditing ? 'Salvar Alterações' : 'Salvar Relatório'}
+    </button>
+  `;
+
+  updateEstudoEncontrosDropdown(selectedFase, initialTema);
+  openModal('modal-generic');
+}
+
+function updateEstudoEncontrosDropdown(faseSelecionada, temaAtual = '') {
+  const select = document.getElementById('estudo-input-tema');
+  if (!select) return;
+
+  const cfg = ESTUDOS_CONFIG[faseSelecionada] || ESTUDOS_CONFIG.triagem;
+  let html = '';
+
+  if (cfg.enfases && cfg.enfases.length > 0) {
+    cfg.enfases.forEach(enf => {
+      html += `<optgroup label="${enf.nome}">`;
+      enf.encontros.forEach(e => {
+        const isSel = (e.titulo === temaAtual) ? 'selected' : '';
+        html += `<option value="${e.titulo}" ${isSel}>${e.titulo}</option>`;
+      });
+      html += `</optgroup>`;
+    });
+  } else {
+    cfg.encontros.forEach(e => {
+      const isSel = (e.titulo === temaAtual) ? 'selected' : '';
+      html += `<option value="${e.titulo}" ${isSel}>${e.titulo}</option>`;
+    });
+  }
+
+  select.innerHTML = html;
+}
+
+function toggleEstudoAcompanhamento(simNao) {
+  const box = document.getElementById('estudo-box-acompanhamento');
+  if (!box) return;
+  box.style.display = (simNao === 'sim') ? 'block' : 'none';
+}
+
+async function handleSaveEstudo(editId) {
+  const dateInput = document.getElementById('estudo-input-date');
+  const unitInput = document.getElementById('estudo-input-unit');
+  const faseInput = document.getElementById('estudo-input-fase');
+  const temaInput = document.getElementById('estudo-input-tema');
+  const missionarioInput = document.getElementById('estudo-input-missionario');
+  const participantesInput = document.getElementById('estudo-input-participantes');
+  const concluintesInput = document.getElementById('estudo-input-concluintes');
+  const btn = document.getElementById('btn-save-estudo');
+
+  const date = dateInput?.value || getLocalDateStr();
+  const unitId = unitInput?.value || 'missao';
+  const fase = faseInput?.value || 'triagem';
+  const tema = temaInput?.value || '';
+  const missionario = (missionarioInput?.value || '').trim();
+  const participantes = parseInt(participantesInput?.value || '0', 10);
+  const concluintes = parseInt(concluintesInput?.value || '0', 10);
+
+  if (!missionario) {
+    showToast('Informe o nome do missionário que aplicou o estudo.', 'warning');
+    if (missionarioInput) missionarioInput.focus();
+    return;
+  }
+
+  const realizadoElem = document.querySelector('input[name="estudo_realizado"]:checked');
+  const realizado = realizadoElem ? realizadoElem.value : 'sim';
+
+  const participacaoElem = document.querySelector('input[name="estudo_participacao"]:checked');
+  const participacao = participacaoElem ? participacaoElem.value : 'participativa';
+
+  const compreensaoElem = document.querySelector('input[name="estudo_compreensao"]:checked');
+  const compreensao = compreensaoElem ? compreensaoElem.value : 'a_maioria';
+
+  const acompElem = document.querySelector('input[name="estudo_acompanhamento"]:checked');
+  const precisaAcompanhamento = acompElem ? acompElem.value : 'nao';
+
+  let acompanhamentoNome = '';
+  let acompanhamentoMotivo = '';
+  let encaminhamentoPsicologo = false;
+  let encaminhamentoPastoral = false;
+
+  if (precisaAcompanhamento === 'sim') {
+    acompanhamentoNome = (document.getElementById('estudo-input-acomp-nome')?.value || '').trim();
+    acompanhamentoMotivo = (document.getElementById('estudo-input-acomp-motivo')?.value || '').trim();
+    encaminhamentoPsicologo = !!document.getElementById('estudo-chk-enc-psicologo')?.checked;
+    encaminhamentoPastoral = !!document.getElementById('estudo-chk-enc-pastoral')?.checked;
+  }
+
+  const estudoPayload = {
+    date,
+    unitId,
+    fase,
+    tema,
+    missionario,
+    realizado,
+    participantes: isNaN(participantes) ? 0 : participantes,
+    concluintes: isNaN(concluintes) ? 0 : concluintes,
+    participacao,
+    compreensao,
+    precisaAcompanhamento,
+    acompanhamentoNome,
+    acompanhamentoMotivo,
+    encaminhamentoPsicologo,
+    encaminhamentoPastoral
+  };
+
+  if (editId) {
+    estudoPayload.id = editId;
+  }
+
+  if (btn) btn.disabled = true;
+  showLoading(editId ? 'Atualizando estudo...' : 'Salvando estudo...');
+
+  try {
+    const saved = await dbManager.saveEstudo(estudoPayload);
+    showToast(editId ? 'Relatório do encontro atualizado com sucesso!' : 'Relatório do encontro salvo com sucesso!', 'success');
+    if (navigator.vibrate) navigator.vibrate([15, 30, 15]);
+    openHistoricoEstudosModal(fase);
+  } catch (err) {
+    console.error('Erro ao salvar estudo:', err);
+    showToast('Erro ao salvar relatório: ' + (err.message || err), 'danger');
+  } finally {
+    hideLoading();
+    if (btn) btn.disabled = false;
+  }
+}
+
+/* ==========================================================================
+   HISTÓRICO DE ESTUDOS REALIZADOS
+   ========================================================================== */
+
+let _historicoEstudosFaseFiltro = 'todas';
+let _historicoEstudosUnitFiltro = 'todas';
+let _historicoEstudosQuery = '';
+
+function openHistoricoEstudosModal(faseFiltro = 'todas') {
+  _historicoEstudosFaseFiltro = faseFiltro;
+  _historicoEstudosUnitFiltro = 'todas';
+  _historicoEstudosQuery = '';
+
+  const modal = document.getElementById('modal-generic');
+  const header = document.getElementById('modal-generic-header');
+  const body = document.getElementById('modal-generic-body');
+  const footer = document.getElementById('modal-generic-footer');
+  if (!modal || !header || !body || !footer) return;
+
+  header.className = 'modal-header';
+  header.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon" style="background:rgba(20, 20, 20, 0.88); color:#F1D28A;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Histórico de Estudos</h2>
+        <p style="margin-bottom:0;">Encontros bíblicos registrados</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  body.innerHTML = `
+    <!-- Barra Superior: Filtros de Fase e Unidade -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+      <div>
+        <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:2px; display:block;">Fase:</label>
+        <select id="hist-estudo-filter-fase" class="form-select" onchange="filterHistoricoEstudos()" style="padding:6px; font-size:0.76rem; width:100%;">
+          <option value="todas" ${_historicoEstudosFaseFiltro === 'todas' ? 'selected' : ''}>Todas as Fases</option>
+          <option value="triagem" ${_historicoEstudosFaseFiltro === 'triagem' ? 'selected' : ''}>Triagem</option>
+          <option value="fase1" ${_historicoEstudosFaseFiltro === 'fase1' ? 'selected' : ''}>1ª Fase</option>
+          <option value="fase2" ${_historicoEstudosFaseFiltro === 'fase2' ? 'selected' : ''}>2ª Fase</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); margin-bottom:2px; display:block;">Unidade:</label>
+        <select id="hist-estudo-filter-unit" class="form-select" onchange="filterHistoricoEstudos()" style="padding:6px; font-size:0.76rem; width:100%;">
+          <option value="todas">Todas as Unidades</option>
+          <option value="missao">Missão</option>
+          <option value="macedonia">Macedônia</option>
+          <option value="feminina">Feminina</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Campo de Busca por Tema ou Missionário -->
+    <div style="margin-bottom:12px;">
+      <input type="search" id="hist-estudo-search" class="form-input" placeholder="Buscar por tema ou missionário..." oninput="filterHistoricoEstudos()" style="width:100%; font-size:0.78rem; padding:8px 10px;">
+    </div>
+
+    <!-- Lista de Encontros -->
+    <div id="hist-estudos-list-container" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+      <!-- Preenchido por renderHistoricoEstudosList -->
+    </div>
+  `;
+
+  footer.className = 'modal-footer';
+  footer.innerHTML = `
+    <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openEstudosModal('${_historicoEstudosFaseFiltro === 'todas' ? 'triagem' : _historicoEstudosFaseFiltro}')">Voltar</button>
+    <button type="button" class="btn-primary-action" style="flex:1.2;" onclick="openNovoEstudoModal('${_historicoEstudosFaseFiltro === 'todas' ? 'triagem' : _historicoEstudosFaseFiltro}')">+ Novo Estudo</button>
+  `;
+
+  renderHistoricoEstudosList();
+  openModal('modal-generic');
+}
+
+function filterHistoricoEstudos() {
+  _historicoEstudosFaseFiltro = document.getElementById('hist-estudo-filter-fase')?.value || 'todas';
+  _historicoEstudosUnitFiltro = document.getElementById('hist-estudo-filter-unit')?.value || 'todas';
+  _historicoEstudosQuery = (document.getElementById('hist-estudo-search')?.value || '').toLowerCase().trim();
+  renderHistoricoEstudosList();
+}
+
+function renderHistoricoEstudosList() {
+  const container = document.getElementById('hist-estudos-list-container');
+  if (!container) return;
+
+  const allEstudos = (typeof dbManager !== 'undefined' && dbManager.getEstudos) ? dbManager.getEstudos() : [];
+
+  const filtered = allEstudos.filter(e => {
+    if (!e) return false;
+    if (_historicoEstudosFaseFiltro !== 'todas' && e.fase !== _historicoEstudosFaseFiltro) return false;
+    if (_historicoEstudosUnitFiltro !== 'todas' && e.unitId !== _historicoEstudosUnitFiltro) return false;
+    if (_historicoEstudosQuery) {
+      const tema = (e.tema || '').toLowerCase();
+      const missionario = (e.missionario || '').toLowerCase();
+      const acompNome = (e.acompanhamentoNome || '').toLowerCase();
+      if (!tema.includes(_historicoEstudosQuery) && !missionario.includes(_historicoEstudosQuery) && !acompNome.includes(_historicoEstudosQuery)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px 15px; color:var(--text-muted); background:var(--white); border-radius:12px; border:1px dashed var(--border-beige);">
+        <div style="font-size:2rem; margin-bottom:6px;">📖</div>
+        <div style="font-weight:700; font-size:0.86rem; color:var(--text-main);">Nenhum estudo encontrado</div>
+        <div style="font-size:0.75rem; margin-top:3px;">Nenhum encontro registrado com os filtros selecionados.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const unitLabels = { missao: 'Missão', macedonia: 'Macedônia', feminina: 'Feminina' };
+  const faseLabels = { triagem: 'Triagem', fase1: '1ª Fase', fase2: '2ª Fase' };
+
+  container.innerHTML = filtered.map(e => {
+    const unitName = unitLabels[e.unitId] || e.unitId || 'Geral';
+    const faseName = faseLabels[e.fase] || e.fase || 'Estudo';
+    const dateFormatted = formatDateBR(e.date);
+
+    return `
+      <div class="report-section-card" style="margin-bottom:0; cursor:pointer; transition:transform 0.15s ease;" onclick="viewDetalhesEstudo('${e.id}')">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px;">
+          <div>
+            <span style="background:rgba(30, 77, 43, 0.12); color:var(--green-primary); font-size:0.68rem; font-weight:800; padding:2px 7px; border-radius:10px; margin-right:4px;">
+              ${unitName}
+            </span>
+            <span style="background:rgba(197, 137, 8, 0.15); color:var(--gold-primary); font-size:0.68rem; font-weight:800; padding:2px 7px; border-radius:10px;">
+              ${faseName}
+            </span>
+          </div>
+          <span style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">
+            ${dateFormatted}
+          </span>
+        </div>
+
+        <div style="font-family:var(--font-gothic); font-size:0.84rem; font-weight:800; color:var(--text-main); margin-bottom:4px; line-height:1.3;">
+          ${escapeHtml(e.tema || 'Estudo sem título')}
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:var(--text-muted);">
+          <span>👤 ${escapeHtml(e.missionario || 'Missionário')}</span>
+          <span>👥 ${e.participantes || 0} participantes (${e.concluintes || 0} concluíram)</span>
+        </div>
+
+        ${e.precisaAcompanhamento === 'sim' ? `
+          <div style="margin-top:5px; padding-top:4px; border-top:1px dashed rgba(220, 53, 69, 0.3); display:flex; align-items:center; justify-content:space-between; font-size:0.70rem; color:#DC3545;">
+            <span>⚠️ Acompanhamento: <strong>${escapeHtml(e.acompanhamentoNome || 'Acolhido')}</strong></span>
+            <span style="font-weight:700;">Ver detalhes →</span>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function viewDetalhesEstudo(id) {
+  const estudo = (typeof dbManager !== 'undefined' && dbManager.getEstudoById) ? dbManager.getEstudoById(id) : null;
+  if (!estudo) {
+    showToast('Estudo não encontrado.', 'danger');
+    return;
+  }
+
+  const modal = document.getElementById('modal-generic');
+  const header = document.getElementById('modal-generic-header');
+  const body = document.getElementById('modal-generic-body');
+  const footer = document.getElementById('modal-generic-footer');
+  if (!modal || !header || !body || !footer) return;
+
+  const unitLabels = { missao: 'Unidade Missão', macedonia: 'Unidade Macedônia', feminina: 'Unidade Feminina' };
+  const faseLabels = { triagem: 'Triagem', fase1: 'Discipulado 1ª Fase', fase2: 'Discipulado 2ª Fase' };
+
+  const participacaoLabels = {
+    muito_participativa: 'Muito participativa',
+    participativa: 'Participativa',
+    regular: 'Regular',
+    baixa: 'Baixa'
+  };
+
+  const compreensaoLabels = {
+    claramente: 'Sim, claramente',
+    a_maioria: 'A maioria compreendeu',
+    alguns: 'Alguns compreenderam',
+    resistencia: 'Houve resistência'
+  };
+
+  const realizadoLabels = {
+    sim: 'Sim',
+    nao: 'Não',
+    parcialmente: 'Parcialmente'
+  };
+
+  header.className = 'modal-header';
+  header.innerHTML = `
+    <div class="modal-header-title">
+      <div class="modal-unit-icon" style="background:rgba(20, 20, 20, 0.88); color:#F1D28A;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Ficha do Encontro</h2>
+        <p style="margin-bottom:0;">${unitLabels[estudo.unitId] || estudo.unitId} • ${formatDateBR(estudo.date)}</p>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
+  `;
+
+  body.innerHTML = `
+    <div style="background:var(--bg-surface); border:1px solid var(--border-gold); border-radius:14px; padding:14px; margin-bottom:12px;">
+      <div style="font-size:0.75rem; font-weight:800; color:var(--gold-primary); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px;">
+        ${faseLabels[estudo.fase] || estudo.fase}
+      </div>
+      <h3 style="margin:0 0 8px 0; font-family:var(--font-gothic); font-size:1rem; font-weight:800; color:var(--green-primary); line-height:1.35;">
+        ${escapeHtml(estudo.tema || 'Tema')}
+      </h3>
+      <div style="font-size:0.78rem; color:var(--text-main); margin-bottom:12px;">
+        <strong>Missionário Responsável:</strong> ${escapeHtml(estudo.missionario || 'Não informado')}
+      </div>
+
+      <div style="border-top:1px dashed var(--border-beige); padding-top:10px; display:flex; flex-direction:column; gap:8px; font-size:0.80rem;">
+        <div>
+          <strong>1. Encontro foi realizado?</strong> 
+          <span style="color:var(--green-primary); font-weight:700;">${realizadoLabels[estudo.realizado] || estudo.realizado}</span>
+        </div>
+        <div>
+          <strong>2. Acolhidos que participaram:</strong> ${estudo.participantes || 0}
+        </div>
+        <div>
+          <strong>3. Acolhidos que concluíram:</strong> ${estudo.concluintes || 0}
+        </div>
+        <div>
+          <strong>4. Como foi a participação:</strong> ${participacaoLabels[estudo.participacao] || estudo.participacao}
+        </div>
+        <div>
+          <strong>5. Compreensão do conteúdo:</strong> ${compreensaoLabels[estudo.compreensao] || estudo.compreensao}
+        </div>
+        <div>
+          <strong>6. Precisa de acompanhamento individual?</strong> 
+          <span style="font-weight:700; color:${estudo.precisaAcompanhamento === 'sim' ? '#DC3545' : 'var(--text-main)'};">
+            ${estudo.precisaAcompanhamento === 'sim' ? 'Sim' : 'Não'}
+          </span>
+        </div>
+
+        ${estudo.precisaAcompanhamento === 'sim' ? `
+          <div style="background:rgba(220, 53, 69, 0.05); border-left:3px solid #DC3545; padding:8px 10px; border-radius:6px; margin-top:4px;">
+            <div style="margin-bottom:3px;"><strong>Nome:</strong> ${escapeHtml(estudo.acompanhamentoNome || 'Não informado')}</div>
+            <div style="margin-bottom:3px;"><strong>Motivo:</strong> ${escapeHtml(estudo.acompanhamentoMotivo || 'Não informado')}</div>
+            <div>
+              <strong>Encaminhamento:</strong> 
+              ${estudo.encaminhamentoPsicologo ? ' [Psicólogo] ' : ''} 
+              ${estudo.encaminhamentoPastoral ? ' [Aconselhamento pastoral] ' : ''}
+              ${(!estudo.encaminhamentoPsicologo && !estudo.encaminhamentoPastoral) ? 'Nenhum' : ''}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  footer.className = 'modal-footer';
+  footer.innerHTML = `
+    <button type="button" class="btn-secondary-action" style="flex:1;" onclick="openHistoricoEstudosModal('${estudo.fase}')">Voltar</button>
+    <button type="button" class="btn-secondary-action" style="flex:1; border-color:#DC3545; color:#DC3545;" onclick="deleteEstudoAction('${estudo.id}')">Excluir</button>
+    <button type="button" class="btn-primary-action" style="flex:1.2;" onclick="openNovoEstudoModal('${estudo.fase}', dbManager.getEstudoById('${estudo.id}'))">Editar</button>
+  `;
+
+  openModal('modal-generic');
+}
+
+async function deleteEstudoAction(id) {
+  if (!confirm('Deseja realmente excluir este relatório de estudo bíblico?')) return;
+  showLoading('Excluindo relatório...');
+  try {
+    if (typeof dbManager !== 'undefined' && dbManager.deleteEstudo) {
+      await dbManager.deleteEstudo(id);
+    }
+    showToast('Relatório de estudo excluído com sucesso.', 'info');
+    renderHistoricoEstudosList();
+    openHistoricoEstudosModal();
+  } catch (err) {
+    showToast('Erro ao excluir estudo: ' + (err.message || err), 'danger');
+  } finally {
+    hideLoading();
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.openEstudosModal = openEstudosModal;
+  window.selectEstudoFase = selectEstudoFase;
+  window.openNovoEstudoModal = openNovoEstudoModal;
+  window.updateEstudoEncontrosDropdown = updateEstudoEncontrosDropdown;
+  window.toggleEstudoAcompanhamento = toggleEstudoAcompanhamento;
+  window.toggleEstudosListaDetails = toggleEstudosListaDetails;
+  window.handleSaveEstudo = handleSaveEstudo;
+  window.openHistoricoEstudosModal = openHistoricoEstudosModal;
+  window.filterHistoricoEstudos = filterHistoricoEstudos;
+  window.renderHistoricoEstudosList = renderHistoricoEstudosList;
+  window.viewDetalhesEstudo = viewDetalhesEstudo;
+  window.deleteEstudoAction = deleteEstudoAction;
+  window.ESTUDOS_CONFIG = ESTUDOS_CONFIG;
+}
+

@@ -10,6 +10,7 @@ const DB_KEYS = {
   ACTIVITIES: 'cristolandia_check_activities_v1',
   NOTICES: 'cristolandia_check_notices_v1',
   TRIAGENS: 'cristolandia_check_triagens_v1',
+  ESTUDOS: 'cristolandia_check_estudos_v1',
   FIREBASE_CONFIG: 'cristolandia_check_firebase_cfg_v1',
   APP_CONFIG: 'cristolandia_check_app_cfg_v1'
 };
@@ -418,6 +419,11 @@ class CristolandiaDB {
       } else {
         localStorage.setItem(DB_KEYS.TRIAGENS, JSON.stringify([]));
       }
+      if (data.estudos !== undefined) {
+        localStorage.setItem(DB_KEYS.ESTUDOS, JSON.stringify(toArray(data.estudos)));
+      } else {
+        localStorage.setItem(DB_KEYS.ESTUDOS, JSON.stringify([]));
+      }
 
       // Atualiza timestamps de last_update por unidade
       if (data.stock_last_update) {
@@ -452,6 +458,7 @@ class CristolandiaDB {
       const activities = this.getActivities();
       const notices = this.getNotices(false); // todos incluindo recentes
       const triagens = this.getTriagens();
+      const estudos = this.getEstudos();
 
       const payload = {
         reports: {},
@@ -459,7 +466,8 @@ class CristolandiaDB {
         churches: {},
         activities: {},
         notices: {},
-        triagens: {}
+        triagens: {},
+        estudos: {}
       };
 
       reports.forEach(r => { if (r && r.id) payload.reports[r.id] = this.sanitize(r); });
@@ -468,6 +476,7 @@ class CristolandiaDB {
       activities.forEach(a => { if (a && a.id) payload.activities[a.id] = this.sanitize(a); });
       notices.forEach(n => { if (n && n.id) payload.notices[n.id] = this.sanitize(n); });
       triagens.forEach(t => { if (t && t.id) payload.triagens[t.id] = this.sanitize(t); });
+      estudos.forEach(e => { if (e && e.id) payload.estudos[e.id] = this.sanitize(e); });
 
       this._lastLocalWrite = Date.now();
       await this.firebaseDb.ref('cristolandia_check').set(payload);
@@ -922,6 +931,77 @@ class CristolandiaDB {
         await this.firebaseDb.ref(`cristolandia_check/triagens/${id}`).remove();
       } catch (e) {
         console.warn('Erro ao remover triagem no Firebase:', e);
+      }
+    }
+  }
+
+  // --- MÉTODOS DE ESTUDOS BÍBLICOS E DISCIPULADO ---
+  getEstudos() {
+    try {
+      const raw = localStorage.getItem(DB_KEYS.ESTUDOS);
+      const list = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(list)) return [];
+      // Ordenação cronológica: mais recentes primeiro (data decrescente, e timestamp decrescente)
+      return list.sort((a, b) => {
+        const dateA = a.date || '';
+        const dateB = b.date || '';
+        if (dateB !== dateA) {
+          return dateB.localeCompare(dateA);
+        }
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  getEstudoById(id) {
+    const list = this.getEstudos();
+    return list.find(e => e.id === id) || null;
+  }
+
+  async saveEstudo(estudoData) {
+    const estudos = this.getEstudos();
+    const finalId = estudoData.id || `est_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const sanitized = this.sanitize({
+      ...estudoData,
+      id: finalId,
+      createdAt: estudoData.createdAt || Date.now(),
+      updatedAt: Date.now()
+    });
+
+    const index = estudos.findIndex(e => e.id === sanitized.id);
+    if (index >= 0) {
+      estudos[index] = sanitized;
+    } else {
+      estudos.unshift(sanitized);
+    }
+
+    localStorage.setItem(DB_KEYS.ESTUDOS, JSON.stringify(estudos));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/estudos/${sanitized.id}`).set(sanitized);
+      } catch (e) {
+        console.warn('Firebase pendente (estudo salvo localmente):', e);
+      }
+    }
+
+    return sanitized;
+  }
+
+  async deleteEstudo(id) {
+    let estudos = this.getEstudos();
+    estudos = estudos.filter(e => e.id !== id);
+    localStorage.setItem(DB_KEYS.ESTUDOS, JSON.stringify(estudos));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/estudos/${id}`).remove();
+      } catch (e) {
+        console.warn('Erro ao remover estudo no Firebase:', e);
       }
     }
   }
