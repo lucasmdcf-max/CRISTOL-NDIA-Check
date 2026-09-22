@@ -406,11 +406,12 @@ class CristolandiaDB {
     try {
       const raw = localStorage.getItem(DB_KEYS.REPORTS);
       const list = raw ? JSON.parse(raw) : [];
-      const defaults = { missao: 45, macedonia: 60, feminina: 30 };
       return list.map(r => {
         if (!r) return r;
-        if (!r.acolhidosPresentes || r.acolhidosPresentes <= 0) {
-          r.acolhidosPresentes = defaults[r.unitId] || 30;
+        // Assegura tipo numérico válido respeitando o valor exato (inclusive 0)
+        if (typeof r.acolhidosPresentes !== 'number') {
+          const parsed = parseInt(r.acolhidosPresentes, 10);
+          r.acolhidosPresentes = !isNaN(parsed) ? parsed : 0;
         }
         return r;
       });
@@ -421,10 +422,19 @@ class CristolandiaDB {
 
   async saveReport(reportData) {
     const reports = this.getReports();
-    const existingIndex = reports.findIndex(r => r.id === reportData.id);
+    // Identifica por ID explícito ou por combinação única de unidade + data
+    const existingIndex = reports.findIndex(r => 
+      (reportData.id && r.id === reportData.id) ||
+      (r.unitId === reportData.unitId && r.date === reportData.date)
+    );
     
+    const finalId = (existingIndex >= 0 && reports[existingIndex].id) 
+      ? reports[existingIndex].id 
+      : (reportData.id || `rep_${reportData.unitId}_${reportData.date}_${Date.now()}`);
+
     const sanitized = this.sanitize({
       ...reportData,
+      id: finalId,
       updatedAt: Date.now()
     });
 

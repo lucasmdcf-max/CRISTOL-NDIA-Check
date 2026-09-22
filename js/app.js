@@ -134,19 +134,19 @@ function updateHeroMetrics() {
 
   let acolhidos = 0;
   unitIds.forEach(uId => {
-    // 1º: Relatório de hoje salvo
+    // 1º: Se já existe relatório salvo hoje para a unidade, usa o valor exato registrado pelo usuário (inclusive 0)
     const repToday = reports.find(r => r.unitId === uId && r.date === todayStr);
-    if (repToday && repToday.acolhidosPresentes > 0) {
+    if (repToday && typeof repToday.acolhidosPresentes === 'number') {
       acolhidos += repToday.acolhidosPresentes;
       return;
     }
-    // 2º: Relatório mais recente da unidade com acolhidos cadastrados
+    // 2º: Se ainda não há relatório salvo hoje, busca o relatório mais recente cadastrado para a unidade
     const unitReports = reports
       .filter(r => r.unitId === uId)
       .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.updatedAt || 0) - (a.updatedAt || 0));
     
-    const latestRep = unitReports.find(r => (r.acolhidosPresentes || 0) > 0);
-    if (latestRep && latestRep.acolhidosPresentes > 0) {
+    const latestRep = unitReports[0];
+    if (latestRep && typeof latestRep.acolhidosPresentes === 'number') {
       acolhidos += latestRep.acolhidosPresentes;
     } else {
       acolhidos += unitDefaults[uId] || 0;

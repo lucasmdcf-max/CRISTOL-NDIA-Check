@@ -50,7 +50,7 @@ function calculateHeroMetrics(reports, todayStr) {
   let acolhidos = 0;
   unitIds.forEach(uId => {
     const repToday = reports.find(r => r.unitId === uId && r.date === todayStr);
-    if (repToday && repToday.acolhidosPresentes > 0) {
+    if (repToday && typeof repToday.acolhidosPresentes === 'number') {
       acolhidos += repToday.acolhidosPresentes;
       return;
     }
@@ -58,8 +58,8 @@ function calculateHeroMetrics(reports, todayStr) {
       .filter(r => r.unitId === uId)
       .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.updatedAt || 0) - (a.updatedAt || 0));
     
-    const latestRep = unitReports.find(r => (r.acolhidosPresentes || 0) > 0);
-    if (latestRep && latestRep.acolhidosPresentes > 0) {
+    const latestRep = unitReports[0];
+    if (latestRep && typeof latestRep.acolhidosPresentes === 'number') {
       acolhidos += latestRep.acolhidosPresentes;
     } else {
       acolhidos += unitDefaults[uId] || 0;
@@ -112,5 +112,15 @@ const res2 = calculateHeroMetrics(mockReportsToday, '2026-09-22');
 assert.strictEqual(res2.acolhidos, 136, 'Acolhidos deve atualizar para 46 + 60 + 30 = 136');
 assert.strictEqual(res2.refeicoes, 186, 'Refeições de hoje deve ser apenas as lançadas hoje na Missão (186)');
 assert.strictEqual(res2.triagens, 1, 'Triagens de hoje deve ser 1');
+
+// Caso 3: Missão alterada para 0 acolhidos presentes pelo usuário
+const mockReportsZero = [
+  ...mockReportsPast,
+  { id: '5', unitId: 'missao', date: '2026-09-22', acolhidosPresentes: 0, novasTriagens: 0, refeicoes: { cafe: 0, almoco: 0, lanche: 0, jantar: 0 } }
+];
+const res3 = calculateHeroMetrics(mockReportsZero, '2026-09-22');
+assert.strictEqual(res3.acolhidos, 90, 'Acolhidos deve ser 0 + 60 + 30 = 90 quando Missão for zerada');
+assert.strictEqual(res3.refeicoes, 0, 'Refeições de hoje deve ser 0');
+assert.strictEqual(res3.triagens, 0, 'Triagens de hoje deve ser 0');
 
 console.log('✅ Todos os testes de lógica de sanitização e dados passaram com 100% de sucesso!');

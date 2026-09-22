@@ -48,7 +48,9 @@ function openUnitReportModal(unitId) {
   const lastReport = unitReports[0];
 
   const defaultAcolhidos = (unitId === 'missao' ? 45 : unitId === 'macedonia' ? 60 : 30);
-  const acolhidos = existing ? existing.acolhidosPresentes : (lastReport && lastReport.acolhidosPresentes > 0 ? lastReport.acolhidosPresentes : defaultAcolhidos);
+  const acolhidos = existing 
+    ? (typeof existing.acolhidosPresentes === 'number' ? existing.acolhidosPresentes : (parseInt(existing.acolhidosPresentes, 10) || 0))
+    : (lastReport && typeof lastReport.acolhidosPresentes === 'number' ? lastReport.acolhidosPresentes : defaultAcolhidos);
   const triagens = existing ? existing.novasTriagens : 0;
   const desligamentos = existing ? existing.desligamentos : 0;
   const cafe = existing ? (existing.refeicoes?.cafe ?? acolhidos) : acolhidos;
