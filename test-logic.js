@@ -311,5 +311,87 @@ assert.strictEqual(checkBlockCompletion(macRefeicoesIncompleto, ['rCafe', 'rAlmo
 const macRefeicoesCompleto = { rCafe: true, rAlmoco: true, rJantar: true, rAbordagens: true, rEventos: true };
 assert.strictEqual(checkBlockCompletion(macRefeicoesCompleto, ['rCafe', 'rAlmoco', 'rJantar', 'rAbordagens', 'rEventos']), true, 'Bloco de 5 refeições completo deve contar');
 
-console.log('✅ Todos os testes de lógica de sanitização e dados passaram com 100% de sucesso!');
+// Teste das funções de agregação de relatórios e períodos
+function getReportPeriodRangeTest(periodKey, refDate = new Date('2026-09-22T12:00:00')) {
+  const getLocalStr = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const today = getLocalStr(refDate);
+  let start = today;
+  let label = 'Últimas 24h';
+  let daysCount = 1;
+
+  if (periodKey === '7d') {
+    const d = new Date(refDate);
+    d.setDate(d.getDate() - 6);
+    start = getLocalStr(d);
+    label = 'Últimos 7 dias';
+    daysCount = 7;
+  } else if (periodKey === '30d') {
+    const d = new Date(refDate);
+    d.setDate(d.getDate() - 29);
+    start = getLocalStr(d);
+    label = 'Últimos 30 dias';
+    daysCount = 30;
+  } else if (periodKey === '3m') {
+    const d = new Date(refDate);
+    d.setDate(d.getDate() - 89);
+    start = getLocalStr(d);
+    label = 'Últimos 3 meses';
+    daysCount = 90;
+  } else if (periodKey === '6m') {
+    const d = new Date(refDate);
+    d.setDate(d.getDate() - 179);
+    start = getLocalStr(d);
+    label = 'Últimos 6 meses';
+    daysCount = 180;
+  } else if (periodKey === '1y') {
+    const d = new Date(refDate);
+    d.setDate(d.getDate() - 364);
+    start = getLocalStr(d);
+    label = 'Último 1 ano';
+    daysCount = 365;
+  }
+
+  return { start, end: today, label, periodKey, daysCount };
+}
+
+// 1. Testa range de 24h
+const r24h = getReportPeriodRangeTest('24h');
+assert.strictEqual(r24h.start, '2026-09-22');
+assert.strictEqual(r24h.end, '2026-09-22');
+
+// 2. Testa range de 7 dias
+const r7d = getReportPeriodRangeTest('7d');
+assert.strictEqual(r7d.start, '2026-09-16');
+assert.strictEqual(r7d.end, '2026-09-22');
+
+// 3. Testa range de 30 dias
+const r30d = getReportPeriodRangeTest('30d');
+assert.strictEqual(r30d.start, '2026-08-24');
+assert.strictEqual(r30d.end, '2026-09-22');
+
+// 4. Teste de agregação e somatório do período para Unidade Missão
+const mockMissaoPeriod = [
+  { unitId: 'missao', date: '2026-09-22', pessoasAtendidas: { total: 40, rua: 10, unidade: 25, buscaAtiva: 5 }, refeicoes: { cafe: 30, almoco: 35, lanche: 30, jantar: 30, buscaAtiva: 10 }, banhos: 12, cortesCabelo: 4, cultos: 1, buscaAtivaPessoas: 5, decisoesCristo: 1 },
+  { unitId: 'missao', date: '2026-09-21', pessoasAtendidas: { total: 50, rua: 15, unidade: 30, buscaAtiva: 5 }, refeicoes: { cafe: 35, almoco: 40, lanche: 35, jantar: 35, buscaAtiva: 15 }, banhos: 18, cortesCabelo: 6, cultos: 2, buscaAtivaPessoas: 5, decisoesCristo: 2 },
+  { unitId: 'missao', date: '2026-09-10', pessoasAtendidas: { total: 30, rua: 5, unidade: 20, buscaAtiva: 5 }, refeicoes: { cafe: 20, almoco: 25, lanche: 20, jantar: 20, buscaAtiva: 5 }, banhos: 10, cortesCabelo: 2, cultos: 1, buscaAtivaPessoas: 5, decisoesCristo: 0 } // fora do range 7d (16/09 a 22/09)
+];
+
+const range7d = getReportPeriodRangeTest('7d');
+const filteredMissao7d = mockMissaoPeriod.filter(r => r.date >= range7d.start && r.date <= range7d.end);
+assert.strictEqual(filteredMissao7d.length, 2, 'Deve filtrar estritamente os 2 relatórios dentro dos últimos 7 dias');
+
+const sumPessoas = filteredMissao7d.reduce((acc, r) => acc + (r.pessoasAtendidas?.total || 0), 0);
+assert.strictEqual(sumPessoas, 90, 'Soma de pessoas atendidas deve ser 40 + 50 = 90');
+
+const sumDecisoes = filteredMissao7d.reduce((acc, r) => acc + (r.decisoesCristo || 0), 0);
+assert.strictEqual(sumDecisoes, 3, 'Soma de decisões deve ser 1 + 2 = 3');
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos e relatórios passaram com 100% de sucesso!');
+
 

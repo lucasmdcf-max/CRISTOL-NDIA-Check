@@ -3039,7 +3039,63 @@ function openStockItemOscillationModal(itemId, unitId) {
   modalFooter.innerHTML = '';
 }
 
-// --- MÓDULO 5: RELATÓRIOS CONSOLIDADOS CLEAN ---
+// --- MÓDULO 5: RELATÓRIOS CONSOLIDADOS & FILTROS POR PERÍODO ---
+let _selectedReportPeriod = '24h';
+
+function getReportPeriodRange(periodKey) {
+  const today = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
+  const now = new Date();
+  let start = today;
+  let label = 'Últimas 24h';
+  let daysCount = 1;
+
+  if (periodKey === '7d') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 6);
+    start = (typeof getLocalDateStr === 'function') ? getLocalDateStr(d) : d.toISOString().split('T')[0];
+    label = 'Últimos 7 dias';
+    daysCount = 7;
+  } else if (periodKey === '30d') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 29);
+    start = (typeof getLocalDateStr === 'function') ? getLocalDateStr(d) : d.toISOString().split('T')[0];
+    label = 'Últimos 30 dias';
+    daysCount = 30;
+  } else if (periodKey === '3m') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 89);
+    start = (typeof getLocalDateStr === 'function') ? getLocalDateStr(d) : d.toISOString().split('T')[0];
+    label = 'Últimos 3 meses';
+    daysCount = 90;
+  } else if (periodKey === '6m') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 179);
+    start = (typeof getLocalDateStr === 'function') ? getLocalDateStr(d) : d.toISOString().split('T')[0];
+    label = 'Últimos 6 meses';
+    daysCount = 180;
+  } else if (periodKey === '1y') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 364);
+    start = (typeof getLocalDateStr === 'function') ? getLocalDateStr(d) : d.toISOString().split('T')[0];
+    label = 'Último 1 ano';
+    daysCount = 365;
+  }
+
+  return { start, end: today, label, periodKey, daysCount };
+}
+
+function selectReportPeriod(periodKey) {
+  _selectedReportPeriod = periodKey;
+  document.querySelectorAll('.btn-period-pill').forEach(btn => {
+    if (btn.getAttribute('data-period') === periodKey) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  renderReportsHistory();
+}
+
 function openReportsModal() {
   window._currentScreen = { type: 'reports-history' };
   const modalBody = document.getElementById('modal-generic-body');
@@ -3051,147 +3107,1088 @@ function openReportsModal() {
     <div class="modal-header-title">
       <div class="modal-unit-icon">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 3H15M9 3C9 2 10 1 12 1C14 1 15 2 15 3M9 3H6C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V5C20 3.89543 19.1046 3 18 3H15"/>
-          <path d="M8 12L11 15L16 9"/>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
         </svg>
       </div>
       <div>
-        <h2>Relatórios Consolidados</h2>
-        <p style="font-size:0.75rem;">Visão geral de atendimento das unidades</p>
+        <h2>Relatórios de Atendimento</h2>
+        <p style="font-size:0.75rem;">Filtros por unidade, período e exportação direta</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
   `;
 
   modalBody.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
-      <select id="report-filter-unit" class="form-select" style="flex:1;" onchange="renderReportsHistory()">
-        <option value="todas">Todas as Unidades</option>
-        <option value="missao">Unidade Missão</option>
-        <option value="macedonia">Unidade Macedônia</option>
-        <option value="feminina">Unidade Feminina</option>
-      </select>
+    <!-- Barra Superior: Filtro de Unidade & Botão WhatsApp -->
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:8px; margin-bottom:10px;">
+      <div style="flex:1;">
+        <label style="font-size:0.72rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.4px;">
+          Unidade de Atendimento:
+        </label>
+        <select id="report-filter-unit" class="form-select" onchange="renderReportsHistory()">
+          <option value="todas">Todas as Unidades (Consolidado)</option>
+          <option value="missao">Unidade Missão</option>
+          <option value="macedonia">Unidade Macedônia</option>
+          <option value="feminina">Unidade Feminina</option>
+        </select>
+      </div>
 
-      <button class="btn-primary-action" style="padding:10px 14px; font-size:0.76rem; flex:none;" onclick="shareReportsWhatsApp()">
+      <button class="btn-primary-action btn-whatsapp-action" style="padding:10px 14px; font-size:0.78rem; flex:none; height:40px;" onclick="shareReportsWhatsApp()" title="Enviar relatório filtrado para WhatsApp">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+        </svg>
         WhatsApp
       </button>
     </div>
 
-    <!-- KPIs de Resumo -->
-    <div id="reports-kpi-summary" class="hero-metrics-row" style="background:var(--bg-surface); border:1px solid var(--border-beige); color:var(--text-main); margin-bottom:12px;">
-      <!-- KPIs calculados -->
+    <!-- Seletor de Período Dinâmico (24h, 7 dias, 30 dias, 3 meses, 6 meses, 1 ano) -->
+    <div class="report-period-container">
+      <span class="report-period-label">Período de Análise:</span>
+      <div class="report-period-pills">
+        <button type="button" class="btn-period-pill ${_selectedReportPeriod === '24h' ? 'active' : ''}" data-period="24h" onclick="selectReportPeriod('24h')">Últimas 24h</button>
+        <button type="button" class="btn-period-pill ${_selectedReportPeriod === '7d' ? 'active' : ''}" data-period="7d" onclick="selectReportPeriod('7d')">7 dias</button>
+        <button type="button" class="btn-period-pill ${_selectedReportPeriod === '30d' ? 'active' : ''}" data-period="30d" onclick="selectReportPeriod('30d')">30 dias</button>
+        <button type="button" class="btn-period-pill ${_selectedReportPeriod === '3m' ? 'active' : ''}" data-period="3m" onclick="selectReportPeriod('3m')">3 meses</button>
+        <button type="button" class="btn-period-pill ${_selectedReportPeriod === '6m' ? 'active' : ''}" data-period="6m" onclick="selectReportPeriod('6m')">6 meses</button>
+        <button type="button" class="btn-period-pill ${_selectedReportPeriod === '1y' ? 'active' : ''}" data-period="1y" onclick="selectReportPeriod('1y')">1 ano</button>
+      </div>
     </div>
 
-    <!-- Histórico de Relatórios -->
+    <!-- Banner com Período Ativo & Quantidade de Registros -->
+    <div id="report-active-banner-area"></div>
+
+    <!-- Conteúdo do Relatório Filtrado -->
     <div id="reports-history-list" style="display:flex; flex-direction:column; gap:10px;">
-      <!-- Lista -->
+      <!-- Preenchido via renderReportsHistory() -->
     </div>
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+    <button type="button" id="btn-download-report-pdf" class="btn-primary-action" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="downloadReportsPDF()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Baixar em PDF
+    </button>
   `;
 
   renderReportsHistory();
   openModal('modal-generic');
 }
 
+function getFilteredReportsData(unitFilter, periodKey) {
+  const range = getReportPeriodRange(periodKey);
+  const allReports = dbManager.getReports() || [];
+
+  // Filtra por data dentro do intervalo
+  let matchedReports = allReports.filter(r => {
+    if (!r.date) return false;
+    return r.date >= range.start && r.date <= range.end;
+  });
+
+  // Filtra por unidade se selecionada
+  if (unitFilter !== 'todas') {
+    matchedReports = matchedReports.filter(r => r.unitId === unitFilter);
+  }
+
+  // Ordena decrescente por data
+  matchedReports.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  return { range, matchedReports, unitFilter, periodKey };
+}
+
 function renderReportsHistory() {
   const container = document.getElementById('reports-history-list');
-  const kpiContainer = document.getElementById('reports-kpi-summary');
+  const bannerArea = document.getElementById('report-active-banner-area');
   if (!container) return;
 
   const unitFilter = document.getElementById('report-filter-unit')?.value || 'todas';
-  let reports = dbManager.getReports();
+  const { range, matchedReports } = getFilteredReportsData(unitFilter, _selectedReportPeriod);
 
-  if (unitFilter !== 'todas') {
-    reports = reports.filter(r => r.unitId === unitFilter);
-  }
+  // Nome formatado da unidade
+  const unitLabel = unitFilter === 'missao' ? 'Unidade Missão' :
+                    unitFilter === 'macedonia' ? 'Unidade Macedônia' :
+                    unitFilter === 'feminina' ? 'Unidade Feminina' : 'Todas as Unidades';
 
-  const totalAcolhidos = reports.reduce((acc, r) => acc + (r.acolhidosPresentes || 0), 0);
-  const totalRefeicoes = reports.reduce((acc, r) => {
-    const ref = r.refeicoes || {};
-    return acc + (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0);
-  }, 0);
-  const totalTriagens = reports.reduce((acc, r) => acc + (r.novasTriagens || 0), 0);
-
-  if (kpiContainer) {
-    kpiContainer.innerHTML = `
-      <div class="metric-item">
-        <span class="metric-label" style="color:var(--text-muted);">Acolhidos</span>
-        <span class="metric-value" style="color:var(--green-primary);">${totalAcolhidos}</span>
-        <span class="metric-sub" style="color:var(--text-muted);">no período</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label" style="color:var(--text-muted);">Refeições</span>
-        <span class="metric-value" style="color:var(--gold-primary);">${totalRefeicoes}</span>
-        <span class="metric-sub" style="color:var(--text-muted);">servidas</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label" style="color:var(--text-muted);">Triagens</span>
-        <span class="metric-value" style="color:var(--green-primary);">${totalTriagens}</span>
-        <span class="metric-sub" style="color:var(--text-muted);">novas</span>
+  // Atualiza Banner Superior
+  if (bannerArea) {
+    bannerArea.innerHTML = `
+      <div class="report-active-banner">
+        <div class="report-active-banner-info">
+          <span class="report-active-period-title">${unitLabel} • ${range.label}</span>
+          <span class="report-active-period-dates">Intervalo: ${formatDateBR(range.start)} até ${formatDateBR(range.end)}</span>
+        </div>
+        <span class="report-active-count-tag">${matchedReports.length} relatório(s) computado(s)</span>
       </div>
     `;
   }
 
-  if (reports.length === 0) {
+  // Estado vazio
+  if (matchedReports.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding:30px; color:var(--text-muted);">
-        <p>Nenhum relatório cadastrado para este filtro.</p>
+      <div style="text-align:center; padding:35px 20px; background:var(--bg-surface); border:1px dashed var(--border-beige); border-radius:12px; color:var(--text-muted);">
+        <p style="font-size:0.95rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">Nenhum relatório encontrado</p>
+        <p style="font-size:0.78rem;">Não constam relatórios salvos para <strong>${unitLabel}</strong> no período de <strong>${range.label}</strong> (${formatDateBR(range.start)} a ${formatDateBR(range.end)}).</p>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = reports.map(r => {
-    const badgeClass = r.unitId === 'missao' ? 'badge-missao' : (r.unitId === 'macedonia' ? 'badge-macedonia' : 'badge-feminina');
-    const totalRef = (r.refeicoes?.cafe || 0) + (r.refeicoes?.almoco || 0) + (r.refeicoes?.lanche || 0) + (r.refeicoes?.jantar || 0);
-    return `
-      <div class="history-item">
-        <div class="history-item-header">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="history-badge ${badgeClass}">${r.unitName}</span>
-            <span style="font-size:0.8rem; font-weight:700; color:var(--green-primary);">${formatDateBR(r.date)}</span>
+  // ==========================================
+  // AGREGADOR DINÂMICO CONFORME A UNIDADE
+  // ==========================================
+  let html = '';
+
+  if (unitFilter === 'missao') {
+    // Totais específicos da Missão
+    let pTotal = 0, pRua = 0, pUnidade = 0, pBusca = 0;
+    let rTotal = 0, rCafe = 0, rAlmoco = 0, rLanche = 0, rJantar = 0, rBusca = 0;
+    let banhos = 0, cortes = 0, cultos = 0, buscaPessoas = 0, decisoes = 0;
+
+    matchedReports.forEach(r => {
+      // Pessoas atendidas
+      const p = r.pessoasAtendidas || {};
+      pTotal += (p.total || (r.acolhidosPresentes || 0));
+      pRua += (p.rua || 0);
+      pUnidade += (p.unidade || (r.acolhidosPresentes || 0));
+      pBusca += (p.buscaAtiva || (r.novasTriagens || 0));
+
+      // Refeições
+      const ref = r.refeicoes || {};
+      rCafe += (ref.cafe || 0);
+      rAlmoco += (ref.almoco || 0);
+      rLanche += (ref.lanche || 0);
+      rJantar += (ref.jantar || 0);
+      rBusca += (ref.buscaAtiva || 0);
+      rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0));
+
+      // Outras perguntas oficiais
+      banhos += (r.banhos || 0);
+      cortes += (r.cortesCabelo || 0);
+      cultos += (r.cultos || 0);
+      buscaPessoas += (r.buscaAtivaPessoas || 0);
+      decisoes += (r.decisoesCristo || 0);
+    });
+
+    html += `
+      <!-- Card: Pessoas Atendidas -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">👥 Pessoas Atendidas</span>
+          <span class="report-section-badge">${pTotal} total</span>
+        </div>
+        <div class="report-subitems-grid">
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${pRua}</div>
+            <div class="report-subitem-text">Na Rua</div>
           </div>
-          <span style="font-size:0.72rem; color:var(--text-muted);">${r.reporterName}</span>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${pUnidade}</div>
+            <div class="report-subitem-text">Na Unidade</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${pBusca}</div>
+            <div class="report-subitem-text">Busca Ativa</div>
+          </div>
         </div>
+      </div>
 
-        <div class="history-stats">
-          <div><strong>Acolhidos:</strong> ${r.acolhidosPresentes}</div>
-          <div><strong>Triagens:</strong> ${r.novasTriagens}</div>
-          <div><strong>Refeições:</strong> ${totalRef}</div>
+      <!-- Card: Refeições Servidas -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">🍽️ Refeições Servidas</span>
+          <span class="report-section-badge">${rTotal} refeições</span>
         </div>
+        <div class="report-subitems-grid">
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rCafe}</div>
+            <div class="report-subitem-text">Café</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rAlmoco}</div>
+            <div class="report-subitem-text">Almoço</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rLanche}</div>
+            <div class="report-subitem-text">Lanche</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rJantar}</div>
+            <div class="report-subitem-text">Jantar</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rBusca}</div>
+            <div class="report-subitem-text">Busca Ativa</div>
+          </div>
+        </div>
+      </div>
 
-        ${r.atividades ? `<p style="font-size:0.76rem; color:var(--text-main); line-height:1.3;"><strong>Atividades:</strong> ${r.atividades}</p>` : ''}
-        ${r.necessidades ? `<p style="font-size:0.76rem; color:var(--gold-primary); line-height:1.3;"><strong>Necessidades:</strong> ${r.necessidades}</p>` : ''}
+      <!-- Card: Cuidados & Atividades -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">✨ Cuidados & Espiritualidade</span>
+        </div>
+        <div class="report-grid-kpis">
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${banhos}</span>
+            <span class="report-kpi-lbl">Banhos Tomados</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${cortes}</span>
+            <span class="report-kpi-lbl">Cortes de Cabelo</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${cultos}</span>
+            <span class="report-kpi-lbl">Cultos Realizados</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${buscaPessoas}</span>
+            <span class="report-kpi-lbl">Pessoas na Busca Ativa</span>
+          </div>
+          <div class="report-kpi-box gold-accent">
+            <span class="report-kpi-val" style="color:var(--gold-primary);">${decisoes}</span>
+            <span class="report-kpi-lbl">Decisões por Cristo</span>
+          </div>
+        </div>
       </div>
     `;
-  }).join('');
-}
 
-function shareReportsWhatsApp() {
-  const reports = dbManager.getReports();
-  const todayStr = (typeof getLocalDateStr === 'function') ? getLocalDateStr() : new Date().toISOString().split('T')[0];
-  const todayReports = reports.filter(r => r.date === todayStr);
+  } else if (unitFilter === 'macedonia' || unitFilter === 'feminina') {
+    // Totais específicos de Macedônia e Feminina (12 perguntas oficiais)
+    let rTotal = 0, rCafe = 0, rAlmoco = 0, rJantar = 0, rAbordagens = 0, rEventos = 0;
+    let sociais = 0, saude = 0, psico = 0, juridico = 0;
+    let estudos = 0, cultos = 0, musica = 0, coro = 0;
+    let esportes = 0, acolhidosEsportes = 0, decisoes = 0;
 
-  let text = `*CRISTOLÂNDIA CHECK • RESUMO DIÁRIO (${formatDateBR(todayStr)})*\n\n`;
+    matchedReports.forEach(r => {
+      const ref = r.refeicoes || {};
+      rCafe += (ref.cafe || 0);
+      rAlmoco += (ref.almoco || 0);
+      rJantar += (ref.jantar || 0);
+      rAbordagens += (ref.abordagens || 0);
+      rEventos += (ref.eventosEspeciais || 0);
+      rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0));
 
-  if (todayReports.length === 0) {
-    text += `Nenhum relatório preenchido hoje ainda.\n`;
-  } else {
-    todayReports.forEach(r => {
-      const totalRef = (r.refeicoes?.cafe || 0) + (r.refeicoes?.almoco || 0) + (r.refeicoes?.lanche || 0) + (r.refeicoes?.jantar || 0);
-      text += `*UNIDADE ${r.unitName.toUpperCase()}*\n`;
-      text += `• Acolhidos: ${r.acolhidosPresentes} | Triagens: ${r.novasTriagens}\n`;
-      text += `• Refeições: ${totalRef}\n`;
-      if (r.atividades) text += `• Atividades: ${r.atividades}\n`;
-      if (r.necessidades) text += `• Necessidades: ${r.necessidades}\n`;
-      text += `• Plantonista: ${r.reporterName}\n\n`;
+      sociais += (r.encaminhamentosSociais || 0);
+      saude += (r.encaminhamentosSaude || 0);
+      psico += (r.atendimentosPsicologicos || 0);
+      juridico += (r.demandasJuridicas || 0);
+
+      estudos += (r.estudosBiblicos || 0);
+      cultos += (r.cultosVigilias || r.cultos || 0);
+      musica += (r.sonsDaMissao || 0);
+      coro += (r.ensaiosCoro || 0);
+
+      esportes += (r.atividadesFisicas || 0);
+      acolhidosEsportes += (r.participantesAtividadesFisicas || 0);
+      decisoes += (r.decisoesCristo || 0);
     });
+
+    html += `
+      <!-- Card: Refeições Servidas -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">🍽️ Refeições Servidas</span>
+          <span class="report-section-badge">${rTotal} refeições</span>
+        </div>
+        <div class="report-subitems-grid">
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rCafe}</div>
+            <div class="report-subitem-text">Café</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rAlmoco}</div>
+            <div class="report-subitem-text">Almoço</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rJantar}</div>
+            <div class="report-subitem-text">Jantar</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rAbordagens}</div>
+            <div class="report-subitem-text">Abordagens</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${rEventos}</div>
+            <div class="report-subitem-text">Eventos</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Encaminhamentos & Apoio -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">🩺 Encaminhamentos & Assistência</span>
+          <span class="report-section-badge">${sociais + saude + psico + juridico} atend.</span>
+        </div>
+        <div class="report-grid-kpis">
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${sociais}</span>
+            <span class="report-kpi-lbl">Encaminhamentos Sociais</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${saude}</span>
+            <span class="report-kpi-lbl">Encaminhamentos de Saúde</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${psico}</span>
+            <span class="report-kpi-lbl">Atendimentos Psicológicos</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${juridico}</span>
+            <span class="report-kpi-lbl">Demandas Jurídicas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Espiritualidade, Música & Esporte -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">📖 Espiritualidade & Oficinas</span>
+        </div>
+        <div class="report-grid-kpis">
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${estudos}</span>
+            <span class="report-kpi-lbl">Estudos Bíblicos</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${cultos}</span>
+            <span class="report-kpi-lbl">Cultos e Vigílias</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${musica}</span>
+            <span class="report-kpi-lbl">Sons da Missão (Música)</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${coro}</span>
+            <span class="report-kpi-lbl">Ensaios do Coro</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${esportes}</span>
+            <span class="report-kpi-lbl">Atividades Físicas</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${acolhidosEsportes}</span>
+            <span class="report-kpi-lbl">Acolhidos no Esporte</span>
+          </div>
+          <div class="report-kpi-box gold-accent" style="grid-column: 1 / -1;">
+            <span class="report-kpi-val" style="color:var(--gold-primary);">${decisoes}</span>
+            <span class="report-kpi-lbl">Decisões e Reconciliações por Cristo</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+  } else {
+    // TODAS AS UNIDADES (Consolidado Geral)
+    let totalRefeicoes = 0;
+    let totalPessoasAssistidas = 0;
+    let totalTriagens = 0;
+    let totalCultosEstudos = 0;
+    let totalDecisoes = 0;
+
+    // Totais específicos para breakdown
+    const unitBreakdown = {
+      missao: { count: 0, ref: 0, assist: 0, decisoes: 0 },
+      macedonia: { count: 0, ref: 0, assist: 0, decisoes: 0 },
+      feminina: { count: 0, ref: 0, assist: 0, decisoes: 0 }
+    };
+
+    matchedReports.forEach(r => {
+      const u = r.unitId || 'missao';
+      const ref = r.refeicoes || {};
+      const refSum = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+      totalRefeicoes += refSum;
+
+      // Pessoas assistidas CUIDAR
+      const banhos = r.banhos || 0;
+      const cortes = r.cortesCabelo || 0;
+      const busca = r.buscaAtivaPessoas || (r.pessoasAtendidas && r.pessoasAtendidas.buscaAtiva) || 0;
+      const soc = r.encaminhamentosSociais || 0;
+      const sau = r.encaminhamentosSaude || 0;
+      const psi = r.atendimentosPsicologicos || 0;
+      const jur = r.demandasJuridicas || 0;
+      const mus = r.sonsDaMissao || 0;
+      const assistSum = (banhos + cortes + busca + soc + sau + psi + jur + mus);
+      totalPessoasAssistidas += assistSum;
+
+      totalTriagens += (r.novasTriagens || 0);
+      totalCultosEstudos += (r.cultos || 0) + (r.cultosVigilias || 0) + (r.estudosBiblicos || 0);
+      totalDecisoes += (r.decisoesCristo || 0);
+
+      if (unitBreakdown[u]) {
+        unitBreakdown[u].count++;
+        unitBreakdown[u].ref += refSum;
+        unitBreakdown[u].assist += assistSum;
+        unitBreakdown[u].decisoes += (r.decisoesCristo || 0);
+      }
+    });
+
+    html += `
+      <!-- Card: Consolidação Geral -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">🌐 Indicadores Gerais Consolidados</span>
+          <span class="report-section-badge">3 Unidades</span>
+        </div>
+        <div class="report-grid-kpis">
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${totalRefeicoes}</span>
+            <span class="report-kpi-lbl">Total Refeições Servidas</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${totalPessoasAssistidas}</span>
+            <span class="report-kpi-lbl">Pessoas Assistidas (CUIDAR)</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${totalTriagens}</span>
+            <span class="report-kpi-lbl">Triagens Realizadas</span>
+          </div>
+          <div class="report-kpi-box">
+            <span class="report-kpi-val">${totalCultosEstudos}</span>
+            <span class="report-kpi-lbl">Cultos & Estudos Bíblicos</span>
+          </div>
+          <div class="report-kpi-box gold-accent" style="grid-column: 1 / -1;">
+            <span class="report-kpi-val" style="color:var(--gold-primary);">${totalDecisoes}</span>
+            <span class="report-kpi-lbl">Decisões por Cristo (Todas as Unidades)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Resumo por Unidade -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">🏢 Comparativo por Unidade</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="background:var(--bg-main); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="color:var(--green-primary); font-size:0.82rem;">Missão</strong>
+              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.missao.count} relatórios</div>
+            </div>
+            <div style="text-align:right; font-size:0.75rem;">
+              <div><strong>${unitBreakdown.missao.ref}</strong> ref. | <strong>${unitBreakdown.missao.assist}</strong> assist.</div>
+              <div style="color:var(--gold-primary); font-weight:700;">${unitBreakdown.missao.decisoes} decisões</div>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-main); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="color:var(--green-primary); font-size:0.82rem;">Macedônia</strong>
+              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.macedonia.count} relatórios</div>
+            </div>
+            <div style="text-align:right; font-size:0.75rem;">
+              <div><strong>${unitBreakdown.macedonia.ref}</strong> ref. | <strong>${unitBreakdown.macedonia.assist}</strong> assist.</div>
+              <div style="color:var(--gold-primary); font-weight:700;">${unitBreakdown.macedonia.decisoes} decisões</div>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-main); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="color:var(--green-primary); font-size:0.82rem;">Feminina</strong>
+              <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.feminina.count} relatórios</div>
+            </div>
+            <div style="text-align:right; font-size:0.75rem;">
+              <div><strong>${unitBreakdown.feminina.ref}</strong> ref. | <strong>${unitBreakdown.feminina.assist}</strong> assist.</div>
+              <div style="color:var(--gold-primary); font-weight:700;">${unitBreakdown.feminina.decisoes} decisões</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
-  text += `_Cristolândia Check PWA_`;
+  // Lista de Relatórios/Dias Computados no Período
+  html += `
+    <div class="report-section-card">
+      <div class="report-section-header">
+        <span class="report-section-title">📋 Relatórios Registrados no Período</span>
+        <span style="font-size:0.72rem; color:var(--text-muted);">${matchedReports.length} dia(s)</span>
+      </div>
+      <div class="report-days-accordion">
+        ${matchedReports.slice(0, 15).map(r => `
+          <div class="report-day-row">
+            <div>
+              <span style="font-weight:700; color:var(--green-primary);">${formatDateBR(r.date)}</span>
+              <span style="color:var(--text-muted); margin-left:6px;">• ${r.unitName || r.unitId}</span>
+            </div>
+            <span style="color:var(--text-muted); font-size:0.70rem;">${r.reporterName || 'Plantonista'}</span>
+          </div>
+        `).join('')}
+        ${matchedReports.length > 15 ? `<p style="font-size:0.70rem; text-align:center; color:var(--text-muted); margin-top:6px;">+ ${matchedReports.length - 15} relatórios computados neste período</p>` : ''}
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+// ==========================================================================
+// BAIXAR RELATÓRIO DIRETAMENTE EM PDF (A4 VERTICAL DIDÁTICO)
+// ==========================================================================
+async function downloadReportsPDF() {
+  const btn = document.getElementById('btn-download-report-pdf');
+  const unitFilter = document.getElementById('report-filter-unit')?.value || 'todas';
+  const { range, matchedReports } = getFilteredReportsData(unitFilter, _selectedReportPeriod);
+
+  if (matchedReports.length === 0) {
+    showToast('Não há relatórios para gerar o PDF neste período.', 'warning');
+    return;
+  }
+
+  const unitLabel = unitFilter === 'missao' ? 'Unidade Missão' :
+                    unitFilter === 'macedonia' ? 'Unidade Macedônia' :
+                    unitFilter === 'feminina' ? 'Unidade Feminina' : 'Todas as Unidades (Consolidado)';
+
+  if (btn) btn.disabled = true;
+  showLoading('Gerando PDF A4...');
+
+  try {
+    // Monta o elemento HTML formatado exatamente para documento A4 vertical
+    const printableArea = document.createElement('div');
+    printableArea.id = 'report-pdf-printable-doc';
+    printableArea.style.width = '740px';
+    printableArea.style.padding = '24px 28px';
+    printableArea.style.background = '#FFFFFF';
+    printableArea.style.color = '#2D3748';
+    printableArea.style.fontFamily = "'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    printableArea.style.boxSizing = 'border-box';
+
+    // Agregações de dados para o PDF
+    let metricsHtml = '';
+
+    if (unitFilter === 'missao') {
+      let pTotal = 0, pRua = 0, pUnidade = 0, pBusca = 0;
+      let rTotal = 0, rCafe = 0, rAlmoco = 0, rLanche = 0, rJantar = 0, rBusca = 0;
+      let banhos = 0, cortes = 0, cultos = 0, buscaPessoas = 0, decisoes = 0;
+
+      matchedReports.forEach(r => {
+        const p = r.pessoasAtendidas || {};
+        pTotal += (p.total || (r.acolhidosPresentes || 0));
+        pRua += (p.rua || 0);
+        pUnidade += (p.unidade || (r.acolhidosPresentes || 0));
+        pBusca += (p.buscaAtiva || (r.novasTriagens || 0));
+
+        const ref = r.refeicoes || {};
+        rCafe += (ref.cafe || 0);
+        rAlmoco += (ref.almoco || 0);
+        rLanche += (ref.lanche || 0);
+        rJantar += (ref.jantar || 0);
+        rBusca += (ref.buscaAtiva || 0);
+        rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0));
+
+        banhos += (r.banhos || 0);
+        cortes += (r.cortesCabelo || 0);
+        cultos += (r.cultos || 0);
+        buscaPessoas += (r.buscaAtivaPessoas || 0);
+        decisoes += (r.decisoesCristo || 0);
+      });
+
+      metricsHtml = `
+        <div style="margin-bottom:18px;">
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            1. Pessoas Atendidas na Unidade Missão (Total: ${pTotal})
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Local / Tipo de Atendimento</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Quantidade Somada no Período</th>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Atendimentos na Rua</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${pRua}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Atendimentos na Unidade</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${pUnidade}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Atendimentos em Busca Ativa</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${pBusca}</td>
+            </tr>
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            2. Refeições Servidas na Unidade Missão (Total: ${rTotal})
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Tipo de Refeição</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Quantidade Somada no Período</th>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Café da Manhã</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rCafe}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Almoço</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rAlmoco}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Lanche da Tarde</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rLanche}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Jantar</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rJantar}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Refeições em Busca Ativa</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rBusca}</td>
+            </tr>
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            3. Atividades & Cuidado Pessoal
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Indicador</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Total</th>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Banhos Tomados na Unidade</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${banhos}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Cortes de Cabelo Realizados</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${cortes}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Cultos Realizados na Unidade</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${cultos}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Pessoas Encontradas na Busca Ativa</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${buscaPessoas}</td>
+            </tr>
+            <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;">
+              <td style="padding:8px 10px; border:1px solid #E2D9C8;">Decisões por Cristo (Decisões & Reconciliações)</td>
+              <td style="padding:8px 10px; border:1px solid #E2D9C8; text-align:center; font-size:14px;">${decisoes}</td>
+            </tr>
+          </table>
+        </div>
+      `;
+
+    } else if (unitFilter === 'macedonia' || unitFilter === 'feminina') {
+      let rTotal = 0, rCafe = 0, rAlmoco = 0, rJantar = 0, rAbordagens = 0, rEventos = 0;
+      let sociais = 0, saude = 0, psico = 0, juridico = 0;
+      let estudos = 0, cultos = 0, musica = 0, coro = 0;
+      let esportes = 0, acolhidosEsportes = 0, decisoes = 0;
+
+      matchedReports.forEach(r => {
+        const ref = r.refeicoes || {};
+        rCafe += (ref.cafe || 0);
+        rAlmoco += (ref.almoco || 0);
+        rJantar += (ref.jantar || 0);
+        rAbordagens += (ref.abordagens || 0);
+        rEventos += (ref.eventosEspeciais || 0);
+        rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0));
+
+        sociais += (r.encaminhamentosSociais || 0);
+        saude += (r.encaminhamentosSaude || 0);
+        psico += (r.atendimentosPsicologicos || 0);
+        juridico += (r.demandasJuridicas || 0);
+
+        estudos += (r.estudosBiblicos || 0);
+        cultos += (r.cultosVigilias || r.cultos || 0);
+        musica += (r.sonsDaMissao || 0);
+        coro += (r.ensaiosCoro || 0);
+
+        esportes += (r.atividadesFisicas || 0);
+        acolhidosEsportes += (r.participantesAtividadesFisicas || 0);
+        decisoes += (r.decisoesCristo || 0);
+      });
+
+      metricsHtml = `
+        <div style="margin-bottom:18px;">
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            1. Refeições Servidas na ${unitLabel} (Total: ${rTotal})
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Tipo de Refeição</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Quantidade Somada</th>
+            </tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Café da Manhã</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rCafe}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Almoço</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rAlmoco}</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Jantar</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rJantar}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Abordagens de Rua</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rAbordagens}</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Eventos Especiais</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${rEventos}</td></tr>
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            2. Atendimentos & Encaminhamentos
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Atendimento</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Total</th>
+            </tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Encaminhamentos Sociais (CRAS, INSS, Documentos)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${sociais}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Encaminhamentos de Saúde (Médicos, Odonto, Vacinas)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${saude}</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Atendimentos Psicológicos</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${psico}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Demandas Jurídicas (Advogados, Fóruns, Varas)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${juridico}</td></tr>
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            3. Espiritualidade, Oficinas & Atividades Físicas
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Atividade</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Total</th>
+            </tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Estudos Bíblicos Realizados na Unidade</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${estudos}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Cultos e Vigílias Realizadas na Unidade</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${cultos}</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Participantes do Sons da Missão (Música)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${musica}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Ensaios do Coro Realizados</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${coro}</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Atividades Físicas / Esportes Realizadas</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${esportes}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Acolhidos que Participaram das Atividades Físicas</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${acolhidosEsportes}</td></tr>
+            <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;">
+              <td style="padding:8px 10px; border:1px solid #E2D9C8;">Decisões por Cristo (Decisões & Reconciliações)</td>
+              <td style="padding:8px 10px; border:1px solid #E2D9C8; text-align:center; font-size:14px;">${decisoes}</td>
+            </tr>
+          </table>
+        </div>
+      `;
+
+    } else {
+      // Consolidado Geral (Todas as Unidades)
+      let totalRefeicoes = 0, totalAssistidas = 0, totalTriagens = 0, totalCultos = 0, totalDecisoes = 0;
+      const breakdown = {
+        missao: { count: 0, ref: 0, assist: 0, decisoes: 0 },
+        macedonia: { count: 0, ref: 0, assist: 0, decisoes: 0 },
+        feminina: { count: 0, ref: 0, assist: 0, decisoes: 0 }
+      };
+
+      matchedReports.forEach(r => {
+        const u = r.unitId || 'missao';
+        const ref = r.refeicoes || {};
+        const refSum = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+        totalRefeicoes += refSum;
+
+        const assistSum = (r.banhos || 0) + (r.cortesCabelo || 0) + (r.buscaAtivaPessoas || 0) + (r.encaminhamentosSociais || 0) + (r.encaminhamentosSaude || 0) + (r.atendimentosPsicologicos || 0) + (r.demandasJuridicas || 0) + (r.sonsDaMissao || 0);
+        totalAssistidas += assistSum;
+
+        totalTriagens += (r.novasTriagens || 0);
+        totalCultos += (r.cultos || 0) + (r.cultosVigilias || 0) + (r.estudosBiblicos || 0);
+        totalDecisoes += (r.decisoesCristo || 0);
+
+        if (breakdown[u]) {
+          breakdown[u].count++;
+          breakdown[u].ref += refSum;
+          breakdown[u].assist += assistSum;
+          breakdown[u].decisoes += (r.decisoesCristo || 0);
+        }
+      });
+
+      metricsHtml = `
+        <div style="margin-bottom:18px;">
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            1. Indicadores Consolidados Gerais (3 Unidades)
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Métrica Geral</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Total Consolidado</th>
+            </tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Total de Refeições Servidas</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalRefeicoes}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Pessoas Assistidas (CUIDAR)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalAssistidas}</td></tr>
+            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Novas Triagens Realizadas</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalTriagens}</td></tr>
+            <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Cultos, Vigílias & Estudos Bíblicos</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${totalCultos}</td></tr>
+            <tr style="background:#FFF9E6; font-weight:bold; color:#A36F04;"><td style="padding:8px 10px; border:1px solid #E2D9C8;">Total de Decisões por Cristo</td><td style="padding:8px 10px; border:1px solid #E2D9C8; text-align:center; font-size:14px;">${totalDecisoes}</td></tr>
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            2. Resumo Comparativo por Unidade
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Unidade</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Relatórios</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Refeições</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Assistidos</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Decisões</th>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; font-weight:bold; color:#1E4D2B;">Missão</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.missao.count}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.missao.ref}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.missao.assist}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold; color:#A36F04;">${breakdown.missao.decisoes}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; font-weight:bold; color:#1E4D2B;">Macedônia</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.count}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.ref}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.assist}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold; color:#A36F04;">${breakdown.macedonia.decisoes}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; font-weight:bold; color:#1E4D2B;">Feminina</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.feminina.count}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.feminina.ref}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.feminina.assist}</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold; color:#A36F04;">${breakdown.feminina.decisoes}</td>
+            </tr>
+          </table>
+        </div>
+      `;
+    }
+
+    const emissionDate = new Date();
+    const emissionStr = `${emissionDate.toLocaleDateString('pt-BR')} às ${emissionDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+    printableArea.innerHTML = `
+      <!-- Cabeçalho Oficial Cristolândia A4 -->
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #1E4D2B; padding-bottom:12px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <img src="icons/app-logo.png" style="width:48px; height:48px; border-radius:10px; object-fit:cover; border:1px solid #C58908;" alt="Logo">
+          <div>
+            <h1 style="font-size:20px; font-weight:800; color:#1E4D2B; margin:0; line-height:1.1; letter-spacing:0.5px;">CRISTOLÂNDIA CHECK</h1>
+            <p style="font-size:11px; color:#C58908; margin:2px 0 0 0; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">Relatório Oficial de Atendimento & Gestão</p>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <span style="display:inline-block; background:#1E4D2B; color:#FFFFFF; font-size:10px; font-weight:bold; padding:4px 8px; border-radius:4px;">DOCUMENTO OFICIAL</span>
+          <div style="font-size:10px; color:#718096; margin-top:3px;">Emitido em: ${emissionStr}</div>
+        </div>
+      </div>
+
+      <!-- Caixa de Parâmetros do Relatório -->
+      <div style="background:#F5F1E8; border:1px solid #D6CEBE; border-left:4px solid #1E4D2B; border-radius:6px; padding:10px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:13px; font-weight:bold; color:#1E4D2B;">${unitLabel}</div>
+          <div style="font-size:11px; color:#555555; margin-top:2px;">
+            Período Selecionado: <strong>${range.label}</strong> (${formatDateBR(range.start)} a ${formatDateBR(range.end)})
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <span style="font-size:11px; font-weight:bold; color:#1E4D2B; background:#FFFFFF; border:1px solid #C58908; padding:3px 8px; border-radius:12px;">
+            ${matchedReports.length} relatório(s) computado(s)
+          </span>
+        </div>
+      </div>
+
+      <!-- Seção Principal de Métricas -->
+      ${metricsHtml}
+
+      <!-- Lista de Relatórios e Plantonistas Computados -->
+      <div style="margin-top:16px; border-top:1px dashed #D6CEBE; padding-top:12px;">
+        <h4 style="font-size:11px; color:#718096; text-transform:uppercase; margin:0 0 6px 0;">Histórico dos Relatórios Computados neste Período:</h4>
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:4px; font-size:10px; color:#555555;">
+          ${matchedReports.slice(0, 16).map(r => `
+            <div style="padding:2px 0;">• <strong>${formatDateBR(r.date)}</strong> (${r.unitName || r.unitId}) - ${r.reporterName || 'Plantonista'}</div>
+          `).join('')}
+          ${matchedReports.length > 16 ? `<div style="grid-column:1 / -1; color:#718096; font-style:italic;">+ ${matchedReports.length - 16} outros registros inclusos nos somatórios acima.</div>` : ''}
+        </div>
+      </div>
+
+      <!-- Rodapé Institucional do PDF -->
+      <div style="margin-top:24px; border-top:1px solid #E2D9C8; padding-top:12px; display:flex; justify-content:space-between; align-items:center; font-size:9px; color:#718096;">
+        <div>Cristolândia Check PWA • Sincronização em Tempo Real (Motor CUIDAR)</div>
+        <div style="text-align:right;">Página 1 de 1 • Formato A4 Vertical</div>
+      </div>
+    `;
+
+    // Opções de impressão A4 Vertical estrito
+    const cleanFilename = `relatorio_cristolandia_${unitFilter}_${_selectedReportPeriod}_${range.end}.pdf`;
+    const opt = {
+      margin: [8, 8, 8, 8],
+      filename: cleanFilename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    if (typeof html2pdf === 'function') {
+      await html2pdf().set(opt).from(printableArea).save();
+      showToast('Relatório em PDF baixado com sucesso!', 'success');
+      if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
+    } else {
+      // Fallback seguro caso script falhe
+      const printWin = window.open('', '_blank');
+      printWin.document.write(`<html><head><title>${cleanFilename}</title></head><body style="margin:0;">${printableArea.outerHTML}</body></html>`);
+      printWin.document.close();
+      printWin.focus();
+      printWin.print();
+    }
+  } catch (err) {
+    console.error('Erro ao gerar PDF:', err);
+    showToast('Erro ao baixar o PDF: ' + err.message, 'danger');
+  } finally {
+    hideLoading();
+    if (btn) btn.disabled = false;
+  }
+}
+
+// ==========================================================================
+// COMPARTILHAR RELATÓRIO FILTRADO VIA WHATSAPP
+// ==========================================================================
+function shareReportsWhatsApp() {
+  const unitFilter = document.getElementById('report-filter-unit')?.value || 'todas';
+  const { range, matchedReports } = getFilteredReportsData(unitFilter, _selectedReportPeriod);
+
+  if (matchedReports.length === 0) {
+    showToast('Não há relatórios para enviar no WhatsApp neste período.', 'warning');
+    return;
+  }
+
+  const unitLabel = unitFilter === 'missao' ? 'UNIDADE MISSÃO' :
+                    unitFilter === 'macedonia' ? 'UNIDADE MACEDÔNIA' :
+                    unitFilter === 'feminina' ? 'UNIDADE FEMININA' : 'TODAS AS UNIDADES (CONSOLIDADO)';
+
+  let text = `🌿 *CRISTOLÂNDIA CHECK • RELATÓRIO DE ATIVIDADES*\n`;
+  text += `📍 *Unidade:* ${unitLabel}\n`;
+  text += `📅 *Período:* ${range.label} (${formatDateBR(range.start)} a ${formatDateBR(range.end)})\n`;
+  text += `📊 *Total de Relatórios Computados:* ${matchedReports.length} dia(s)\n\n`;
+
+  if (unitFilter === 'missao') {
+    let pTotal = 0, pRua = 0, pUnidade = 0, pBusca = 0;
+    let rTotal = 0, rCafe = 0, rAlmoco = 0, rLanche = 0, rJantar = 0, rBusca = 0;
+    let banhos = 0, cortes = 0, cultos = 0, buscaPessoas = 0, decisoes = 0;
+
+    matchedReports.forEach(r => {
+      const p = r.pessoasAtendidas || {};
+      pTotal += (p.total || (r.acolhidosPresentes || 0));
+      pRua += (p.rua || 0);
+      pUnidade += (p.unidade || (r.acolhidosPresentes || 0));
+      pBusca += (p.buscaAtiva || (r.novasTriagens || 0));
+
+      const ref = r.refeicoes || {};
+      rCafe += (ref.cafe || 0);
+      rAlmoco += (ref.almoco || 0);
+      rLanche += (ref.lanche || 0);
+      rJantar += (ref.jantar || 0);
+      rBusca += (ref.buscaAtiva || 0);
+      rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0));
+
+      banhos += (r.banhos || 0);
+      cortes += (r.cortesCabelo || 0);
+      cultos += (r.cultos || 0);
+      buscaPessoas += (r.buscaAtivaPessoas || 0);
+      decisoes += (r.decisoesCristo || 0);
+    });
+
+    text += `*1. PESSOAS ATENDIDAS (TOTAL: ${pTotal})*\n`;
+    text += `• Na Rua: ${pRua}\n`;
+    text += `• Na Unidade: ${pUnidade}\n`;
+    text += `• Busca Ativa: ${pBusca}\n\n`;
+
+    text += `*2. REFEIÇÕES SERVIDAS (TOTAL: ${rTotal})*\n`;
+    text += `• Café da Manhã: ${rCafe}\n`;
+    text += `• Almoço: ${rAlmoco}\n`;
+    text += `• Lanche da Tarde: ${rLanche}\n`;
+    text += `• Jantar: ${rJantar}\n`;
+    text += `• Busca Ativa: ${rBusca}\n\n`;
+
+    text += `*3. CUIDADOS & ESPIRITUALIDADE*\n`;
+    text += `• Banhos Tomados: ${banhos}\n`;
+    text += `• Cortes de Cabelo: ${cortes}\n`;
+    text += `• Cultos Realizados: ${cultos}\n`;
+    text += `• Pessoas na Busca Ativa: ${buscaPessoas}\n`;
+    text += `• ✨ *Decisões por Cristo:* ${decisoes}\n\n`;
+
+  } else if (unitFilter === 'macedonia' || unitFilter === 'feminina') {
+    let rTotal = 0, rCafe = 0, rAlmoco = 0, rJantar = 0, rAbordagens = 0, rEventos = 0;
+    let sociais = 0, saude = 0, psico = 0, juridico = 0;
+    let estudos = 0, cultos = 0, musica = 0, coro = 0;
+    let esportes = 0, acolhidosEsportes = 0, decisoes = 0;
+
+    matchedReports.forEach(r => {
+      const ref = r.refeicoes || {};
+      rCafe += (ref.cafe || 0);
+      rAlmoco += (ref.almoco || 0);
+      rJantar += (ref.jantar || 0);
+      rAbordagens += (ref.abordagens || 0);
+      rEventos += (ref.eventosEspeciais || 0);
+      rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0));
+
+      sociais += (r.encaminhamentosSociais || 0);
+      saude += (r.encaminhamentosSaude || 0);
+      psico += (r.atendimentosPsicologicos || 0);
+      juridico += (r.demandasJuridicas || 0);
+
+      estudos += (r.estudosBiblicos || 0);
+      cultos += (r.cultosVigilias || r.cultos || 0);
+      musica += (r.sonsDaMissao || 0);
+      coro += (r.ensaiosCoro || 0);
+
+      esportes += (r.atividadesFisicas || 0);
+      acolhidosEsportes += (r.participantesAtividadesFisicas || 0);
+      decisoes += (r.decisoesCristo || 0);
+    });
+
+    text += `*1. REFEIÇÕES SERVIDAS (TOTAL: ${rTotal})*\n`;
+    text += `• Café: ${rCafe} | Almoço: ${rAlmoco} | Jantar: ${rJantar}\n`;
+    text += `• Abordagens de Rua: ${rAbordagens} | Eventos Especiais: ${rEventos}\n\n`;
+
+    text += `*2. ENCAMINHAMENTOS & APOIO*\n`;
+    text += `• Encaminhamentos Sociais: ${sociais}\n`;
+    text += `• Encaminhamentos de Saúde: ${saude}\n`;
+    text += `• Atendimentos Psicológicos: ${psico}\n`;
+    text += `• Demandas Jurídicas: ${juridico}\n\n`;
+
+    text += `*3. ESPIRITUALIDADE & OFICINAS*\n`;
+    text += `• Estudos Bíblicos: ${estudos}\n`;
+    text += `• Cultos e Vigílias: ${cultos}\n`;
+    text += `• Sons da Missão (Música): ${musica}\n`;
+    text += `• Ensaios do Coro: ${coro}\n`;
+    text += `• Atividades Físicas Realizadas: ${esportes}\n`;
+    text += `• Acolhidos nas Atividades Físicas: ${acolhidosEsportes}\n`;
+    text += `• ✨ *Decisões por Cristo:* ${decisoes}\n\n`;
+
+  } else {
+    // Consolidado Geral
+    let totalRefeicoes = 0, totalAssistidas = 0, totalTriagens = 0, totalCultos = 0, totalDecisoes = 0;
+    const breakdown = {
+      missao: { count: 0, ref: 0, assist: 0, decisoes: 0 },
+      macedonia: { count: 0, ref: 0, assist: 0, decisoes: 0 },
+      feminina: { count: 0, ref: 0, assist: 0, decisoes: 0 }
+    };
+
+    matchedReports.forEach(r => {
+      const u = r.unitId || 'missao';
+      const ref = r.refeicoes || {};
+      const refSum = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+      totalRefeicoes += refSum;
+
+      const assistSum = (r.banhos || 0) + (r.cortesCabelo || 0) + (r.buscaAtivaPessoas || 0) + (r.encaminhamentosSociais || 0) + (r.encaminhamentosSaude || 0) + (r.atendimentosPsicologicos || 0) + (r.demandasJuridicas || 0) + (r.sonsDaMissao || 0);
+      totalAssistidas += assistSum;
+
+      totalTriagens += (r.novasTriagens || 0);
+      totalCultos += (r.cultos || 0) + (r.cultosVigilias || 0) + (r.estudosBiblicos || 0);
+      totalDecisoes += (r.decisoesCristo || 0);
+
+      if (breakdown[u]) {
+        breakdown[u].count++;
+        breakdown[u].ref += refSum;
+        breakdown[u].assist += assistSum;
+        breakdown[u].decisoes += (r.decisoesCristo || 0);
+      }
+    });
+
+    text += `*1. CONSOLIDADO GERAL (3 UNIDADES)*\n`;
+    text += `• Total de Refeições: ${totalRefeicoes}\n`;
+    text += `• Pessoas Assistidas (CUIDAR): ${totalAssistidas}\n`;
+    text += `• Novas Triagens: ${totalTriagens}\n`;
+    text += `• Cultos, Vigílias e Estudos: ${totalCultos}\n`;
+    text += `• ✨ *Decisões por Cristo:* ${totalDecisoes}\n\n`;
+
+    text += `*2. COMPARATIVO POR UNIDADE*\n`;
+    text += `• *Missão:* ${breakdown.missao.ref} ref. | ${breakdown.missao.assist} assist. | ${breakdown.missao.decisoes} decisões (${breakdown.missao.count} relatórios)\n`;
+    text += `• *Macedônia:* ${breakdown.macedonia.ref} ref. | ${breakdown.macedonia.assist} assist. | ${breakdown.macedonia.decisoes} decisões (${breakdown.macedonia.count} relatórios)\n`;
+    text += `• *Feminina:* ${breakdown.feminina.ref} ref. | ${breakdown.feminina.assist} assist. | ${breakdown.feminina.decisoes} decisões (${breakdown.feminina.count} relatórios)\n\n`;
+  }
+
+  text += `_Cristolândia Check PWA • Sistema Oficial_`;
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
   window.open(url, '_blank');
 }

@@ -11,6 +11,7 @@ const urls = [
   '/js/db.js',
   '/js/modules.js',
   '/js/pwa.js',
+  '/js/html2pdf.bundle.min.js',
   '/manifest.json',
   '/version.json',
   '/icons/app-logo.png',

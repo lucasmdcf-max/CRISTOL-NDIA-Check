@@ -2036,4 +2036,244 @@ body::before {
   line-height: 1.3;
 }
 
+/* ==========================================================================
+   MÓDULO DE RELATÓRIOS CONSOLIDADOS & FILTROS DE PERÍODO
+   ========================================================================== */
+.report-period-container {
+  margin-bottom: 12px;
+}
+
+.report-period-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  display: block;
+}
+
+.report-period-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 2px 6px 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.report-period-pills::-webkit-scrollbar {
+  height: 4px;
+}
+
+.report-period-pills::-webkit-scrollbar-thumb {
+  background: var(--gold-primary);
+  border-radius: 4px;
+}
+
+.btn-period-pill {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1px solid var(--border-gold, #C58908);
+  background: var(--bg-surface, #FFFFFF);
+  color: var(--text-main, #2D3748);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.btn-period-pill:hover {
+  background: rgba(197, 137, 8, 0.12);
+  transform: translateY(-1px);
+}
+
+.btn-period-pill.active {
+  background: var(--gold-primary, #C58908) !important;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(197, 137, 8, 0.38);
+  border-color: #A36F04;
+}
+
+/* Banner de Período Ativo */
+.report-active-banner {
+  background: linear-gradient(135deg, rgba(30, 77, 43, 0.08), rgba(197, 137, 8, 0.12));
+  border: 1px solid rgba(197, 137, 8, 0.35);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.report-active-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.report-active-period-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--green-primary);
+}
+
+.report-active-period-dates {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.report-active-count-tag {
+  background: var(--green-primary);
+  color: #FFFFFF;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* Cards Didáticos do Relatório */
+.report-section-card {
+  background: var(--bg-surface, #FFFFFF);
+  border: 1px solid var(--border-beige, #E2D9C8);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.report-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.report-section-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--green-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-section-badge {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--gold-primary);
+  background: rgba(197, 137, 8, 0.1);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.report-grid-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.report-kpi-box {
+  background: var(--bg-main, #F5F1E8);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 3px solid var(--green-primary);
+}
+
+.report-kpi-box.gold-accent {
+  border-left-color: var(--gold-primary);
+}
+
+.report-kpi-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.report-kpi-lbl {
+  font-size: 0.70rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+/* Subitens de Refeições ou Atendimentos */
+.report-subitems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.report-subitem-pill {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 5px 6px;
+  text-align: center;
+}
+
+.report-subitem-num {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--green-primary);
+}
+
+.report-subitem-text {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  line-height: 1.1;
+}
+
+/* Botão de WhatsApp Específico para Relatórios */
+.btn-whatsapp-action {
+  background: #25D366 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 700 !important;
+}
+
+.btn-whatsapp-action:hover {
+  background: #1EBE5D !important;
+  transform: translateY(-1px);
+}
+
+/* Lista de Plantonistas e Relatórios do Período */
+.report-days-accordion {
+  margin-top: 10px;
+  border-top: 1px dashed var(--border-beige);
+  padding-top: 8px;
+}
+
+.report-day-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 0.74rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.report-day-row:last-child {
+  border-bottom: none;
+}
+
+
 

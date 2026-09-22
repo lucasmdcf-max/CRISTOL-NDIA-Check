@@ -1,6 +1,6 @@
 {
-  "version": "1.0.37",
-  "build": "20260922_37",
+  "version": "1.0.38",
+  "build": "20260922_38",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Aprimoramento ergonômico e de acessibilidade visual: tela inicial com fundo verde escuro radial desfocado, partículas brancas com glow flutuando lentamente com opacidade de 20%, e ampliação do texto dos avisos em cor cinza escuro para máximo conforto e proteção da visão."
+  "releaseNotes": "Módulo de Relatórios totalmente renovado: filtros dinâmicos por unidade e período (24h, 7d, 30d, 3m, 6m, 1 ano), somatório acumulado automático dos dados no período, download direto de PDF em formato A4 vertical organizado e envio instantâneo e fiel para o WhatsApp."
 }
