@@ -1,6 +1,6 @@
 {
-  "version": "1.0.34",
-  "build": "20260922_34",
+  "version": "1.0.35",
+  "build": "20260922_35",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Painel Diário atualizado com nova métrica 'Pessoas Assistidas' (soma consolidada de banhos, cortes, busca ativa, encaminhamentos sociais, saúde, psicologia, jurídico e sons da missão), 'Refeições' (soma das 3 unidades) e 'Triagens'. Nova seção 'Avisos do dia!' na tela inicial com balão dourado com 50% de opacidade e letras verdes, autoria, expiração de 24 horas, carrossel navegável e fileira de bolinhas douradas com bolinha neon ativa."
+  "releaseNotes": "Ajuste de layout e refinamento visual dos Avisos do dia: balão com altura e tamanho fixos (comportando até 4 linhas sem oscilar), fundo dourado com 20% de opacidade, textos na cor cinza em fonte Century fina, elevação da linha de bolinhas indicadoras neon e centralização perfeita dos 6 botões no espaço entre o Painel Diário e a seção de avisos."
 }
