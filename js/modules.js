@@ -5729,7 +5729,7 @@ function openEstudosModal(faseAtiva = 'triagem') {
   header.innerHTML = `
     <div class="modal-header-title">
       <div class="modal-unit-icon" style="background:#000000; color:#FFFFFF; border:1.5px solid #F1D28A;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="stroke:#FFFFFF !important;">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
           <line x1="12" y1="6" x2="12" y2="12"/>
@@ -5909,7 +5909,7 @@ function openNovoEstudoModal(faseSugerida = 'triagem', estudoParaEditar = null) 
   header.innerHTML = `
     <div class="modal-header-title">
       <div class="modal-unit-icon" style="background:#000000; color:#FFFFFF; border:1.5px solid #F1D28A;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:#FFFFFF !important;">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
           <line x1="16" y1="13" x2="8" y2="13"/>
@@ -6270,7 +6270,7 @@ function openHistoricoEstudosModal(faseFiltro = 'todas') {
   header.innerHTML = `
     <div class="modal-header-title">
       <div class="modal-unit-icon" style="background:#000000; color:#FFFFFF; border:1.5px solid #F1D28A;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:#FFFFFF !important;">
           <circle cx="12" cy="12" r="10"/>
           <polyline points="12 6 12 12 16 14"/>
         </svg>
@@ -6450,7 +6450,7 @@ function viewDetalhesEstudo(id) {
   header.innerHTML = `
     <div class="modal-header-title">
       <div class="modal-unit-icon" style="background:#000000; color:#FFFFFF; border:1.5px solid #F1D28A;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:#FFFFFF !important;">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
         </svg>

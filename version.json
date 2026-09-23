@@ -1,6 +1,6 @@
 {
-  "version": "1.0.46",
-  "build": "20260922_46",
+  "version": "1.0.47",
+  "build": "20260923_47",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Remoção dos botões redundantes de registrar entrada/saída de dentro dos itens da despensa, centralizando o controle nos botões de + e - dos estoques."
+  "releaseNotes": "Ajuste visual no módulo e botão de Estudos: ícone da bíblia perfeitamente estilizado em branco puro com alta visibilidade."
 }

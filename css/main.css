@@ -2615,6 +2615,16 @@ body::before {
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
+.modal-header.modal-header-estudos .modal-unit-icon {
+  background: #000000 !important;
+  border: 1.5px solid #F1D28A !important;
+  color: #FFFFFF !important;
+}
+
+.modal-header.modal-header-estudos .modal-unit-icon svg {
+  stroke: #FFFFFF !important;
+}
+
 .modal-header.modal-header-estudos .btn-close-modal {
   color: #F1D28A !important;
   font-size: 1.6rem;
