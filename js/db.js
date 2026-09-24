@@ -198,27 +198,18 @@ class CristolandiaDB {
   }
 
   ensureLocalSeed() {
-    // Reset seguro para início limpo a partir de hoje (remove relatórios antigos, triagem teste e movimentações antigas)
-    const cleanFlag = 'cristolandia_clean_start_today_v45';
-    if (!localStorage.getItem(cleanFlag)) {
-      localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify([]));
-      localStorage.setItem(DB_KEYS.TRIAGENS, JSON.stringify([]));
-      localStorage.setItem(DB_KEYS.STOCK_MOVEMENTS, JSON.stringify([]));
-      localStorage.setItem(cleanFlag, 'done');
-    }
-
-    // Autoridade do Estoque dos Usuários: remove resquícios de estoques antigos com valores fictícios de código fonte
-    const userStockAuthFlag = 'cristolandia_stock_user_authority_v2';
-    if (!localStorage.getItem(userStockAuthFlag)) {
-      localStorage.removeItem(DB_KEYS.STOCK);
-      localStorage.setItem(userStockAuthFlag, 'done');
-    }
-
+    // Inicialização segura de chaves caso não existam (nunca sobrescreve dados existentes)
     if (!localStorage.getItem(DB_KEYS.REPORTS)) {
       localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify(INITIAL_SEED.reports));
     }
+    if (!localStorage.getItem(DB_KEYS.TRIAGENS)) {
+      localStorage.setItem(DB_KEYS.TRIAGENS, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(DB_KEYS.STOCK_MOVEMENTS)) {
+      localStorage.setItem(DB_KEYS.STOCK_MOVEMENTS, JSON.stringify([]));
+    }
     
-    // Na instalação inicial, não preenche quantidades falsas: catálogo inicia limpo com 0 ou carrega da nuvem
+    // Na instalação inicial, se o estoque ainda não existir localmente, inicia com o catálogo zerado (ou carrega da nuvem)
     if (!localStorage.getItem(DB_KEYS.STOCK)) {
       localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(buildStockSeedFor3Units()));
     }
@@ -298,21 +289,8 @@ class CristolandiaDB {
           this.isFirebaseConnected = (snap.val() === true);
           if (this.isFirebaseConnected) {
             this.notifyStatus('online', 'Nuvem Conectada');
-            this.startRealtimeListeners(); // Pilar 1: listeners persistentes
-
-            // Limpeza na nuvem de relatórios antigos, triagens de teste e estoque anterior (mantendo instituições)
-            const cloudCleanFlag = 'cristolandia_cloud_clean_v45';
-            if (!localStorage.getItem(cloudCleanFlag) && this.firebaseDb) {
-              try {
-                this._lastLocalWrite = Date.now();
-                this.firebaseDb.ref('cristolandia_check/reports').set({});
-                this.firebaseDb.ref('cristolandia_check/triagens').set({});
-                this.firebaseDb.ref('cristolandia_check/stock_movements').set({});
-                localStorage.setItem(cloudCleanFlag, 'done');
-              } catch (e) {
-                console.warn('Aviso ao sincronizar limpeza na nuvem:', e);
-              }
-            }
+            this.startRealtimeListeners(); // Pilar 1: listeners persistentes em tempo real
+            // A nuvem e o localStorage preservam integralmente os relatórios e o estoque preenchido pelos usuários
 
             // Não sobrescreve o estoque na nuvem: aguarda o ouvinte em tempo real para obter os dados preenchidos pelos usuários
           } else {

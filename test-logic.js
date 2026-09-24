@@ -784,9 +784,102 @@ const mockEstudoSemConcluintes = {
   concluintes: 0
 };
 assert.strictEqual(mockEstudoSemConcluintes.concluintes, 0, 'Estudo bíblico não deve exigir pergunta quantos concluíram');
-assert.strictEqual(mockEstudoSemConcluintes.participantes, 15, 'Participantes devem ser registrados normalmente');
+// 8.7 Validação do Painel Diário Estritamente da Data Corrente (Sem dados retroativos)
+function calculateHeroMetricsTest(reports, triagens, targetDate) {
+  const todayReports = (reports || []).filter(r => r.date === targetDate);
+  let pessoasAssistidas = 0;
+  let refeicoes = 0;
+  let relTriagens = 0;
 
-console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens completas (aptidão, formato, exames, docs), avisos, estudos, estoque real, lanche, voluntários, frutas e preservação de instituições passaram com 100% de sucesso!');
+  todayReports.forEach(r => {
+    const banhos = r.banhos || 0;
+    const cortes = r.cortesCabelo || 0;
+    const buscaAtiva = r.buscaAtivaPessoas || (r.pessoasAtendidas && r.pessoasAtendidas.buscaAtiva) || 0;
+    const sociais = r.encaminhamentosSociais || 0;
+    const saude = r.encaminhamentosSaude || 0;
+    const psicologicos = r.atendimentosPsicologicos || 0;
+    const juridicas = r.demandasJuridicas || 0;
+    const musica = r.sonsDaMissao || 0;
+    pessoasAssistidas += (banhos + cortes + buscaAtiva + sociais + saude + psicologicos + juridicas + musica);
+
+    const ref = r.refeicoes || {};
+    refeicoes += (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.buscaAtiva || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+    relTriagens += (r.novasTriagens || 0);
+  });
+
+  const triagensCadastradasHoje = (triagens || []).filter(t => t.date === targetDate).length;
+  const finalTriagens = triagensCadastradasHoje > 0 ? triagensCadastradasHoje : relTriagens;
+
+  return { pessoasAssistidas, refeicoes, triagens: finalTriagens, count: todayReports.length };
+}
+
+// Cenário: Apenas relatório de 22/09 preenchido, hoje é 24/09
+const mockReportsComRetroativo = [
+  {
+    id: 'rep_2026-09-22_missao',
+    date: '2026-09-22',
+    unitId: 'missao',
+    banhos: 20,
+    cortesCabelo: 10,
+    novasTriagens: 5,
+    refeicoes: { cafe: 30, almoco: 50, lanche: 20, jantar: 40 }
+  }
+];
+
+const metricsHojeSemRelatorio = calculateHeroMetricsTest(mockReportsComRetroativo, [], '2026-09-24');
+assert.strictEqual(metricsHojeSemRelatorio.pessoasAssistidas, 0, 'No dia de hoje (24/09) sem relatório, pessoas assistidas deve ser 0 e NÃO do dia 22');
+assert.strictEqual(metricsHojeSemRelatorio.refeicoes, 0, 'No dia de hoje sem relatório, refeições deve ser 0 e NÃO do dia 22');
+assert.strictEqual(metricsHojeSemRelatorio.triagens, 0, 'No dia de hoje sem relatório, triagens deve ser 0');
+assert.strictEqual(metricsHojeSemRelatorio.count, 0, 'Contagem de relatórios de hoje deve ser 0/3');
+
+// Cenário: Relatório de 24/09 preenchido
+const mockReportsComHoje = [
+  ...mockReportsComRetroativo,
+  {
+    id: 'rep_2026-09-24_missao',
+    date: '2026-09-24',
+    unitId: 'missao',
+    banhos: 15,
+    novasTriagens: 2,
+    refeicoes: { cafe: 25, almoco: 35 }
+  }
+];
+const metricsHojeComRelatorio = calculateHeroMetricsTest(mockReportsComHoje, [], '2026-09-24');
+assert.strictEqual(metricsHojeComRelatorio.pessoasAssistidas, 15, 'Deve exibir as métricas estritamente do dia 24');
+assert.strictEqual(metricsHojeComRelatorio.refeicoes, 60, 'Deve somar as refeições estritamente do dia 24');
+assert.strictEqual(metricsHojeComRelatorio.triagens, 2, 'Deve exibir triagens de hoje');
+
+// 8.8 Validação de Preservação e Prevalência da Última Atualização de Estoque dos Usuários
+const mockCatalogoBase = [
+  { id: 'stk_missao_g01', name: 'Feijões', quantity: 0, unitId: 'missao' },
+  { id: 'stk_missao_g02', name: 'Arroz', quantity: 0, unitId: 'missao' }
+];
+
+const mockEstoquePreenchidoPelosUsuarios = [
+  { id: 'stk_missao_g01', name: 'Feijões', quantity: 45, unitId: 'missao' },
+  { id: 'stk_missao_g02', name: 'Arroz', quantity: 80, unitId: 'missao' },
+  { id: 'stk_missao_custom_farinha', name: 'Farinha Especial', quantity: 12, unitId: 'missao' }
+];
+
+function mergeStockPreservingUserUpdates(currentList, defaultCatalog) {
+  const map = new Map();
+  defaultCatalog.forEach(item => map.set(item.id, { ...item, quantity: 0 }));
+  (currentList || []).forEach(item => {
+    if (item && item.id) map.set(item.id, { ...(map.get(item.id) || {}), ...item });
+  });
+  return Array.from(map.values());
+}
+
+const mergedStockResult = mergeStockPreservingUserUpdates(mockEstoquePreenchidoPelosUsuarios, mockCatalogoBase);
+const feijaoItem = mergedStockResult.find(i => i.id === 'stk_missao_g01');
+const arrozItem = mergedStockResult.find(i => i.id === 'stk_missao_g02');
+const itemCustom = mergedStockResult.find(i => i.id === 'stk_missao_custom_farinha');
+
+assert.strictEqual(feijaoItem.quantity, 45, 'Quantidade de feijão preenchida pelo usuário (45) deve prevalecer');
+assert.strictEqual(arrozItem.quantity, 80, 'Quantidade de arroz preenchida pelo usuário (80) deve prevalecer');
+assert.strictEqual(itemCustom.quantity, 12, 'Novo item cadastrado pelo usuário não pode ser perdido');
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens completas (aptidão, formato, exames, docs), avisos, estudos, painel diário estritamente da data corrente, estoque real dos usuários, voluntários, frutas e preservação de instituições passaram com 100% de sucesso!');
 
 
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.50",
-  "build": "20260924_50",
+  "version": "1.0.51",
+  "build": "20260924_51",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Novo ícone avatar homem para a unidade Masculina, triagem completa com aptidão (Apto/Não Apto/Ressalva), formato online/presencial, documentos em checkboxes, exames e pergunta de passagem anterior."
+  "releaseNotes": "Painel diário estritamente da data corrente sem dados retroativos, e garantia de preservação permanente da última atualização de estoque preenchida pelos usuários."
 }

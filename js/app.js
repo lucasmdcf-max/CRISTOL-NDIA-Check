@@ -300,14 +300,9 @@ function updateHeroMetrics() {
   let refeicoes = 0;
   let triagens = 0;
 
-  // Se houver relatórios hoje, soma deles; se ainda não houver nenhum hoje,
-  // consolida do dia mais recente com fechamento salvo
-  const targetReports = todayReports.length > 0 
-    ? todayReports 
-    : (() => {
-        const sortedDates = [...new Set(reports.map(r => r.date).filter(Boolean))].sort().reverse();
-        return sortedDates[0] ? reports.filter(r => r.date === sortedDates[0]) : [];
-      })();
+  // O Painel Diário exibe estritamente os valores da data corrente (hoje).
+  // Se ainda não houver relatórios na data de hoje, os totais iniciam zerados aguardando os registros do dia.
+  const targetReports = todayReports;
 
   targetReports.forEach(r => {
     // Pessoas assistidas
