@@ -1,6 +1,6 @@
 {
-  "version": "1.0.48",
-  "build": "20260923_48",
+  "version": "1.0.49",
+  "build": "20260923_49",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Botão de triagem na tela inicial, unidade Masculina, lanches, voluntários, frutas no estoque e soberania dos dados da nuvem."
+  "releaseNotes": "Triagem exclusiva na tela inicial com identidade verde claro, ícone branco e nome dourado, e abas superiores correspondentes."
 }

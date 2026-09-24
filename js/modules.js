@@ -122,19 +122,6 @@ function openMissaoFlow() {
         <div class="btn-choice-title">Relatório</div>
         <div class="btn-choice-desc">Diário de 7 perguntas</div>
       </div>
-
-      <!-- Opção 3: Triagem -->
-      <div class="btn-choice-card" onclick="openMissaoTriagens()">
-        <div class="btn-choice-icon" style="color:var(--gold-primary);">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <polyline points="16 11 18 13 22 9"/>
-          </svg>
-        </div>
-        <div class="btn-choice-title" style="color:var(--gold-primary);">Triagem</div>
-        <div class="btn-choice-desc">Lista e acolhimento</div>
-      </div>
     </div>
   `;
 
@@ -1048,19 +1035,18 @@ function openMissaoTriagens(dateFilter = null, searchTerm = '') {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
-  modalHeader.className = 'modal-header';
+  modalHeader.className = 'modal-header theme-triagem';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
-      <button type="button" class="btn-step" onclick="openMissaoFlow()" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;" title="Voltar para Unidade Missão">←</button>
-      <div class="modal-unit-icon" style="color:var(--gold-primary);">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
           <polyline points="16 11 18 13 22 9"/>
         </svg>
       </div>
       <div>
-        <h2>Triagens • Missão</h2>
+        <h2>Triagem</h2>
         <p style="font-size:0.75rem;">Fichas e Histórico de Acolhimento</p>
       </div>
     </div>
@@ -1068,14 +1054,25 @@ function openMissaoTriagens(dateFilter = null, searchTerm = '') {
   `;
 
   modalBody.innerHTML = `
-    <!-- Topo da Lista: Botão Nova Triagem -->
-    <div class="triagem-top-actions">
-      <button type="button" class="btn-primary-action" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="openTriagemForm()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Abas Superiores de Triagem (Identidade: Fundo Verde Claro, Ícone Branco, Nome Dourado) -->
+    <div class="triagem-nav-tabs">
+      <button type="button" class="btn-triagem-tab active" onclick="openMissaoTriagens('${_triagemFilterDate}', '${_triagemSearchTerm}')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/>
+          <line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <span>Fichas Cadastradas</span>
+      </button>
+      <button type="button" class="btn-triagem-tab" onclick="openTriagemForm()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
           <line x1="12" y1="5" x2="12" y2="19"/>
           <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Nova Triagem
+        <span>Nova Triagem</span>
       </button>
     </div>
 
@@ -1115,7 +1112,7 @@ function openMissaoTriagens(dateFilter = null, searchTerm = '') {
   `;
 
   modalFooter.innerHTML = `
-    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="openMissaoFlow()">← Voltar para Missão</button>
+    <button type="button" class="btn-secondary-action" style="width:100%;" onclick="closeModal('modal-generic')">Fechar</button>
   `;
 
   renderTriagensList();
@@ -1217,12 +1214,12 @@ function viewTriagemDetails(id) {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
-  modalHeader.className = 'modal-header';
+  modalHeader.className = 'modal-header theme-triagem';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="openMissaoTriagens('${_triagemFilterDate}', '${_triagemSearchTerm}')" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;" title="Voltar para a lista">←</button>
-      <div class="modal-unit-icon" style="color:var(--gold-primary);">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
           <polyline points="16 11 18 13 22 9"/>
@@ -1340,12 +1337,12 @@ function openTriagemForm(triagemId = null) {
   const quantasVezes = existing && existing.quantasVezes ? existing.quantasVezes : '';
   const dataTriagem = existing ? (existing.date || todayStr) : todayStr;
 
-  modalHeader.className = 'modal-header';
+  modalHeader.className = 'modal-header theme-triagem';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
       <button type="button" class="btn-step" onclick="${triagemId ? `viewTriagemDetails('${triagemId}')` : `openMissaoTriagens('${_triagemFilterDate}', '${_triagemSearchTerm}')`}" style="width:32px;height:32px;font-size:0.95rem;margin-right:4px;">←</button>
-      <div class="modal-unit-icon" style="color:var(--gold-primary);">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <div class="modal-unit-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9"/>
           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
@@ -1359,6 +1356,30 @@ function openTriagemForm(triagemId = null) {
   `;
 
   modalBody.innerHTML = `
+    <!-- Abas Superiores de Triagem (Identidade: Fundo Verde Claro, Ícone Branco, Nome Dourado) -->
+    ${!triagemId ? `
+      <div class="triagem-nav-tabs">
+        <button type="button" class="btn-triagem-tab" onclick="openMissaoTriagens('${_triagemFilterDate}', '${_triagemSearchTerm}')">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          <span>Fichas Cadastradas</span>
+        </button>
+        <button type="button" class="btn-triagem-tab active" onclick="openTriagemForm()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          <span>Nova Triagem</span>
+        </button>
+      </div>
+    ` : ''}
+
     <form id="triagem-form" onsubmit="event.preventDefault();" style="display:flex; flex-direction:column; gap:12px;">
 
       <!-- 1. Nome -->
