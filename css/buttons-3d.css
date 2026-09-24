@@ -171,8 +171,9 @@
   color: var(--green-primary);
 }
 
-/* 2. Macedônia (Tom Porcelana Nobre Levemente Mais Escuro que o Fundo Branco) */
-.btn-card-3d.btn-macedonia {
+/* 2. Masculina / Macedônia (Tom Porcelana Nobre Levemente Mais Escuro que o Fundo Branco) */
+.btn-card-3d.btn-macedonia,
+.btn-card-3d.btn-masculina {
   background: linear-gradient(145deg, #F5F1E8, #EBE5D8);
   border-color: #D9D1BF;
   box-shadow: 
@@ -180,24 +181,29 @@
     0 8px 18px rgba(30, 77, 43, 0.07);
 }
 
-.btn-card-3d.btn-macedonia:hover {
+.btn-card-3d.btn-macedonia:hover,
+.btn-card-3d.btn-masculina:hover {
   box-shadow: 
     0 6px 0 #CFC6B0,
     0 12px 20px rgba(30, 77, 43, 0.1);
 }
 
 .btn-card-3d.btn-macedonia:active,
-.btn-card-3d.btn-macedonia.pressed {
+.btn-card-3d.btn-macedonia.pressed,
+.btn-card-3d.btn-masculina:active,
+.btn-card-3d.btn-masculina.pressed {
   box-shadow: 
     0 1px 0 #CFC6B0,
     0 3px 6px rgba(30, 77, 43, 0.05) !important;
 }
 
-.btn-card-3d.btn-macedonia .btn-icon-wrapper svg {
+.btn-card-3d.btn-macedonia .btn-icon-wrapper svg,
+.btn-card-3d.btn-masculina .btn-icon-wrapper svg {
   stroke: var(--green-primary);
 }
 
-.btn-card-3d.btn-macedonia .btn-title {
+.btn-card-3d.btn-macedonia .btn-title,
+.btn-card-3d.btn-masculina .btn-title {
   color: var(--green-primary);
 }
 
@@ -231,7 +237,40 @@
   color: var(--green-primary);
 }
 
-/* 4. Estoque (Fundo Verde Nobre, Ícone Dourado e Nome Branco) */
+/* 4. Triagem (Fundo Amarelo / Dourado Vivo, Ícone Verde e Letra Branca) */
+.btn-card-3d.btn-triagem {
+  background: linear-gradient(145deg, #F59E0B, #EAB308);
+  border-color: #D97706;
+  box-shadow: 
+    0 4px 0 #B45309,
+    0 8px 18px rgba(217, 119, 6, 0.28);
+}
+
+.btn-card-3d.btn-triagem:hover {
+  box-shadow: 
+    0 6px 0 #B45309,
+    0 12px 20px rgba(217, 119, 6, 0.35);
+}
+
+.btn-card-3d.btn-triagem:active,
+.btn-card-3d.btn-triagem.pressed {
+  box-shadow: 
+    0 1px 0 #B45309,
+    0 3px 6px rgba(217, 119, 6, 0.15) !important;
+}
+
+.btn-card-3d.btn-triagem .btn-icon-wrapper svg,
+.btn-card-3d.btn-triagem .btn-icon-wrapper svg * {
+  stroke: #1E4D2B !important;
+}
+
+.btn-card-3d.btn-triagem .btn-title {
+  color: #FFFFFF !important;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* 5. Estoque (Fundo Verde Nobre, Ícone Dourado e Nome Branco) */
 .btn-card-3d.btn-estoque {
   background: linear-gradient(145deg, #1E4D2B, #276237);
   border-color: #14351D;

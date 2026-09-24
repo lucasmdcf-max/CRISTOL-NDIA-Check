@@ -39,52 +39,56 @@ const OFFICIAL_FIREBASE_CONFIG = {
   appId: "1:346049139190:web:0152b706e2ce6f23aef7d7"
 };
 
-// Dados Iniciais Demonstrativos de Alta Qualidade
+// Catálogo Base de Alimentos (Quantidades iniciais zeradas — a autoridade é sempre a contagem real dos usuários)
 const STOCK_ITEMS_TEMPLATE = [
   // ALIMENTOS GROSSOS 🫘
-  { baseId: 'g01', name: 'Feijões', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 198, unit: 'und', minQty: 20 },
-  { baseId: 'g02', name: 'Arroz', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 130, unit: 'und', minQty: 20 },
-  { baseId: 'g03', name: 'Macarrão', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 80, unit: 'und', minQty: 15 },
-  { baseId: 'g04', name: 'Fubá', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 300, unit: 'und', minQty: 30 },
-  { baseId: 'g05', name: 'Açúcar', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 100, unit: 'und', minQty: 15 },
-  { baseId: 'g06', name: 'Sal', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 48, unit: 'und', minQty: 10 },
-  { baseId: 'g07', name: 'Farinha', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 30, unit: 'und', minQty: 10 },
-  { baseId: 'g08', name: 'Leite em pó', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 8, unit: 'und', minQty: 5 },
-  { baseId: 'g09', name: 'Nescafé', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 5, unit: 'und', minQty: 3 },
-  { baseId: 'g10', name: 'Molho de tomate', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 2, unit: 'und', minQty: 5 },
-  { baseId: 'g11', name: 'Vinagre', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 20, unit: 'und', minQty: 5 },
-  { baseId: 'g12', name: 'Óleo', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 10, unit: 'und', minQty: 5 },
-  { baseId: 'g13', name: 'Margarina 3kg', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 3, unit: 'und', minQty: 2 },
+  { baseId: 'g01', name: 'Feijões', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 20 },
+  { baseId: 'g02', name: 'Arroz', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 20 },
+  { baseId: 'g03', name: 'Macarrão', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 15 },
+  { baseId: 'g04', name: 'Fubá', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 30 },
+  { baseId: 'g05', name: 'Açúcar', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 15 },
+  { baseId: 'g06', name: 'Sal', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 10 },
+  { baseId: 'g07', name: 'Farinha', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 10 },
+  { baseId: 'g08', name: 'Leite em pó', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 5 },
+  { baseId: 'g09', name: 'Nescafé', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 3 },
+  { baseId: 'g10', name: 'Molho de tomate', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 5 },
+  { baseId: 'g11', name: 'Vinagre', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 5 },
+  { baseId: 'g12', name: 'Óleo', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 5 },
+  { baseId: 'g13', name: 'Margarina 3kg', category: 'alimentos_grossos', categoryLabel: 'Alimentos Grossos', categoryIcon: '🫘', quantity: 0, unit: 'und', minQty: 2 },
 
   // PROTEÍNAS 🍖
-  { baseId: 'p01', name: 'Ovos', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 122, unit: 'und', minQty: 30 },
+  { baseId: 'p01', name: 'Ovos', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 0, unit: 'und', minQty: 30 },
   { baseId: 'p02', name: 'Fígado', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 0, unit: 'und', minQty: 5 },
-  { baseId: 'p03', name: 'Peito de frango', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 4, unit: 'und', minQty: 5 },
-  { baseId: 'p04', name: 'Pct de salsicha c/60 und', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 4, unit: 'pct', minQty: 3 },
-  { baseId: 'p05', name: 'Coxa e sobrecoxa', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 6, unit: 'und', minQty: 5 },
-  { baseId: 'p06', name: 'Carne moída', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 7, unit: 'und', minQty: 5 },
+  { baseId: 'p03', name: 'Peito de frango', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 0, unit: 'und', minQty: 5 },
+  { baseId: 'p04', name: 'Pct de salsicha c/60 und', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 0, unit: 'pct', minQty: 3 },
+  { baseId: 'p05', name: 'Coxa e sobrecoxa', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 0, unit: 'und', minQty: 5 },
+  { baseId: 'p06', name: 'Carne moída', category: 'proteinas', categoryLabel: 'Proteínas', categoryIcon: '🍖', quantity: 0, unit: 'und', minQty: 5 },
 
   // TEMPEROS 🧄
-  { baseId: 't01', name: 'Colorau', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 3, unit: 'und', minQty: 2 },
-  { baseId: 't02', name: 'Tempero misto', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 1, unit: 'und', minQty: 2 },
-  { baseId: 't03', name: 'Cabeça de alho', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 6, unit: 'und', minQty: 3 },
-  { baseId: 't04', name: 'Kinnor', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 20, unit: 'uni', minQty: 5 },
-  { baseId: 't05', name: 'Cominho', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 1, unit: 'und', minQty: 2 },
+  { baseId: 't01', name: 'Colorau', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 0, unit: 'und', minQty: 2 },
+  { baseId: 't02', name: 'Tempero misto', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 0, unit: 'und', minQty: 2 },
+  { baseId: 't03', name: 'Cabeça de alho', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 0, unit: 'und', minQty: 3 },
+  { baseId: 't04', name: 'Kinnor', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 0, unit: 'uni', minQty: 5 },
+  { baseId: 't05', name: 'Cominho', category: 'temperos', categoryLabel: 'Temperos', categoryIcon: '🧄', quantity: 0, unit: 'und', minQty: 2 },
 
   // LANCHES 🍟
-  { baseId: 'l01', name: 'Pct de bolacha salgada', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 3, unit: 'pct', minQty: 3 },
-  { baseId: 'l02', name: 'Pct de biscoito recheado', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 1, unit: 'pct', minQty: 3 },
-  { baseId: 'l03', name: 'Pct bolacha doce', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 3, unit: 'pct', minQty: 3 },
-  { baseId: 'l04', name: 'Caixa de suco em pó', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 3, unit: 'cx', minQty: 2 },
-  { baseId: 'l05', name: 'Pct de club social', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 5, unit: 'pct', minQty: 3 },
-  { baseId: 'l06', name: 'Salgadinhos', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 6, unit: 'und', minQty: 3 },
+  { baseId: 'l01', name: 'Pct de bolacha salgada', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 0, unit: 'pct', minQty: 3 },
+  { baseId: 'l02', name: 'Pct de biscoito recheado', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 0, unit: 'pct', minQty: 3 },
+  { baseId: 'l03', name: 'Pct bolacha doce', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 0, unit: 'pct', minQty: 3 },
+  { baseId: 'l04', name: 'Caixa de suco em pó', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 0, unit: 'cx', minQty: 2 },
+  { baseId: 'l05', name: 'Pct de club social', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 0, unit: 'pct', minQty: 3 },
+  { baseId: 'l06', name: 'Salgadinhos', category: 'lanches', categoryLabel: 'Lanches', categoryIcon: '🍟', quantity: 0, unit: 'und', minQty: 3 },
 
   // VERDURAS E LEGUMES 🫑
-  { baseId: 'v01', name: 'Cebola', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 8, unit: 'und', minQty: 4 },
-  { baseId: 'v02', name: 'Cenoura', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 3, unit: 'und', minQty: 2 },
-  { baseId: 'v03', name: 'Tomate', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 11, unit: 'und', minQty: 5 },
-  { baseId: 'v04', name: 'Pimentão', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 3, unit: 'und', minQty: 2 },
-  { baseId: 'v05', name: 'Chuchu', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 2, unit: 'und', minQty: 2 }
+  { baseId: 'v01', name: 'Cebola', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 0, unit: 'und', minQty: 4 },
+  { baseId: 'v02', name: 'Cenoura', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 0, unit: 'und', minQty: 2 },
+  { baseId: 'v03', name: 'Tomate', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 0, unit: 'und', minQty: 5 },
+  { baseId: 'v04', name: 'Pimentão', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 0, unit: 'und', minQty: 2 },
+  { baseId: 'v05', name: 'Chuchu', category: 'verduras_legumes', categoryLabel: 'Verduras e Legumes', categoryIcon: '🫑', quantity: 0, unit: 'und', minQty: 2 },
+
+  // FRUTAS 🍎
+  { baseId: 'fr01', name: 'Banana', category: 'frutas', categoryLabel: 'Frutas', categoryIcon: '🍌', quantity: 0, unit: 'palma', minQty: 2 },
+  { baseId: 'fr02', name: 'Laranja', category: 'frutas', categoryLabel: 'Frutas', categoryIcon: '🍊', quantity: 0, unit: 'und', minQty: 10 }
 ];
 
 function buildStockSeedFor3Units() {
@@ -132,7 +136,7 @@ const INITIAL_SEED = {
       neighborhood: 'Tatuapé',
       supportType: 'Doação Financeira & Material de Higiene',
       lastVisit: '2026-09-05',
-      notes: 'Mantenedora de 3 leitos da Unidade Macedônia.'
+      notes: 'Mantenedora de 3 leitos da Unidade Masculina.'
     },
     {
       id: 'chu_03',
@@ -203,15 +207,21 @@ class CristolandiaDB {
       localStorage.setItem(cleanFlag, 'done');
     }
 
+    // Autoridade do Estoque dos Usuários: remove resquícios de estoques antigos com valores fictícios de código fonte
+    const userStockAuthFlag = 'cristolandia_stock_user_authority_v2';
+    if (!localStorage.getItem(userStockAuthFlag)) {
+      localStorage.removeItem(DB_KEYS.STOCK);
+      localStorage.setItem(userStockAuthFlag, 'done');
+    }
+
     if (!localStorage.getItem(DB_KEYS.REPORTS)) {
       localStorage.setItem(DB_KEYS.REPORTS, JSON.stringify(INITIAL_SEED.reports));
     }
     
-    // Sempre garante a integridade total do estoque para as 3 Despensas (Missão, Macedônia, Feminina)
-    const currentStock = this.getStock();
-    const mergedStock = this.mergeWithDefaultStock(currentStock);
-    localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(mergedStock));
-    localStorage.setItem('cristolandia_stock_seed_3_units_v3', 'yes');
+    // Na instalação inicial, não preenche quantidades falsas: catálogo inicia limpo com 0 ou carrega da nuvem
+    if (!localStorage.getItem(DB_KEYS.STOCK)) {
+      localStorage.setItem(DB_KEYS.STOCK, JSON.stringify(buildStockSeedFor3Units()));
+    }
 
     // Mantém o cadastro das instituições/igrejas 100% preservado
     if (!localStorage.getItem(DB_KEYS.CHURCHES)) {
@@ -228,24 +238,24 @@ class CristolandiaDB {
     }
   }
 
-  // Mescla os itens da lista oficial padrão com quaisquer itens existentes ou adicionados
+  // Mescla catálogo base preservando 100% as contagens e itens preenchidos pelos usuários
   mergeWithDefaultStock(currentList) {
     const list = Array.isArray(currentList) ? currentList : [];
-    const defaultStock = buildStockSeedFor3Units();
+    const defaultCatalog = buildStockSeedFor3Units();
     const deletedIds = this.getDeletedStockIds();
 
     const map = new Map();
-    // 1. Carrega todos os itens padrão oficiais das 3 despensas (exceto os que foram deliberadamente removidos)
-    defaultStock.forEach(item => {
+    // 1. Carrega itens do catálogo padrão oficial com quantidade zerada (exceto deletados)
+    defaultCatalog.forEach(item => {
       if (!deletedIds.includes(item.id)) {
-        map.set(item.id, { ...item });
+        map.set(item.id, { ...item, quantity: 0 });
       }
     });
 
-    // 2. Mescla com os itens atuais (preserva quantidades alteradas e novos itens cadastrados pelo usuário)
+    // 2. Sobrepõe com a lista real dos usuários (PREVALECE TOTALMENTE a contagem de estoque e itens novos cadastrados)
     list.forEach(item => {
       if (item && item.id && !deletedIds.includes(item.id)) {
-        map.set(item.id, item);
+        map.set(item.id, { ...(map.get(item.id) || {}), ...item });
       }
     });
 
@@ -304,9 +314,7 @@ class CristolandiaDB {
               }
             }
 
-            // Garante que o estoque na nuvem contenha todos os itens padrão
-            const stock = this.mergeWithDefaultStock(this.getStock());
-            this.syncStockToCloud(stock);
+            // Não sobrescreve o estoque na nuvem: aguarda o ouvinte em tempo real para obter os dados preenchidos pelos usuários
           } else {
             this.notifyStatus(navigator.onLine ? 'connecting' : 'offline', navigator.onLine ? 'Conectando...' : 'Offline');
           }
@@ -532,7 +540,7 @@ class CristolandiaDB {
   }
 
   async saveStockItem(itemData) {
-    const stock = this.mergeWithDefaultStock(this.getStock());
+    const stock = this.getStock();
     const index = stock.findIndex(s => s.id === itemData.id);
     const sanitized = this.sanitize(itemData);
 

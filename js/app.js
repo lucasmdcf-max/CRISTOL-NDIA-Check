@@ -163,9 +163,9 @@ function updateMissaoDots() {
   const cultosActive = hasAnsFlags ? !!ans.cultos : ((missaoReport.cultos || 0) > 0);
   if (cultosActive) dots[4].classList.add('active'); else dots[4].classList.remove('active');
 
-  // 6. Pessoas na busca ativa
-  const buscaActive = hasAnsFlags ? !!ans.buscaAtiva : (((missaoReport.buscaAtivaPessoas || 0) > 0) || ((missaoReport.pessoasAtendidas?.buscaAtiva || 0) > 0));
-  if (buscaActive) dots[5].classList.add('active'); else dots[5].classList.remove('active');
+  // 6. Voluntários presentes
+  const volActive = hasAnsFlags ? !!ans.voluntarios : ((missaoReport.voluntarios || 0) > 0);
+  if (volActive) dots[5].classList.add('active'); else dots[5].classList.remove('active');
 
   // 7. Decisões por Cristo
   const decisoesActive = hasAnsFlags ? !!ans.decisoes : ((missaoReport.decisoesCristo || 0) > 0);
@@ -195,9 +195,9 @@ function updateStandardUnitDots(unitId, containerId) {
   const ans = rep.answeredQuestions || {};
   const hasAnsFlags = !!rep.answeredQuestions;
 
-  // 1. Refeições (5 subcampos)
+  // 1. Refeições (6 subcampos incluindo lanche)
   const ref = rep.refeicoes || {};
-  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
   const rActive = hasAnsFlags ? !!ans.refeicoes : (totalRef > 0);
   if (rActive) dots[0].classList.add('active'); else dots[0].classList.remove('active');
 
@@ -252,6 +252,7 @@ function updateMacedoniaDots() {
 }
 if (typeof window !== 'undefined') {
   window.updateMacedoniaDots = updateMacedoniaDots;
+  window.updateMasculinaDots = updateMacedoniaDots;
 }
 
 // Atualiza o estado das 12 bolinhas de progresso neon no topo do botão Unidade Feminina

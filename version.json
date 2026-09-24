@@ -1,6 +1,6 @@
 {
-  "version": "1.0.47",
-  "build": "20260923_47",
+  "version": "1.0.48",
+  "build": "20260923_48",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Ajuste visual no módulo e botão de Estudos: ícone da bíblia perfeitamente estilizado em branco puro com alta visibilidade."
+  "releaseNotes": "Botão de triagem na tela inicial, unidade Masculina, lanches, voluntários, frutas no estoque e soberania dos dados da nuvem."
 }

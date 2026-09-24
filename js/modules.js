@@ -16,8 +16,8 @@ const UNIT_PROFILES = {
   },
   macedonia: {
     id: 'macedonia',
-    name: 'Macedônia',
-    fullName: 'Unidade Macedônia • Internação & Vida',
+    name: 'Masculina',
+    fullName: 'Unidade Masculina • Internação & Vida',
     badgeClass: 'badge-macedonia',
     iconSvg: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/><path d="M12 17C15 17 18 19 19 22"/></svg>`,
     defaultReporter: 'Missionário Carlos'
@@ -31,6 +31,14 @@ const UNIT_PROFILES = {
     defaultReporter: 'Missionária Sarah'
   }
 };
+
+// Abre a Triagem diretamente pelo botão da tela inicial
+function openTriagemModal() {
+  if (typeof openMissaoTriagens === 'function') {
+    openMissaoTriagens();
+  }
+}
+window.openTriagemModal = openTriagemModal;
 
 // ==========================================================================
 // MÓDULO EXCLUSIVO DA UNIDADE MISSÃO (HISTÓRICO + CALENDÁRIO + NOVO RELATÓRIO)
@@ -46,6 +54,7 @@ const MISSAO_ICONS = {
   cortes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>`,
   cultos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10L12 3L21 10"/><path d="M5 10V20H19V10"/><line x1="12" y1="7" x2="12" y2="15"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
   buscaAtiva: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>`,
+  voluntarios: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
   decisoes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M7 7h10"/><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
 };
 
@@ -376,7 +385,7 @@ function viewMissaoDayReport(dateStr) {
           <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Refeições Servidas</span>
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--gold-primary);">${totalRef}</div>
-        <div style="font-size:0.66rem; color:var(--text-muted);">Café: ${ref.cafe || 0} | Almoço: ${ref.almoco || 0} | Jantar: ${ref.jantar || 0}</div>
+        <div style="font-size:0.66rem; color:var(--text-muted);">Café: ${ref.cafe || 0} | Almoço: ${ref.almoco || 0} | Lanche: ${ref.lanche || 0} | Jantar: ${ref.jantar || 0}</div>
       </div>
 
       <!-- Banhos -->
@@ -406,13 +415,13 @@ function viewMissaoDayReport(dateStr) {
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.cultos || 0}</div>
       </div>
 
-      <!-- Busca Ativa Pessoas -->
+      <!-- Voluntários Presentes -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-          <span style="color:var(--green-primary);">${MISSAO_ICONS.buscaAtiva}</span>
-          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Busca Ativa (Pessoas)</span>
+          <span style="color:var(--green-primary);">${MISSAO_ICONS.voluntarios}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Voluntários Presentes</span>
         </div>
-        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.buscaAtivaPessoas || pBusca || 0}</div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.voluntarios || 0}</div>
       </div>
     </div>
 
@@ -482,7 +491,7 @@ function openMissaoForm(targetDate, isEdit) {
   const isBanhosActive = hasAns ? !!ans.banhos : (!!existing && typeof existing.banhos === 'number');
   const isCortesActive = hasAns ? !!ans.cortes : (!!existing && typeof existing.cortesCabelo === 'number');
   const isCultosActive = hasAns ? !!ans.cultos : (!!existing && typeof existing.cultos === 'number');
-  const isBuscaPessoasActive = hasAns ? !!ans.buscaAtiva : (!!existing && (typeof existing.buscaAtivaPessoas === 'number' || typeof existing.pessoasAtendidas?.buscaAtiva === 'number'));
+  const isVoluntariosActive = hasAns ? !!ans.voluntarios : (!!existing && typeof existing.voluntarios === 'number');
   const isDecisoesActive = hasAns ? !!ans.decisoes : (!!existing && typeof existing.decisoesCristo === 'number');
 
   // Valores numéricos carregados
@@ -502,7 +511,7 @@ function openMissaoForm(targetDate, isEdit) {
   const banhos = existing?.banhos ?? 0;
   const cortes = existing?.cortesCabelo ?? 0;
   const cultos = existing?.cultos ?? 0;
-  const buscaAtivaPessoas = existing?.buscaAtivaPessoas ?? pBusca;
+  const voluntarios = existing?.voluntarios ?? 0;
   const decisoes = existing?.decisoesCristo ?? 0;
 
   modalHeader.className = 'modal-header';
@@ -728,20 +737,20 @@ function openMissaoForm(targetDate, isEdit) {
         </div>
       </div>
 
-      <!-- Nº DE PESSOAS ATENDIDAS NAS AÇÕES DE BUSCA ATIVA -->
+      <!-- Nº DE VOLUNTÁRIOS PRESENTES -->
       <div class="missao-q-card">
         <div class="missao-stepper-row">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon">${MISSAO_ICONS.buscaAtiva}</div>
+            <div class="missao-q-icon">${MISSAO_ICONS.voluntarios}</div>
             <div>
-              <div class="missao-q-title">Nº de pessoas atendidas nas ações de Busca Ativa</div>
-              <div class="missao-q-sub">Atendidas nas ações externas</div>
+              <div class="missao-q-title">Nº de Voluntários presentes</div>
+              <div class="missao-q-sub">Voluntários e apoiadores atuando no dia</div>
             </div>
           </div>
           <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-busca-pessoas', -1)">-</button>
-            <input type="number" id="missao-rep-busca-pessoas" class="missao-step-input ${isBuscaPessoasActive ? 'active-val' : ''}" data-activated="${isBuscaPessoasActive ? 'true' : 'false'}" value="${isBuscaPessoasActive ? buscaAtivaPessoas : ''}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-busca-pessoas', 1)">+</button>
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-voluntarios', -1)">-</button>
+            <input type="number" id="missao-rep-voluntarios" class="missao-step-input ${isVoluntariosActive ? 'active-val' : ''}" data-activated="${isVoluntariosActive ? 'true' : 'false'}" value="${isVoluntariosActive ? voluntarios : ''}" onfocus="activateMissaoInput(this.id)" onclick="activateMissaoInput(this.id)" oninput="activateMissaoInput(this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustMissaoStep('missao-rep-voluntarios', 1)">+</button>
           </div>
         </div>
       </div>
@@ -921,7 +930,7 @@ async function handleSaveMissaoReport() {
   const banhos = parseInt(document.getElementById('missao-rep-banhos')?.value, 10) || 0;
   const cortes = parseInt(document.getElementById('missao-rep-cortes')?.value, 10) || 0;
   const cultos = parseInt(document.getElementById('missao-rep-cultos')?.value, 10) || 0;
-  const buscaAtivaPessoas = parseInt(document.getElementById('missao-rep-busca-pessoas')?.value, 10) || pBusca;
+  const voluntarios = parseInt(document.getElementById('missao-rep-voluntarios')?.value, 10) || 0;
   const decisoes = parseInt(document.getElementById('missao-rep-decisoes')?.value, 10) || 0;
   const reporter = document.getElementById('missao-rep-reporter')?.value.trim() || 'Pr. Marcos Lima';
   const repId = document.getElementById('missao-rep-id')?.value;
@@ -944,7 +953,7 @@ async function handleSaveMissaoReport() {
   const isBanhosComplete = document.getElementById('missao-rep-banhos')?.getAttribute('data-activated') === 'true';
   const isCortesComplete = document.getElementById('missao-rep-cortes')?.getAttribute('data-activated') === 'true';
   const isCultosComplete = document.getElementById('missao-rep-cultos')?.getAttribute('data-activated') === 'true';
-  const isBuscaComplete = document.getElementById('missao-rep-busca-pessoas')?.getAttribute('data-activated') === 'true';
+  const isVoluntariosComplete = document.getElementById('missao-rep-voluntarios')?.getAttribute('data-activated') === 'true';
   const isDecisoesComplete = document.getElementById('missao-rep-decisoes')?.getAttribute('data-activated') === 'true';
 
   const answeredQuestions = {
@@ -953,7 +962,7 @@ async function handleSaveMissaoReport() {
     banhos: isBanhosComplete,
     cortes: isCortesComplete,
     cultos: isCultosComplete,
-    buscaAtiva: isBuscaComplete,
+    voluntarios: isVoluntariosComplete,
     decisoes: isDecisoesComplete
   };
 
@@ -994,7 +1003,8 @@ async function handleSaveMissaoReport() {
     banhos: banhos,
     cortesCabelo: cortes,
     cultos: cultos,
-    buscaAtivaPessoas: buscaAtivaPessoas,
+    buscaAtivaPessoas: pBusca,
+    voluntarios: voluntarios,
     decisoesCristo: decisoes,
     answeredQuestions: answeredQuestions,
     answeredSubfields: answeredSubfields,
@@ -1830,7 +1840,7 @@ function viewStandardUnitDayReport(unitId, dateStr) {
   const modalFooter = document.getElementById('modal-generic-footer');
 
   const ref = r.refeicoes || {};
-  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
+  const totalRef = (ref.cafe || 0) + (ref.almoco || 0) + (ref.lanche || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0);
 
   modalHeader.className = 'modal-header';
   modalHeader.innerHTML = `
@@ -1861,7 +1871,7 @@ function viewStandardUnitDayReport(unitId, dateStr) {
       </div>
     </div>
 
-    <!-- Indicadores Numéricos em Cards (12 Perguntas) -->
+    <!-- Indicadores Numéricos em Cards -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
       <!-- 1. Refeições -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px; grid-column: span 2;">
@@ -1871,7 +1881,7 @@ function viewStandardUnitDayReport(unitId, dateStr) {
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--gold-primary);">${totalRef}</div>
         <div style="font-size:0.66rem; color:var(--text-muted); line-height:1.3;">
-          Café: ${ref.cafe || 0} | Almoço: ${ref.almoco || 0} | Jantar: ${ref.jantar || 0} | Abordagens: ${ref.abordagens || 0} | Eventos: ${ref.eventosEspeciais || 0}
+          Café: ${ref.cafe || 0} | Almoço: ${ref.almoco || 0} | Lanche: ${ref.lanche || 0} | Jantar: ${ref.jantar || 0} | Abordagens: ${ref.abordagens || 0} | Eventos: ${ref.eventosEspeciais || 0}
         </div>
       </div>
 
@@ -1974,6 +1984,16 @@ function viewStandardUnitDayReport(unitId, dateStr) {
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.participantesAtividadesFisicas || 0}</div>
         <div style="font-size:0.64rem; color:var(--text-muted);">Acolhidos participantes</div>
       </div>
+
+      <!-- Voluntários Presentes -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px; grid-column: span 2;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="color:var(--green-primary);">${MISSAO_ICONS.voluntarios || `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`}</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Voluntários Presentes</span>
+        </div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.voluntarios || 0}</div>
+        <div style="font-size:0.64rem; color:var(--text-muted);">Voluntários e apoiadores no dia</div>
+      </div>
     </div>
 
     <!-- 12. Decisões por Cristo em destaque nobre ouro -->
@@ -2024,15 +2044,16 @@ function openStandardUnitForm(unitId, targetDate, isEdit) {
   const sub = existing?.answeredSubfields || {};
   const hasAns = !!existing?.answeredQuestions;
 
-  // Bloco Refeições (5 subcampos)
+  // Bloco Refeições (6 subcampos)
   const isCafeActive = hasAns ? (sub.rCafe ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.cafe === 'number');
   const isAlmocoActive = hasAns ? (sub.rAlmoco ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.almoco === 'number');
+  const isLancheActive = hasAns ? (sub.rLanche ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.lanche === 'number');
   const isJantarActive = hasAns ? (sub.rJantar ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.jantar === 'number');
   const isAbordagensActive = hasAns ? (sub.rAbordagens ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.abordagens === 'number');
   const isEventosActive = hasAns ? (sub.rEventos ?? !!ans.refeicoes) : (!!existing && typeof existing.refeicoes?.eventosEspeciais === 'number');
-  const isRefeicoesComplete = isCafeActive && isAlmocoActive && isJantarActive && isAbordagensActive && isEventosActive;
+  const isRefeicoesComplete = isCafeActive && isAlmocoActive && isLancheActive && isJantarActive && isAbordagensActive && isEventosActive;
 
-  // Campos individuais (11 restantes)
+  // Campos individuais
   const isSociaisActive = hasAns ? !!ans.sociais : (!!existing && (typeof existing.encaminhamentosSociais === 'number' || typeof existing.novasTriagens === 'number'));
   const isSaudeActive = hasAns ? !!ans.saude : (!!existing && typeof existing.encaminhamentosSaude === 'number');
   const isPsicoActive = hasAns ? !!ans.psicologicos : (!!existing && typeof existing.atendimentosPsicologicos === 'number');
@@ -2043,16 +2064,18 @@ function openStandardUnitForm(unitId, targetDate, isEdit) {
   const isCoroActive = hasAns ? !!ans.ensaiosCoro : (!!existing && typeof existing.ensaiosCoro === 'number');
   const isEsporteActive = hasAns ? !!ans.atividadesFisicas : (!!existing && typeof existing.atividadesFisicas === 'number');
   const isAcolhidosEsporteActive = hasAns ? !!ans.participantesAtividadesFisicas : (!!existing && typeof existing.participantesAtividadesFisicas === 'number');
+  const isVoluntariosActive = hasAns ? !!ans.voluntarios : (!!existing && typeof existing.voluntarios === 'number');
   const isDecisoesActive = hasAns ? !!ans.decisoes : (!!existing && typeof existing.decisoesCristo === 'number');
 
   // Valores numéricos carregados
   const ref = existing?.refeicoes || {};
   const rCafe = ref.cafe ?? 0;
   const rAlmoco = ref.almoco ?? 0;
+  const rLanche = ref.lanche ?? 0;
   const rJantar = ref.jantar ?? 0;
   const rAbordagens = ref.abordagens ?? 0;
   const rEventos = ref.eventosEspeciais ?? 0;
-  const rTotal = rCafe + rAlmoco + rJantar + rAbordagens + rEventos;
+  const rTotal = rCafe + rAlmoco + rLanche + rJantar + rAbordagens + rEventos;
 
   const sociais = existing?.encaminhamentosSociais ?? existing?.novasTriagens ?? 0;
   const saude = existing?.encaminhamentosSaude ?? 0;
@@ -2064,6 +2087,7 @@ function openStandardUnitForm(unitId, targetDate, isEdit) {
   const coro = existing?.ensaiosCoro ?? 0;
   const esporte = existing?.atividadesFisicas ?? 0;
   const acolhidosEsporte = existing?.participantesAtividadesFisicas ?? 0;
+  const voluntarios = existing?.voluntarios ?? 0;
   const decisoes = existing?.decisoesCristo ?? 0;
 
   modalHeader.className = 'modal-header';
@@ -2148,6 +2172,15 @@ function openStandardUnitForm(unitId, targetDate, isEdit) {
               <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-almoco', -1, 'refeicoes')">-</button>
               <input type="number" id="${unitId}-r-almoco" class="missao-step-input ${isAlmocoActive ? 'active-val' : ''}" data-activated="${isAlmocoActive ? 'true' : 'false'}" value="${isAlmocoActive ? rAlmoco : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" onclick="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" oninput="activateStandardUnitInput('${unitId}', this.id, 'refeicoes'); recalcStandardUnitTotal('${unitId}', 'refeicoes')">
               <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-almoco', 1, 'refeicoes')">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Lanche</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-lanche', -1, 'refeicoes')">-</button>
+              <input type="number" id="${unitId}-r-lanche" class="missao-step-input ${isLancheActive ? 'active-val' : ''}" data-activated="${isLancheActive ? 'true' : 'false'}" value="${isLancheActive ? rLanche : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" onclick="activateStandardUnitInput('${unitId}', this.id, 'refeicoes')" oninput="activateStandardUnitInput('${unitId}', this.id, 'refeicoes'); recalcStandardUnitTotal('${unitId}', 'refeicoes')">
+              <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-r-lanche', 1, 'refeicoes')">+</button>
             </div>
           </div>
 
@@ -2360,6 +2393,24 @@ function openStandardUnitForm(unitId, targetDate, isEdit) {
         </div>
       </div>
 
+      <!-- Nº DE VOLUNTÁRIOS PRESENTES -->
+      <div class="missao-q-card">
+        <div class="missao-stepper-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="missao-q-icon">${MISSAO_ICONS.voluntarios || `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`}</div>
+            <div>
+              <div class="missao-q-title">Nº de Voluntários presentes</div>
+              <div class="missao-q-sub">Voluntários e apoiadores atuando no dia</div>
+            </div>
+          </div>
+          <div class="missao-stepper-controls">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-voluntarios', -1)">-</button>
+            <input type="number" id="${unitId}-rep-voluntarios" class="missao-step-input ${isVoluntariosActive ? 'active-val' : ''}" data-activated="${isVoluntariosActive ? 'true' : 'false'}" value="${isVoluntariosActive ? voluntarios : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
+            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-voluntarios', 1)">+</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 12. Nº DECISÕES POR CRISTO -->
       <div class="missao-q-card" style="border:1.5px solid var(--gold-primary); background:rgba(197, 137, 8, 0.04);">
         <div class="missao-stepper-row">
@@ -2445,19 +2496,22 @@ function recalcStandardUnitTotal(unitId, group) {
   if (group === 'refeicoes') {
     const elCafe = document.getElementById(`${unitId}-r-cafe`);
     const elAlmoco = document.getElementById(`${unitId}-r-almoco`);
+    const elLanche = document.getElementById(`${unitId}-r-lanche`);
     const elJantar = document.getElementById(`${unitId}-r-jantar`);
     const elAbordagens = document.getElementById(`${unitId}-r-abordagens`);
     const elEventos = document.getElementById(`${unitId}-r-eventos`);
 
     const cAct = elCafe?.getAttribute('data-activated') === 'true';
     const aAct = elAlmoco?.getAttribute('data-activated') === 'true';
+    const lAct = elLanche?.getAttribute('data-activated') === 'true';
     const jAct = elJantar?.getAttribute('data-activated') === 'true';
     const abAct = elAbordagens?.getAttribute('data-activated') === 'true';
     const evAct = elEventos?.getAttribute('data-activated') === 'true';
-    const allFilled = cAct && aAct && jAct && abAct && evAct;
+    const allFilled = cAct && aAct && lAct && jAct && abAct && evAct;
 
     const cafe = parseInt(elCafe?.value, 10) || 0;
     const almoco = parseInt(elAlmoco?.value, 10) || 0;
+    const lanche = parseInt(elLanche?.value, 10) || 0;
     const jantar = parseInt(elJantar?.value, 10) || 0;
     const abordagens = parseInt(elAbordagens?.value, 10) || 0;
     const eventos = parseInt(elEventos?.value, 10) || 0;
@@ -2465,11 +2519,11 @@ function recalcStandardUnitTotal(unitId, group) {
     const totalEl = document.getElementById(`${unitId}-total-refeicoes`);
     if (totalEl) {
       if (allFilled) {
-        totalEl.textContent = (cafe + almoco + jantar + abordagens + eventos);
+        totalEl.textContent = (cafe + almoco + lanche + jantar + abordagens + eventos);
         totalEl.classList.add('active-val');
       } else {
-        const partial = (cAct ? cafe : 0) + (aAct ? almoco : 0) + (jAct ? jantar : 0) + (abAct ? abordagens : 0) + (evAct ? eventos : 0);
-        totalEl.textContent = (cAct || aAct || jAct || abAct || evAct) ? partial : '-';
+        const partial = (cAct ? cafe : 0) + (aAct ? almoco : 0) + (lAct ? lanche : 0) + (jAct ? jantar : 0) + (abAct ? abordagens : 0) + (evAct ? eventos : 0);
+        totalEl.textContent = (cAct || aAct || lAct || jAct || abAct || evAct) ? partial : '-';
         totalEl.classList.remove('active-val');
       }
     }
@@ -2493,6 +2547,7 @@ async function handleSaveStandardUnitReport(unitId) {
 
   const rCafe = parseInt(document.getElementById(`${unitId}-r-cafe`)?.value, 10) || 0;
   const rAlmoco = parseInt(document.getElementById(`${unitId}-r-almoco`)?.value, 10) || 0;
+  const rLanche = parseInt(document.getElementById(`${unitId}-r-lanche`)?.value, 10) || 0;
   const rJantar = parseInt(document.getElementById(`${unitId}-r-jantar`)?.value, 10) || 0;
   const rAbordagens = parseInt(document.getElementById(`${unitId}-r-abordagens`)?.value, 10) || 0;
   const rEventos = parseInt(document.getElementById(`${unitId}-r-eventos`)?.value, 10) || 0;
@@ -2507,19 +2562,21 @@ async function handleSaveStandardUnitReport(unitId) {
   const coro = parseInt(document.getElementById(`${unitId}-rep-coro`)?.value, 10) || 0;
   const esporte = parseInt(document.getElementById(`${unitId}-rep-esporte`)?.value, 10) || 0;
   const acolhidosEsporte = parseInt(document.getElementById(`${unitId}-rep-acolhidos-esporte`)?.value, 10) || 0;
+  const voluntarios = parseInt(document.getElementById(`${unitId}-rep-voluntarios`)?.value, 10) || 0;
   const decisoes = parseInt(document.getElementById(`${unitId}-rep-decisoes`)?.value, 10) || 0;
   const reporter = document.getElementById(`${unitId}-rep-reporter`)?.value.trim() || unit.defaultReporter;
   const repId = document.getElementById(`${unitId}-rep-id`)?.value;
 
-  // Bloco Refeições: só é considerado preenchido se TODOS os 5 subcampos forem ativados
+  // Bloco Refeições: só é considerado preenchido se TODOS os subcampos forem ativados
   const cafeAct = document.getElementById(`${unitId}-r-cafe`)?.getAttribute('data-activated') === 'true';
   const almocoAct = document.getElementById(`${unitId}-r-almoco`)?.getAttribute('data-activated') === 'true';
+  const lancheAct = document.getElementById(`${unitId}-r-lanche`)?.getAttribute('data-activated') === 'true';
   const jantarAct = document.getElementById(`${unitId}-r-jantar`)?.getAttribute('data-activated') === 'true';
   const abordagensAct = document.getElementById(`${unitId}-r-abordagens`)?.getAttribute('data-activated') === 'true';
   const eventosAct = document.getElementById(`${unitId}-r-eventos`)?.getAttribute('data-activated') === 'true';
-  const isRefeicoesComplete = cafeAct && almocoAct && jantarAct && abordagensAct && eventosAct;
+  const isRefeicoesComplete = cafeAct && almocoAct && lancheAct && jantarAct && abordagensAct && eventosAct;
 
-  // Campos individuais (11 restantes)
+  // Campos individuais
   const isSociaisComplete = document.getElementById(`${unitId}-rep-sociais`)?.getAttribute('data-activated') === 'true';
   const isSaudeComplete = document.getElementById(`${unitId}-rep-saude`)?.getAttribute('data-activated') === 'true';
   const isPsicoComplete = document.getElementById(`${unitId}-rep-psico`)?.getAttribute('data-activated') === 'true';
@@ -2530,6 +2587,7 @@ async function handleSaveStandardUnitReport(unitId) {
   const isCoroComplete = document.getElementById(`${unitId}-rep-coro`)?.getAttribute('data-activated') === 'true';
   const isEsporteComplete = document.getElementById(`${unitId}-rep-esporte`)?.getAttribute('data-activated') === 'true';
   const isAcolhidosEsporteComplete = document.getElementById(`${unitId}-rep-acolhidos-esporte`)?.getAttribute('data-activated') === 'true';
+  const isVoluntariosComplete = document.getElementById(`${unitId}-rep-voluntarios`)?.getAttribute('data-activated') === 'true';
   const isDecisoesComplete = document.getElementById(`${unitId}-rep-decisoes`)?.getAttribute('data-activated') === 'true';
 
   const answeredQuestions = {
@@ -2544,12 +2602,14 @@ async function handleSaveStandardUnitReport(unitId) {
     ensaiosCoro: isCoroComplete,
     atividadesFisicas: isEsporteComplete,
     participantesAtividadesFisicas: isAcolhidosEsporteComplete,
+    voluntarios: isVoluntariosComplete,
     decisoes: isDecisoesComplete
   };
 
   const answeredSubfields = {
     rCafe: cafeAct,
     rAlmoco: almocoAct,
+    rLanche: lancheAct,
     rJantar: jantarAct,
     rAbordagens: abordagensAct,
     rEventos: eventosAct
@@ -2572,6 +2632,7 @@ async function handleSaveStandardUnitReport(unitId) {
     refeicoes: {
       cafe: rCafe,
       almoco: rAlmoco,
+      lanche: rLanche,
       jantar: rJantar,
       abordagens: rAbordagens,
       eventosEspeciais: rEventos
@@ -2587,6 +2648,7 @@ async function handleSaveStandardUnitReport(unitId) {
     ensaiosCoro: coro,
     atividadesFisicas: esporte,
     participantesAtividadesFisicas: acolhidosEsporte,
+    voluntarios: voluntarios,
     decisoesCristo: decisoes,
     answeredQuestions: answeredQuestions,
     answeredSubfields: answeredSubfields,
@@ -2616,6 +2678,7 @@ async function handleSaveStandardUnitReport(unitId) {
 
 // Aliases e Exportações Globais
 window.openMacedoniaFlow = () => openStandardUnitFlow('macedonia');
+window.openMasculinaFlow = window.openMacedoniaFlow;
 window.openFemininaFlow = () => openStandardUnitFlow('feminina');
 window.openStandardUnitFlow = openStandardUnitFlow;
 window.openStandardUnitCalendar = openStandardUnitCalendar;
@@ -2878,9 +2941,9 @@ const STOCK_UNITS = [
   },
   {
     id: 'macedonia',
-    name: 'Estoque Macedônia',
+    name: 'Estoque Masculina',
     icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/><path d="M12 17C15 17 18 19 19 22"/></svg>`,
-    subtitle: 'Unidade de Acolhimento Rural'
+    subtitle: 'Unidade de Acolhimento Masculino'
   },
   {
     id: 'feminina',
@@ -2903,10 +2966,11 @@ const STOCK_CATEGORIES_INFO = [
   { id: 'proteinas', label: 'Proteínas' },
   { id: 'temperos', label: 'Temperos' },
   { id: 'lanches', label: 'Lanches' },
-  { id: 'verduras_legumes', label: 'Verduras e Legumes' }
+  { id: 'verduras_legumes', label: 'Verduras e Legumes' },
+  { id: 'frutas', label: 'Frutas' }
 ];
 
-// 1. TELA DE SELEÇÃO DA DESPENSA (MISSÃO, MACEDÔNIA, FEMININA)
+// 1. TELA DE SELEÇÃO DA DESPENSA (MISSÃO, MASCULINA, FEMININA)
 function openStockModal() {
   const modalBody = document.getElementById('modal-generic-body');
   const modalHeader = document.getElementById('modal-generic-header');
@@ -3252,7 +3316,6 @@ function openAddStockItemModal(unitId) {
       </div>
       <div>
         <h2>Novo Alimento</h2>
-        <p style="font-size:0.75rem;">Será acrescido em todas as 3 despensas</p>
       </div>
     </div>
     <button class="btn-close-modal" onclick="closeModal('modal-generic')">&times;</button>
@@ -3265,11 +3328,11 @@ function openAddStockItemModal(unitId) {
     <form id="new-stock-item-form" onsubmit="event.preventDefault(); handleSaveNewStockItem('${unitId}');">
       <div class="form-group">
         <label class="form-label">Nome do Alimento ou Item *</label>
-        <input type="text" id="new-stock-name" class="form-input" placeholder="Ex: Azeite, Canela em pó, Carne seca..." required autofocus>
+        <input type="text" id="new-stock-name" class="form-input" placeholder="Ex: Azeite, Banana, Canela em pó..." required autofocus>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Categoria * (para agrupamento em todos os estoques)</label>
+        <label class="form-label">Categoria *</label>
         <select id="new-stock-category" class="form-input" required style="font-weight:700;">
           ${availableCats.map(cat => `
             <option value="${cat.id}" ${cat.id === defaultSelectedCat ? 'selected' : ''}>${cat.label}</option>
@@ -3281,13 +3344,13 @@ function openAddStockItemModal(unitId) {
         <div class="form-group">
           <label class="form-label">Qtd Inicial na ${unit.name}</label>
           <input type="number" id="new-stock-qty" class="form-input" value="10" min="0" required inputmode="numeric">
-          <span style="font-size:0.68rem; color:var(--text-muted); display:block; margin-top:2px;">(Nas outras despensas iniciará com 0 para contagem independente)</span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Unidade de Medida</label>
           <select id="new-stock-unit" class="form-input">
             <option value="und" selected>Unidade (und)</option>
+            <option value="palma">Palma (palma)</option>
             <option value="kg">Quilograma (kg)</option>
             <option value="pct">Pacote (pct)</option>
             <option value="cx">Caixa (cx)</option>
@@ -3303,7 +3366,7 @@ function openAddStockItemModal(unitId) {
 
   modalFooter.innerHTML = `
     <button type="button" class="btn-primary-action" style="width:100%; background:linear-gradient(135deg, #1E4D2B, #2E6A3B); color:#FFF; font-weight:800; box-shadow:0 4px 12px rgba(30,77,43,0.3);" onclick="handleSaveNewStockItem('${unitId}')">
-      💾 Salvar em Todos os Estoques
+      💾 Salvar Alimento
     </button>
   `;
 }
@@ -3329,33 +3392,30 @@ async function handleSaveNewStockItem(unitId) {
   const unitSelect = document.getElementById('new-stock-unit');
   const unit = unitSelect ? unitSelect.value.trim().toLowerCase() : 'und';
 
-  const allUnits = ['missao', 'macedonia', 'feminina'];
   const baseTimestamp = Date.now();
   const baseId = `c_${baseTimestamp}`;
 
-  showLoading('Cadastrando alimento em todos os estoques...');
+  showLoading('Cadastrando alimento no estoque...');
   try {
-    for (const targetUnitId of allUnits) {
-      const itemData = {
-        id: `stk_${targetUnitId}_custom_${baseTimestamp}`,
-        baseId: baseId,
-        name: name,
-        category: categoryId,
-        categoryLabel: categoryLabel,
-        quantity: (targetUnitId === unitId) ? quantity : 0,
-        unit: unit,
-        minQty: 5,
-        unitId: targetUnitId
-      };
+    const itemData = {
+      id: `stk_${unitId}_custom_${baseTimestamp}`,
+      baseId: baseId,
+      name: name,
+      category: categoryId,
+      categoryLabel: categoryLabel,
+      quantity: quantity,
+      unit: unit,
+      minQty: 5,
+      unitId: unitId
+    };
 
-      if (typeof dbManager.addStockItem === 'function') {
-        await dbManager.addStockItem(itemData);
-      } else if (typeof dbManager.saveStockItem === 'function') {
-        await dbManager.saveStockItem(itemData);
-      }
+    if (typeof dbManager.addStockItem === 'function') {
+      await dbManager.addStockItem(itemData);
+    } else if (typeof dbManager.saveStockItem === 'function') {
+      await dbManager.saveStockItem(itemData);
     }
 
-    showToast(`"${name}" adicionado em todos os estoques!`, 'success');
+    showToast(`"${name}" adicionado ao estoque!`, 'success');
     // Retorna à tela de atualização da despensa atual
     openStockUpdateView(unitId);
   } catch (e) {
@@ -3796,7 +3856,7 @@ function openReportsModal() {
         <select id="report-filter-unit" class="form-select" onchange="renderReportsHistory()">
           <option value="todas">Todas as Unidades (Consolidado)</option>
           <option value="missao">Unidade Missão</option>
-          <option value="macedonia">Unidade Macedônia</option>
+          <option value="macedonia">Unidade Masculina</option>
           <option value="feminina">Unidade Feminina</option>
         </select>
       </div>
@@ -3898,7 +3958,7 @@ function renderReportsHistory() {
 
   // Nome formatado da unidade
   const unitLabel = unitFilter === 'missao' ? 'Unidade Missão' :
-                    unitFilter === 'macedonia' ? 'Unidade Macedônia' :
+                    unitFilter === 'macedonia' ? 'Unidade Masculina' :
                     unitFilter === 'feminina' ? 'Unidade Feminina' : 'Todas as Unidades';
 
   // Atualiza Banner Superior
@@ -4352,7 +4412,7 @@ function renderReportsHistory() {
 
           <div style="background:var(--bg-main); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <strong style="color:var(--green-primary); font-size:0.82rem;">Macedônia</strong>
+              <strong style="color:var(--green-primary); font-size:0.82rem;">Masculina</strong>
               <div style="font-size:0.70rem; color:var(--text-muted);">${unitBreakdown.macedonia.count} relatórios · ${unitBreakdown.macedonia.estudos} estudos</div>
             </div>
             <div style="text-align:right; font-size:0.75rem;">
@@ -4415,7 +4475,7 @@ async function downloadReportsPDF() {
   }
 
   const unitLabel = unitFilter === 'missao' ? 'Unidade Missão' :
-                    unitFilter === 'macedonia' ? 'Unidade Macedônia' :
+                    unitFilter === 'macedonia' ? 'Unidade Masculina' :
                     unitFilter === 'feminina' ? 'Unidade Feminina' : 'Todas as Unidades (Consolidado)';
 
   if (btn) btn.disabled = true;
@@ -4772,7 +4832,7 @@ async function downloadReportsPDF() {
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold; color:#A36F04;">${breakdown.missao.decisoes}</td>
             </tr>
             <tr style="background:#FAF8F5;">
-              <td style="padding:6px 10px; border:1px solid #E2D9C8; font-weight:bold; color:#1E4D2B;">Macedônia</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; font-weight:bold; color:#1E4D2B;">Masculina</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.count}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.ref}</td>
               <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${breakdown.macedonia.assist}</td>
@@ -4895,7 +4955,7 @@ function shareReportsWhatsApp() {
     : { total: 0, participantes: 0, concluintes: { triagem: 0, fase1: 0, fase2: 0 }, porFase: { triagem: 0, fase1: 0, fase2: 0 }, list: [] };
 
   const unitLabel = unitFilter === 'missao' ? 'UNIDADE MISSÃO' :
-                    unitFilter === 'macedonia' ? 'UNIDADE MACEDÔNIA' :
+                    unitFilter === 'macedonia' ? 'UNIDADE MASCULINA' :
                     unitFilter === 'feminina' ? 'UNIDADE FEMININA' : 'TODAS AS UNIDADES (CONSOLIDADO)';
 
   let text = `🌿 *CRISTOLÂNDIA CHECK • RELATÓRIO DE ATIVIDADES*\n`;
@@ -5045,7 +5105,7 @@ function shareReportsWhatsApp() {
 
     text += `*2. COMPARATIVO POR UNIDADE*\n`;
     text += `• *Missão:* ${breakdown.missao.ref} ref. | ${breakdown.missao.assist} assist. | ${estudosMissaoCount} estudos | ${breakdown.missao.decisoes} decisões (${breakdown.missao.count} relatórios)\n`;
-    text += `• *Macedônia:* ${breakdown.macedonia.ref} ref. | ${breakdown.macedonia.assist} assist. | ${estudosMacedoniaCount} estudos | ${breakdown.macedonia.decisoes} decisões (${breakdown.macedonia.count} relatórios)\n`;
+    text += `• *Masculina:* ${breakdown.macedonia.ref} ref. | ${breakdown.macedonia.assist} assist. | ${estudosMacedoniaCount} estudos | ${breakdown.macedonia.decisoes} decisões (${breakdown.macedonia.count} relatórios)\n`;
     text += `• *Feminina:* ${breakdown.feminina.ref} ref. | ${breakdown.feminina.assist} assist. | ${estudosFemininaCount} estudos | ${breakdown.feminina.decisoes} decisões (${breakdown.feminina.count} relatórios)\n\n`;
   }
 
@@ -5161,7 +5221,7 @@ function openAtividadesView(filterInstId = '') {
     ? `<div style="text-align:center;padding:30px;color:var(--text-muted);"><p style="font-weight:600;">Nenhuma atividade registrada.</p><p style="font-size:0.76rem;">Registre atividades realizadas com as instituições parceiras.</p></div>`
     : filtered.map(a => {
         const instName = a.institutionName || '—';
-        const unitLabel = { missao: 'Missão', macedonia: 'Macedônia', feminina: 'Feminina' }[a.unitId] || a.unitId || '—';
+        const unitLabel = { missao: 'Missão', macedonia: 'Masculina', feminina: 'Feminina' }[a.unitId] || a.unitId || '—';
         return `
           <div class="history-item clickable" style="border-left:3px solid var(--gold-primary); cursor:pointer;" onclick="openNovaAtividadeForm({}, '${a.id}')">
             <div class="history-item-header">
@@ -5242,7 +5302,7 @@ function openNovaAtividadeForm(pending, editId = null) {
         <label class="form-label">Unidade</label>
         <select id="atv-unit" class="form-input">
           <option value="missao" ${(p.unitId === 'missao' || !p.unitId) ? 'selected' : ''}>Missão</option>
-          <option value="macedonia" ${p.unitId === 'macedonia' ? 'selected' : ''}>Macedônia</option>
+          <option value="macedonia" ${p.unitId === 'macedonia' ? 'selected' : ''}>Masculina</option>
           <option value="feminina" ${p.unitId === 'feminina' ? 'selected' : ''}>Feminina</option>
         </select>
       </div>
@@ -5940,7 +6000,7 @@ function openNovoEstudoModal(faseSugerida = 'triagem', estudoParaEditar = null) 
           </label>
           <select id="estudo-input-unit" class="form-select" required style="width:100%;">
             <option value="missao" ${initialUnit === 'missao' ? 'selected' : ''}>Unidade Missão</option>
-            <option value="macedonia" ${initialUnit === 'macedonia' ? 'selected' : ''}>Unidade Macedônia</option>
+            <option value="macedonia" ${initialUnit === 'macedonia' ? 'selected' : ''}>Unidade Masculina</option>
             <option value="feminina" ${initialUnit === 'feminina' ? 'selected' : ''}>Unidade Feminina</option>
           </select>
         </div>
@@ -5998,20 +6058,12 @@ function openNovoEstudoModal(faseSugerida = 'triagem', estudoParaEditar = null) 
         </div>
       </div>
 
-      <!-- Perguntas 2 e 3: Participantes e Concluintes -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:14px;">
-        <div>
-          <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--green-primary); margin-bottom:4px; font-family:var(--font-gothic);">
-            2. Qtd. de participantes
-          </label>
-          <input type="number" min="0" id="estudo-input-participantes" class="form-input" placeholder="0" value="${initialParticipantes}" required style="width:100%;">
-        </div>
-        <div>
-          <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--green-primary); margin-bottom:4px; font-family:var(--font-gothic);">
-            3. Qtd. que concluíram
-          </label>
-          <input type="number" min="0" id="estudo-input-concluintes" class="form-input" placeholder="0" value="${initialConcluintes}" required style="width:100%;">
-        </div>
+      <!-- Pergunta 2: Qtd. de participantes -->
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.76rem; font-weight:800; color:var(--green-primary); margin-bottom:4px; font-family:var(--font-gothic);">
+          2. Qtd. de participantes
+        </label>
+        <input type="number" min="0" id="estudo-input-participantes" class="form-input" placeholder="0" value="${initialParticipantes}" required style="width:100%;">
       </div>
 
       <!-- Pergunta 4: Como foi a participação? -->
@@ -6167,7 +6219,6 @@ async function handleSaveEstudo(editId) {
   const temaInput = document.getElementById('estudo-input-tema');
   const missionarioInput = document.getElementById('estudo-input-missionario');
   const participantesInput = document.getElementById('estudo-input-participantes');
-  const concluintesInput = document.getElementById('estudo-input-concluintes');
   const btn = document.getElementById('btn-save-estudo');
 
   const date = dateInput?.value || getLocalDateStr();
@@ -6176,7 +6227,7 @@ async function handleSaveEstudo(editId) {
   const tema = temaInput?.value || '';
   const missionario = (missionarioInput?.value || '').trim();
   const participantes = parseInt(participantesInput?.value || '0', 10);
-  const concluintes = parseInt(concluintesInput?.value || '0', 10);
+  const concluintes = 0;
 
   if (!missionario) {
     showToast('Informe o nome do missionário que aplicou o estudo.', 'warning');
@@ -6300,7 +6351,7 @@ function openHistoricoEstudosModal(faseFiltro = 'todas') {
         <select id="hist-estudo-filter-unit" class="form-select" onchange="filterHistoricoEstudos()" style="padding:6px; font-size:0.76rem; width:100%;">
           <option value="todas">Todas as Unidades</option>
           <option value="missao">Missão</option>
-          <option value="macedonia">Macedônia</option>
+          <option value="macedonia">Masculina</option>
           <option value="feminina">Feminina</option>
         </select>
       </div>
@@ -6366,7 +6417,7 @@ function renderHistoricoEstudosList() {
     return;
   }
 
-  const unitLabels = { missao: 'Missão', macedonia: 'Macedônia', feminina: 'Feminina' };
+  const unitLabels = { missao: 'Missão', macedonia: 'Masculina', feminina: 'Feminina' };
   const faseLabels = { triagem: 'Triagem', fase1: '1ª Fase', fase2: '2ª Fase' };
 
   container.innerHTML = filtered.map(e => {
@@ -6396,7 +6447,7 @@ function renderHistoricoEstudosList() {
 
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:var(--text-muted);">
           <span>👤 ${escapeHtml(e.missionario || 'Missionário')}</span>
-          <span>👥 ${e.participantes || 0} participantes (${e.concluintes || 0} concluíram)</span>
+          <span>👥 ${e.participantes || 0} participantes</span>
         </div>
 
         ${e.precisaAcompanhamento === 'sim' ? `
@@ -6423,7 +6474,7 @@ function viewDetalhesEstudo(id) {
   const footer = document.getElementById('modal-generic-footer');
   if (!modal || !header || !body || !footer) return;
 
-  const unitLabels = { missao: 'Unidade Missão', macedonia: 'Unidade Macedônia', feminina: 'Unidade Feminina' };
+  const unitLabels = { missao: 'Unidade Missão', macedonia: 'Unidade Masculina', feminina: 'Unidade Feminina' };
   const faseLabels = { triagem: 'Triagem', fase1: 'Discipulado 1ª Fase', fase2: 'Discipulado 2ª Fase' };
 
   const participacaoLabels = {
@@ -6484,16 +6535,13 @@ function viewDetalhesEstudo(id) {
           <strong>2. Acolhidos que participaram:</strong> ${estudo.participantes || 0}
         </div>
         <div>
-          <strong>3. Acolhidos que concluíram:</strong> ${estudo.concluintes || 0}
+          <strong>3. Como foi a participação:</strong> ${participacaoLabels[estudo.participacao] || estudo.participacao}
         </div>
         <div>
-          <strong>4. Como foi a participação:</strong> ${participacaoLabels[estudo.participacao] || estudo.participacao}
+          <strong>4. Compreensão do conteúdo:</strong> ${compreensaoLabels[estudo.compreensao] || estudo.compreensao}
         </div>
         <div>
-          <strong>5. Compreensão do conteúdo:</strong> ${compreensaoLabels[estudo.compreensao] || estudo.compreensao}
-        </div>
-        <div>
-          <strong>6. Precisa de acompanhamento individual?</strong> 
+          <strong>5. Precisa de acompanhamento individual?</strong> 
           <span style="font-weight:700; color:${estudo.precisaAcompanhamento === 'sim' ? '#DC3545' : 'var(--text-main)'};">
             ${estudo.precisaAcompanhamento === 'sim' ? 'Sim' : 'Não'}
           </span>

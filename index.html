@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Cristolândia Check</title>
-  <meta name="description" content="Aplicativo PWA clean para preenchimento de relatórios diários das unidades de atendimento da Cristolândia.">
+  <meta name="description"
+    content="Aplicativo PWA clean para preenchimento de relatórios diários das unidades de atendimento da Cristolândia.">
 
   <!-- Anti-Cache para Refletir Alterações Imediatas sem Limpar Dados -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -22,9 +25,10 @@
   <meta name="theme-color" content="#1E4D2B">
 
   <!-- Estilos CSS com Versionamento Anti-Cache -->
-  <link rel="stylesheet" href="css/main.css?v=20260923-v47">
-  <link rel="stylesheet" href="css/buttons-3d.css?v=20260923-v47">
+  <link rel="stylesheet" href="css/main.css?v=20260923-v48">
+  <link rel="stylesheet" href="css/buttons-3d.css?v=20260923-v48">
 </head>
+
 <body>
 
   <!-- Partículas Brancas Flutuantes com Glow (Desfocadas, Opacidade 20%) -->
@@ -50,7 +54,8 @@
       </div>
 
       <!-- Bolinha Verde Simples no Lado Direito para Sinalizar Conexão Online -->
-      <div class="header-status-indicator" onclick="openSettingsModal()" title="Status da Conexão (Toque para Configurações)">
+      <div class="header-status-indicator" onclick="openSettingsModal()"
+        title="Status da Conexão (Toque para Configurações)">
         <span id="status-dot-simple" class="status-dot-simple online"></span>
       </div>
     </header>
@@ -95,22 +100,22 @@
             <span class="btn-dot" data-q="3" title="Banhos"></span>
             <span class="btn-dot" data-q="4" title="Corte de cabelo"></span>
             <span class="btn-dot" data-q="5" title="Cultos realizados"></span>
-            <span class="btn-dot" data-q="6" title="Busca ativa"></span>
+            <span class="btn-dot" data-q="6" title="Voluntários presentes"></span>
             <span class="btn-dot" data-q="7" title="Decisões por Cristo"></span>
           </div>
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
-              <path d="M3 10L12 3L21 10"/>
-              <path d="M5 10V20H19V10"/>
-              <path d="M9 20V14H15V20"/>
-              <line x1="2" y1="20" x2="22" y2="20"/>
+              <path d="M3 10L12 3L21 10" />
+              <path d="M5 10V20H19V10" />
+              <path d="M9 20V14H15V20" />
+              <line x1="2" y1="20" x2="22" y2="20" />
             </svg>
           </div>
           <div class="btn-title">Missão</div>
         </button>
 
-        <!-- 2. Macedônia -->
-        <button class="btn-card-3d btn-macedonia" onclick="openMacedoniaFlow()">
+        <!-- 2. Masculina -->
+        <button class="btn-card-3d btn-masculina btn-macedonia" onclick="openMacedoniaFlow()">
           <!-- 12 Bolinhas de Progresso Neon correspondentes às 12 perguntas do relatório -->
           <div class="btn-dots-progress" id="macedonia-dots-container" title="Progresso das 12 perguntas de hoje">
             <span class="btn-dot" data-q="1" title="Refeições"></span>
@@ -128,12 +133,12 @@
           </div>
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
-              <path d="M12 22V12"/>
-              <path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/>
-              <path d="M12 17C15 17 18 19 19 22"/>
+              <path d="M12 22V12" />
+              <path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z" />
+              <path d="M12 17C15 17 18 19 19 22" />
             </svg>
           </div>
-          <div class="btn-title">Macedônia</div>
+          <div class="btn-title">Masculina</div>
         </button>
 
         <!-- 3. Feminina (Avatar Feminino Idêntico à Referência) -->
@@ -155,65 +160,76 @@
           </div>
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
-              <path d="M8.8 13.5L5.5 14C6 8.5 8 4 12 4C16 4 18 8.5 18.5 14L15.2 13.5"/>
-              <path d="M8.2 9.5C9.5 9 11 8.2 12.5 7.5C13.8 8.5 15 9.2 15.8 9.5"/>
-              <path d="M8.2 9.5C8.2 12.8 9.8 14.2 12 14.2C14.2 14.2 15.8 12.8 15.8 9.5"/>
-              <path d="M8.8 14.5C6.5 15.2 5.5 16.5 5 20H19C18.5 16.5 17.5 15.2 15.2 14.5"/>
-              <path d="M10.2 14.8C10.5 16.8 11.2 17.8 12 17.8C12.8 17.8 13.5 16.8 13.8 14.8"/>
+              <path d="M8.8 13.5L5.5 14C6 8.5 8 4 12 4C16 4 18 8.5 18.5 14L15.2 13.5" />
+              <path d="M8.2 9.5C9.5 9 11 8.2 12.5 7.5C13.8 8.5 15 9.2 15.8 9.5" />
+              <path d="M8.2 9.5C8.2 12.8 9.8 14.2 12 14.2C14.2 14.2 15.8 12.8 15.8 9.5" />
+              <path d="M8.8 14.5C6.5 15.2 5.5 16.5 5 20H19C18.5 16.5 17.5 15.2 15.2 14.5" />
+              <path d="M10.2 14.8C10.5 16.8 11.2 17.8 12 17.8C12.8 17.8 13.5 16.8 13.8 14.8" />
             </svg>
           </div>
           <div class="btn-title">Feminina</div>
         </button>
 
-        <!-- LINHA INFERIOR: ESTOQUE, RELATÓRIOS E IGREJAS -->
-
-        <!-- 4. Estoque -->
-        <button class="btn-card-3d btn-estoque" onclick="openStockModal()">
+        <!-- 4. Triagem (Amarelo com Ícone Verde e Letra Branca) -->
+        <button class="btn-card-3d btn-triagem" onclick="openTriagemModal()">
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
-              <path d="M21 8L12 3L3 8L12 13L21 8Z"/>
-              <path d="M3 8V16L12 21L21 16V8"/>
-              <line x1="12" y1="13" x2="12" y2="21"/>
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <polyline points="16 11 18 13 22 9" />
             </svg>
           </div>
-          <div class="btn-title">Estoque</div>
+          <div class="btn-title">Triagem</div>
         </button>
 
-        <!-- 5. Estudos (No lugar anterior de Relatórios) -->
+        <!-- 5. Estudos -->
         <button class="btn-card-3d btn-estudos" onclick="openEstudosModal()">
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24" style="stroke: #FFFFFF !important;">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-              <line x1="12" y1="6" x2="12" y2="12"/>
-              <line x1="9.5" y1="8.5" x2="14.5" y2="8.5"/>
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              <line x1="12" y1="6" x2="12" y2="12" />
+              <line x1="9.5" y1="8.5" x2="14.5" y2="8.5" />
             </svg>
           </div>
           <div class="btn-title">Estudos</div>
         </button>
 
-        <!-- 6. Igrejas / Instituições -->
+        <!-- 6. Estoque -->
+        <button class="btn-card-3d btn-estoque" onclick="openStockModal()">
+          <div class="btn-icon-wrapper">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 8L12 3L3 8L12 13L21 8Z" />
+              <path d="M3 8V16L12 21L21 16V8" />
+              <line x1="12" y1="13" x2="12" y2="21" />
+            </svg>
+          </div>
+          <div class="btn-title">Estoque</div>
+        </button>
+
+        <!-- 7. Instituições -->
         <button class="btn-card-3d btn-igreja" onclick="openInstituicoesModal()">
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
-              <line x1="12" y1="2" x2="12" y2="7"/>
-              <line x1="10" y1="4" x2="14" y2="4"/>
-              <path d="M12 7L4 12V22H20V12L12 7Z"/>
-              <path d="M10 22V16C10 14.9 10.9 14 12 14C13.1 14 14 14.9 14 16V22"/>
+              <line x1="12" y1="2" x2="12" y2="7" />
+              <line x1="10" y1="4" x2="14" y2="4" />
+              <path d="M12 7L4 12V22H20V12L12 7Z" />
+              <path d="M10 22V16C10 14.9 10.9 14 12 14C13.1 14 14 14.9 14 16V22" />
             </svg>
           </div>
           <div class="btn-title">Institui&#231;&#245;es</div>
         </button>
 
-        <!-- 7. Relatórios (Abaixo do botão Estoque, coluna 1 da 3ª linha) -->
+        <!-- 8. Relatório -->
         <button class="btn-card-3d btn-relatorios" onclick="openReportsModal()">
           <div class="btn-icon-wrapper">
             <svg viewBox="0 0 24 24">
-              <path d="M9 3H15M9 3C9 2 10 1 12 1C14 1 15 2 15 3M9 3H6C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V5C20 3.89543 19.1046 3 18 3H15"/>
-              <path d="M8 12L11 15L16 9"/>
+              <path
+                d="M9 3H15M9 3C9 2 10 1 12 1C14 1 15 2 15 3M9 3H6C4.89543 3 4 3.89543 4 5V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V5C20 3.89543 19.1046 3 18 3H15" />
+              <path d="M8 12L11 15L16 9" />
             </svg>
           </div>
-          <div class="btn-title">Relatórios</div>
+          <div class="btn-title">Relatório</div>
         </button>
 
       </div>
@@ -223,14 +239,16 @@
     <section class="daily-notices-section">
       <div class="daily-notices-header">
         <div class="daily-notices-title-wrapper">
-          <svg class="daily-notices-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          <svg class="daily-notices-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
           <h3 class="daily-notices-title">Avisos do dia!</h3>
         </div>
         <button type="button" class="btn-add-notice" onclick="openAddNoticeModal()" title="Adicionar Aviso">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6"
+            stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
@@ -243,8 +261,10 @@
           <!-- Injetado dinamicamente -->
         </div>
         <!-- Botões discretos de navegação lateral para facilidade universal -->
-        <button type="button" class="notice-nav-arrow prev" id="notice-nav-prev" onclick="navNotice(-1)" aria-label="Aviso anterior">&#8249;</button>
-        <button type="button" class="notice-nav-arrow next" id="notice-nav-next" onclick="navNotice(1)" aria-label="Próximo aviso">&#8250;</button>
+        <button type="button" class="notice-nav-arrow prev" id="notice-nav-prev" onclick="navNotice(-1)"
+          aria-label="Aviso anterior">&#8249;</button>
+        <button type="button" class="notice-nav-arrow next" id="notice-nav-next" onclick="navNotice(1)"
+          aria-label="Próximo aviso">&#8250;</button>
       </div>
 
       <!-- Fileira de Bolinhas Douradas com Indicador Neon da Mensagem Ativa -->
@@ -287,10 +307,11 @@
   <script src="js/html2pdf.bundle.min.js"></script>
 
   <!-- Scripts da Aplicação com Versionamento Anti-Cache -->
-  <script src="js/db.js?v=20260923-v47"></script>
-  <script src="js/modules.js?v=20260923-v47"></script>
-  <script src="js/pwa.js?v=20260923-v47"></script>
-  <script src="js/app.js?v=20260923-v47"></script>
+  <script src="js/db.js?v=20260923-v48"></script>
+  <script src="js/modules.js?v=20260923-v48"></script>
+  <script src="js/pwa.js?v=20260923-v48"></script>
+  <script src="js/app.js?v=20260923-v48"></script>
 
 </body>
+
 </html>
