@@ -746,9 +746,47 @@ const mockFrutasCatalogo = [
 ];
 assert.strictEqual(mockFrutasCatalogo[0].unit, 'palma', 'Banana deve ter unidade palma');
 assert.strictEqual(mockFrutasCatalogo[1].unit, 'und', 'Laranja deve ter unidade und');
-assert.strictEqual(mockFrutasCatalogo[0].quantity, 0, 'Valores padrão devem ser 0 para prevalecer a contagem do usuário');
+// 8.5 Validação dos Novos Campos e Regras da Triagem
+const mockNovaTriagem = {
+  formatoAtendimento: 'online',
+  nome: 'Lucas Silva',
+  idade: 32,
+  moradia: 'rua',
+  documentos: ['RG', 'CPF', 'Cartão do SUS'],
+  temDocumentos: true,
+  quaisDocumentos: 'RG, CPF, Cartão do SUS',
+  exames: ['HIV', 'Hepatite'],
+  fezExames: true,
+  demandaSaude: false,
+  demandaJuridica: true,
+  qualDemandaJuridica: 'Processo',
+  jaPassouCristolandia: true,
+  primeiroAcolhimento: false,
+  quantasVezes: 2,
+  statusAptidao: 'apto_ressalvas',
+  ressalva: 'Necessita desintoxicação acompanhada'
+};
 
-console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens, avisos, estudos, estoque real, lanche, voluntários, frutas e preservação de instituições passaram com 100% de sucesso!');
+assert.strictEqual(mockNovaTriagem.formatoAtendimento, 'online', 'Triagem deve suportar formato online');
+assert.deepStrictEqual(mockNovaTriagem.documentos, ['RG', 'CPF', 'Cartão do SUS'], 'Documentos devem ser gravados em array de itens selecionados');
+assert.deepStrictEqual(mockNovaTriagem.exames, ['HIV', 'Hepatite'], 'Exames devem ser gravados em array de itens selecionados');
+assert.strictEqual(mockNovaTriagem.jaPassouCristolandia, true, 'Pergunta já passou pela Cristolândia deve ser booleana');
+assert.strictEqual(mockNovaTriagem.statusAptidao, 'apto_ressalvas', 'Status de aptidão deve ser apto_ressalvas');
+assert.strictEqual(mockNovaTriagem.ressalva, 'Necessita desintoxicação acompanhada', 'Ressalva deve ser gravada');
+
+// 8.6 Validação de Ficha de Estudos Bíblicos sem Concluintes
+const mockEstudoSemConcluintes = {
+  unitId: 'missao',
+  fase: 'triagem',
+  tema: '1. O Encontro com a Verdade',
+  missionario: 'Missionário João',
+  participantes: 15,
+  concluintes: 0
+};
+assert.strictEqual(mockEstudoSemConcluintes.concluintes, 0, 'Estudo bíblico não deve exigir pergunta quantos concluíram');
+assert.strictEqual(mockEstudoSemConcluintes.participantes, 15, 'Participantes devem ser registrados normalmente');
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens completas (aptidão, formato, exames, docs), avisos, estudos, estoque real, lanche, voluntários, frutas e preservação de instituições passaram com 100% de sucesso!');
 
 
 

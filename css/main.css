@@ -2612,6 +2612,95 @@ body::before {
   color: #E65100;
 }
 
+.badge-formato-online {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
+.badge-formato-presencial {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.badge-apto {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.badge-nao-apto {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.badge-apto-ressalvas {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+/* Checkbox tags / pills para documentos e exames */
+.triagem-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.triagem-check-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-beige);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.triagem-check-item:hover {
+  border-color: var(--green-primary);
+}
+
+.triagem-check-item input[type="checkbox"] {
+  accent-color: var(--green-primary);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.triagem-check-item:has(input[type="checkbox"]:checked) {
+  background: rgba(30, 77, 43, 0.08);
+  border-color: var(--green-primary);
+  color: var(--green-primary);
+  font-weight: 700;
+}
+
+/* Aptidão Pills personalizadas com cores oficiais: Verde, Vermelho e Azul */
+.radio-pill-apto:has(input[type="radio"]:checked) {
+  background: #1E4D2B !important;
+  color: #FFFFFF !important;
+  border-color: #1E4D2B !important;
+  box-shadow: 0 2px 6px rgba(30, 77, 43, 0.35) !important;
+}
+
+.radio-pill-nao-apto:has(input[type="radio"]:checked) {
+  background: #DC2626 !important;
+  color: #FFFFFF !important;
+  border-color: #DC2626 !important;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35) !important;
+}
+
+.radio-pill-ressalvas:has(input[type="radio"]:checked) {
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35) !important;
+}
+
 /* Modal de Detalhes da Triagem */
 .triagem-details-box {
   background: var(--bg-surface);

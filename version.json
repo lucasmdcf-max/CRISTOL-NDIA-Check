@@ -1,6 +1,6 @@
 {
-  "version": "1.0.49",
-  "build": "20260923_49",
+  "version": "1.0.50",
+  "build": "20260924_50",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Triagem exclusiva na tela inicial com identidade verde claro, ícone branco e nome dourado, e abas superiores correspondentes."
+  "releaseNotes": "Novo ícone avatar homem para a unidade Masculina, triagem completa com aptidão (Apto/Não Apto/Ressalva), formato online/presencial, documentos em checkboxes, exames e pergunta de passagem anterior."
 }

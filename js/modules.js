@@ -19,7 +19,7 @@ const UNIT_PROFILES = {
     name: 'Masculina',
     fullName: 'Unidade Masculina • Internação & Vida',
     badgeClass: 'badge-macedonia',
-    iconSvg: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/><path d="M12 17C15 17 18 19 19 22"/></svg>`,
+    iconSvg: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8C7.5 4.5 9.5 3.5 12 3.5C14.5 3.5 16.5 4.5 16.5 8" /><path d="M7.5 7.5C9.5 6 12 6.2 16.5 7.5" /><path d="M8.5 8C8.5 11.5 10 13.2 12 13.2C14 13.2 15.5 11.5 15.5 8" /><path d="M4 20C4 16.5 7 14.5 12 14.5C17 14.5 20 16.5 20 20" /><path d="M10 14.5L12 17L14 14.5" /></svg>`,
     defaultReporter: 'Missionário Carlos'
   },
   feminina: {
@@ -1173,12 +1173,23 @@ function renderTriagensList() {
 
   container.innerHTML = list.map(t => {
     const moradiaBadge = t.moradia === 'rua' 
-      ? `<span class="triagem-badge badge-rua">Rua</span>` 
-      : `<span class="triagem-badge badge-casa">Casa</span>`;
+      ? `<span class="triagem-badge badge-rua">Veio de Rua</span>` 
+      : `<span class="triagem-badge badge-casa">Veio de Casa</span>`;
 
-    const primeiroBadge = t.primeiroAcolhimento 
+    const primeiroBadge = (t.jaPassouCristolandia === false || t.primeiroAcolhimento)
       ? `<span class="triagem-badge badge-primeiro">1º Acolhimento</span>` 
       : `<span class="triagem-badge badge-retorno">${t.quantasVezes ? t.quantasVezes + 'ª vez' : 'Retorno'}</span>`;
+
+    const formatoBadge = t.formatoAtendimento === 'online'
+      ? `<span class="triagem-badge badge-formato-online">🌐 Online</span>`
+      : `<span class="triagem-badge badge-formato-presencial">📍 Presencial</span>`;
+
+    let aptidaoBadge = `<span class="triagem-badge badge-apto">✓ Apto</span>`;
+    if (t.statusAptidao === 'nao_apto') {
+      aptidaoBadge = `<span class="triagem-badge badge-nao-apto">✕ Não Apto</span>`;
+    } else if (t.statusAptidao === 'apto_ressalvas') {
+      aptidaoBadge = `<span class="triagem-badge badge-apto-ressalvas">⚠️ Apto c/ Ressalvas</span>`;
+    }
 
     return `
       <div class="triagem-card" onclick="viewTriagemDetails('${t.id}')" title="Toque para ver a ficha completa">
@@ -1188,6 +1199,8 @@ function renderTriagensList() {
         </div>
         <div class="triagem-card-tags">
           ${t.idade ? `<span style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">${t.idade} anos</span> •` : ''}
+          ${formatoBadge}
+          ${aptidaoBadge}
           ${moradiaBadge}
           ${primeiroBadge}
           ${t.demandaSaude ? `<span style="font-size:0.70rem; color:#D32F2F; font-weight:700;">🩺 Saúde</span>` : ''}
@@ -1214,6 +1227,67 @@ function viewTriagemDetails(id) {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  const statusApt = t.statusAptidao || 'apto';
+  let aptBanner = '';
+  if (statusApt === 'nao_apto') {
+    aptBanner = `
+      <div style="background:#FEE2E2; border:1.5px solid #EF4444; border-radius:10px; padding:10px 14px; display:flex; align-items:center; gap:10px; color:#991B1B;">
+        <div style="font-size:1.4rem;">⛔</div>
+        <div>
+          <div style="font-size:0.88rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Não Apto</div>
+          <div style="font-size:0.74rem;">O acolhido não atende aos critérios imediatos de acolhimento.</div>
+        </div>
+      </div>
+    `;
+  } else if (statusApt === 'apto_ressalvas') {
+    aptBanner = `
+      <div style="background:#EFF6FF; border:1.5px solid #3B82F6; border-radius:10px; padding:10px 14px; color:#1E40AF;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="font-size:1.3rem;">ℹ️</div>
+          <div style="font-size:0.88rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Apto com Ressalvas</div>
+        </div>
+        ${t.ressalva ? `
+          <div style="margin-top:6px; font-size:0.78rem; background:rgba(255,255,255,0.7); padding:6px 10px; border-radius:6px; border:1px solid #BFDBFE;">
+            <strong>Ressalva descrita:</strong> ${t.ressalva}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else {
+    aptBanner = `
+      <div style="background:#ECFDF5; border:1.5px solid #10B981; border-radius:10px; padding:10px 14px; display:flex; align-items:center; gap:10px; color:#065F46;">
+        <div style="font-size:1.4rem;">✅</div>
+        <div>
+          <div style="font-size:0.88rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Apto</div>
+          <div style="font-size:0.74rem;">Acolhido qualificado para os procedimentos de acolhimento.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Lista de documentos
+  let docDisplay = '✗ Nenhum documento informado';
+  if (Array.isArray(t.documentos) && t.documentos.length > 0) {
+    docDisplay = t.documentos.map(d => `<span style="display:inline-block; margin:2px 4px 2px 0; padding:2px 8px; border-radius:6px; background:#E2E8F0; font-size:0.74rem; font-weight:700; color:#334155;">📄 ${d}</span>`).join('');
+  } else if (t.quaisDocumentos) {
+    docDisplay = `✓ ${t.quaisDocumentos}`;
+  } else if (t.temDocumentos) {
+    docDisplay = '✓ Possui documentos';
+  }
+
+  // Lista de exames
+  let examesDisplay = '✗ Nenhum exame informado';
+  if (Array.isArray(t.exames) && t.exames.length > 0) {
+    examesDisplay = t.exames.map(e => `<span style="display:inline-block; margin:2px 4px 2px 0; padding:2px 8px; border-radius:6px; background:#FEF3C7; font-size:0.74rem; font-weight:700; color:#92400E;">🧪 ${e}</span>`).join('');
+  } else if (t.fezExames === false) {
+    examesDisplay = '✗ Não realizou exames';
+  }
+
+  // Já passou pela Cristolândia
+  const jaPassou = (t.jaPassouCristolandia !== undefined) 
+    ? t.jaPassouCristolandia 
+    : (t.primeiroAcolhimento === false);
+
   modalHeader.className = 'modal-header theme-triagem';
   modalHeader.innerHTML = `
     <div class="modal-header-title">
@@ -1235,7 +1309,10 @@ function viewTriagemDetails(id) {
 
   modalBody.innerHTML = `
     <div class="triagem-details-box">
-      <div class="triagem-detail-row">
+      <!-- Status de Aptidão Oficial -->
+      ${aptBanner}
+
+      <div class="triagem-detail-row" style="margin-top:4px;">
         <span class="triagem-detail-label">Nome Completo do Acolhido</span>
         <span class="triagem-detail-val" style="font-size:1.05rem; font-weight:800; color:var(--green-primary);">${t.nome}</span>
       </div>
@@ -1246,31 +1323,42 @@ function viewTriagemDetails(id) {
           <span class="triagem-detail-val">${formatDateBR(t.date)}</span>
         </div>
         <div class="triagem-detail-row">
+          <span class="triagem-detail-label">Formato do Atendimento</span>
+          <span class="triagem-detail-val">${t.formatoAtendimento === 'online' ? '🌐 Online' : '📍 Presencial'}</span>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="triagem-detail-row">
           <span class="triagem-detail-label">Idade</span>
           <span class="triagem-detail-val">${t.idade ? t.idade + ' anos' : 'Não informada'}</span>
+        </div>
+        <div class="triagem-detail-row">
+          <span class="triagem-detail-label">Veio de Casa ou Veio de Rua</span>
+          <span class="triagem-detail-val">
+            ${t.moradia === 'rua' 
+              ? '⛺ Veio de Rua' 
+              : (t.moradia === 'casa' ? '🏠 Veio de Casa' : (t.moradia || 'Não informado'))}
+          </span>
         </div>
       </div>
 
       <div class="triagem-detail-row">
-        <span class="triagem-detail-label">Rua ou Casa</span>
-        <span class="triagem-detail-val">
-          ${t.moradia === 'rua' 
-            ? '⛺ Situação de Rua' 
-            : (t.moradia === 'casa' ? '🏠 Possui Casa / Família' : (t.moradia || 'Não informado'))}
-        </span>
+        <span class="triagem-detail-label">Documentos Apresentados</span>
+        <div class="triagem-detail-val" style="margin-top:2px;">
+          ${docDisplay}
+        </div>
       </div>
 
       <div class="triagem-detail-row">
-        <span class="triagem-detail-label">Tem documentos? Quais?</span>
-        <span class="triagem-detail-val">
-          ${t.temDocumentos 
-            ? `✓ Sim (${t.quaisDocumentos || 'Não especificados'})` 
-            : '✗ Não possui documentos'}
-        </span>
+        <span class="triagem-detail-label">Fez exames?</span>
+        <div class="triagem-detail-val" style="margin-top:2px;">
+          ${examesDisplay}
+        </div>
       </div>
 
       <div class="triagem-detail-row">
-        <span class="triagem-detail-label">Tem alguma demanda de saúde? Qual?</span>
+        <span class="triagem-detail-label">Tem alguma demanda de saúde?</span>
         <span class="triagem-detail-val">
           ${t.demandaSaude 
             ? `🩺 Sim (${t.qualDemandaSaude || 'Não especificada'})` 
@@ -1288,11 +1376,11 @@ function viewTriagemDetails(id) {
       </div>
 
       <div class="triagem-detail-row">
-        <span class="triagem-detail-label">É o primeiro acolhimento na Cristolândia?</span>
+        <span class="triagem-detail-label">Já passou pela Cristolândia?</span>
         <span class="triagem-detail-val">
-          ${t.primeiroAcolhimento 
-            ? '✓ Sim (Primeira vez na Cristolândia)' 
-            : `Retorno (Já passou ${t.quantasVezes || 'mais de 1'} vez(es))`}
+          ${jaPassou 
+            ? `Sim (Já passou ${t.quantasVezes ? t.quantasVezes + ' vez(es)' : 'anteriormente'})` 
+            : 'Não (1º acolhimento)'}
         </span>
       </div>
     </div>
@@ -1313,7 +1401,7 @@ function viewTriagemDetails(id) {
 }
 window.viewTriagemDetails = viewTriagemDetails;
 
-// Formulário de Cadastro e Edição de Triagem (8 Perguntas Oficiais)
+// Formulário de Cadastro e Edição de Triagem (Perguntas Oficiais Completas)
 function openTriagemForm(triagemId = null) {
   window._currentScreen = { type: 'missao-triagem-form', triagemId };
 
@@ -1324,18 +1412,34 @@ function openTriagemForm(triagemId = null) {
   const modalHeader = document.getElementById('modal-generic-header');
   const modalFooter = document.getElementById('modal-generic-footer');
 
+  const formatoAtendimento = existing ? (existing.formatoAtendimento || 'presencial') : 'presencial';
   const nome = existing ? (existing.nome || '') : '';
   const idade = existing && existing.idade ? existing.idade : '';
   const moradia = existing ? (existing.moradia || 'rua') : 'rua';
-  const temDocumentos = existing ? !!existing.temDocumentos : false;
-  const quaisDocumentos = existing ? (existing.quaisDocumentos || '') : '';
+  
+  // Documentos cadastrados
+  const docsList = existing && Array.isArray(existing.documentos) 
+    ? existing.documentos 
+    : (existing && existing.quaisDocumentos ? existing.quaisDocumentos.split(',').map(s => s.trim()) : []);
+
+  // Exames cadastrados
+  const examesList = existing && Array.isArray(existing.exames) ? existing.exames : [];
+
   const demandaSaude = existing ? !!existing.demandaSaude : false;
   const qualDemandaSaude = existing ? (existing.qualDemandaSaude || '') : '';
   const demandaJuridica = existing ? !!existing.demandaJuridica : false;
   const qualDemandaJuridica = existing ? (existing.qualDemandaJuridica || '') : '';
-  const primeiroAcolhimento = existing ? (existing.primeiroAcolhimento !== false) : true;
+  
+  // Já passou pela Cristolândia
+  const jaPassou = existing 
+    ? (existing.jaPassouCristolandia !== undefined ? existing.jaPassouCristolandia : (existing.primeiroAcolhimento === false))
+    : false;
   const quantasVezes = existing && existing.quantasVezes ? existing.quantasVezes : '';
   const dataTriagem = existing ? (existing.date || todayStr) : todayStr;
+
+  // Aptidão
+  const statusAptidao = existing ? (existing.statusAptidao || 'apto') : 'apto';
+  const ressalva = existing ? (existing.ressalva || '') : '';
 
   modalHeader.className = 'modal-header theme-triagem';
   modalHeader.innerHTML = `
@@ -1382,13 +1486,28 @@ function openTriagemForm(triagemId = null) {
 
     <form id="triagem-form" onsubmit="event.preventDefault();" style="display:flex; flex-direction:column; gap:12px;">
 
-      <!-- 1. Nome -->
+      <!-- 1. Formato do Atendimento (Início do cadastro: Online ou Presencial) -->
+      <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
+        <label class="form-label" style="font-weight:700;">Formato do Atendimento: *</label>
+        <div class="form-radio-pills">
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-formato" value="presencial" ${formatoAtendimento === 'presencial' ? 'checked' : ''}>
+            📍 Presencial
+          </label>
+          <label class="radio-pill-label">
+            <input type="radio" name="trg-formato" value="online" ${formatoAtendimento === 'online' ? 'checked' : ''}>
+            🌐 Online
+          </label>
+        </div>
+      </div>
+
+      <!-- 2. Nome -->
       <div class="form-group" style="margin-bottom:0;">
         <label class="form-label" style="font-weight:700;">Nome Completo: *</label>
         <input type="text" id="trg-nome" class="form-input" value="${nome}" placeholder="Ex: João da Silva" required>
       </div>
 
-      <!-- 2. Idade e Data da Triagem -->
+      <!-- 3. Idade e Data da Triagem -->
       <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap:8px;">
         <div class="form-group" style="margin-bottom:0;">
           <label class="form-label" style="font-weight:700;">Idade:</label>
@@ -1400,41 +1519,50 @@ function openTriagemForm(triagemId = null) {
         </div>
       </div>
 
-      <!-- 3. Rua ou Casa -->
+      <!-- 4. Veio de Casa ou Veio de Rua -->
       <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label" style="font-weight:700;">Rua ou Casa:</label>
+        <label class="form-label" style="font-weight:700;">Veio de Casa ou Veio de Rua:</label>
         <div class="form-radio-pills">
           <label class="radio-pill-label">
             <input type="radio" name="trg-moradia" value="rua" ${moradia === 'rua' ? 'checked' : ''}>
-            ⛺ Rua
+            ⛺ Veio de Rua
           </label>
           <label class="radio-pill-label">
             <input type="radio" name="trg-moradia" value="casa" ${moradia === 'casa' ? 'checked' : ''}>
-            🏠 Casa
+            🏠 Veio de Casa
           </label>
         </div>
       </div>
 
-      <!-- 4. Tem documentos? Quais? -->
+      <!-- 5. Tem documentos? (Lista para marcar os que possui) -->
       <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
         <label class="form-label" style="font-weight:700;">Tem documentos?</label>
-        <div class="form-radio-pills" style="margin-bottom:8px;">
-          <label class="radio-pill-label">
-            <input type="radio" name="trg-tem-docs" value="sim" ${temDocumentos ? 'checked' : ''} onchange="toggleTriagemField('trg-quais-docs-box', true)">
-            Sim
-          </label>
-          <label class="radio-pill-label">
-            <input type="radio" name="trg-tem-docs" value="nao" ${!temDocumentos ? 'checked' : ''} onchange="toggleTriagemField('trg-quais-docs-box', false)">
-            Não
-          </label>
-        </div>
-        <div id="trg-quais-docs-box" style="display:${temDocumentos ? 'block' : 'none'};">
-          <label class="form-label" style="font-size:0.74rem;">Quais documentos?</label>
-          <input type="text" id="trg-quais-docs" class="form-input" value="${quaisDocumentos}" placeholder="Ex: RG, CPF, Certidão de Nascimento">
+        <p style="font-size:0.70rem; color:var(--text-muted); margin-top:-2px; margin-bottom:6px;">Marque os documentos que o atendido possui:</p>
+        <div class="triagem-checkbox-grid">
+          ${['RG', 'CPF', 'Certidão', 'CNH', 'Cartão do SUS', 'Cartão de Vacina'].map(doc => `
+            <label class="triagem-check-item">
+              <input type="checkbox" name="trg-docs" value="${doc}" ${docsList.includes(doc) ? 'checked' : ''}>
+              <span>${doc}</span>
+            </label>
+          `).join('')}
         </div>
       </div>
 
-      <!-- 5. Tem alguma demanda de saúde? Qual? -->
+      <!-- 6. Fez exames? (Lista para marcar) -->
+      <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
+        <label class="form-label" style="font-weight:700;">Fez exames?</label>
+        <p style="font-size:0.70rem; color:var(--text-muted); margin-top:-2px; margin-bottom:6px;">Marque os exames realizados pelo atendido:</p>
+        <div class="triagem-checkbox-grid">
+          ${['HIV', 'Hepatite', 'Sífilis', 'Gravidez'].map(ex => `
+            <label class="triagem-check-item">
+              <input type="checkbox" name="trg-exames" value="${ex}" ${examesList.includes(ex) ? 'checked' : ''}>
+              <span>${ex}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- 7. Tem alguma demanda de saúde? Qual? -->
       <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
         <label class="form-label" style="font-weight:700;">Tem alguma demanda de saúde?</label>
         <div class="form-radio-pills" style="margin-bottom:8px;">
@@ -1453,7 +1581,7 @@ function openTriagemForm(triagemId = null) {
         </div>
       </div>
 
-      <!-- 6. Tem alguma demanda jurídica? -->
+      <!-- 8. Tem alguma demanda jurídica? -->
       <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
         <label class="form-label" style="font-weight:700;">Tem alguma demanda jurídica?</label>
         <div class="form-radio-pills" style="margin-bottom:8px;">
@@ -1472,22 +1600,46 @@ function openTriagemForm(triagemId = null) {
         </div>
       </div>
 
-      <!-- 7 & 8. Primeiro acolhimento e passagens anteriores -->
+      <!-- 9. Já passou pela Cristolândia? -->
       <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:10px; border-radius:10px; border:1px solid var(--border-beige);">
-        <label class="form-label" style="font-weight:700;">É o primeiro acolhimento na Cristolândia?</label>
+        <label class="form-label" style="font-weight:700;">Já passou pela Cristolândia?</label>
         <div class="form-radio-pills" style="margin-bottom:8px;">
           <label class="radio-pill-label">
-            <input type="radio" name="trg-primeiro" value="sim" ${primeiroAcolhimento ? 'checked' : ''} onchange="toggleTriagemField('trg-quantas-vezes-box', false)">
+            <input type="radio" name="trg-ja-passou" value="sim" ${jaPassou ? 'checked' : ''} onchange="toggleTriagemField('trg-quantas-vezes-box', true)">
             Sim
           </label>
           <label class="radio-pill-label">
-            <input type="radio" name="trg-primeiro" value="nao" ${!primeiroAcolhimento ? 'checked' : ''} onchange="toggleTriagemField('trg-quantas-vezes-box', true)">
+            <input type="radio" name="trg-ja-passou" value="nao" ${!jaPassou ? 'checked' : ''} onchange="toggleTriagemField('trg-quantas-vezes-box', false)">
             Não
           </label>
         </div>
-        <div id="trg-quantas-vezes-box" style="display:${!primeiroAcolhimento ? 'block' : 'none'};">
-          <label class="form-label" style="font-size:0.74rem;">Se não, quantas vezes já passou?</label>
+        <div id="trg-quantas-vezes-box" style="display:${jaPassou ? 'block' : 'none'};">
+          <label class="form-label" style="font-size:0.74rem;">Quantas vezes já passou?</label>
           <input type="number" id="trg-quantas-vezes" class="form-input" value="${quantasVezes}" placeholder="Ex: 2" min="1">
+        </div>
+      </div>
+
+      <!-- 10. Status de Aptidão (Final do registro: Apto, Não Apto, Apto com Ressalvas) -->
+      <div class="form-group" style="margin-bottom:0; background:var(--bg-main); padding:12px; border-radius:10px; border:1.5px solid var(--border-beige);">
+        <label class="form-label" style="font-weight:800; font-size:0.86rem; color:var(--text-main);">Situação do Atendido (Aptidão): *</label>
+        <div class="form-radio-pills" style="margin-top:6px;">
+          <label class="radio-pill-label radio-pill-apto">
+            <input type="radio" name="trg-aptidao" value="apto" ${statusAptidao === 'apto' ? 'checked' : ''} onchange="toggleTriagemField('trg-ressalva-box', false)">
+            ✓ Apto
+          </label>
+          <label class="radio-pill-label radio-pill-nao-apto">
+            <input type="radio" name="trg-aptidao" value="nao_apto" ${statusAptidao === 'nao_apto' ? 'checked' : ''} onchange="toggleTriagemField('trg-ressalva-box', false)">
+            ✕ Não Apto
+          </label>
+          <label class="radio-pill-label radio-pill-ressalvas">
+            <input type="radio" name="trg-aptidao" value="apto_ressalvas" ${statusAptidao === 'apto_ressalvas' ? 'checked' : ''} onchange="toggleTriagemField('trg-ressalva-box', true)">
+            ⚠️ Apto c/ Ressalvas
+          </label>
+        </div>
+
+        <div id="trg-ressalva-box" style="display:${statusAptidao === 'apto_ressalvas' ? 'block' : 'none'}; margin-top:10px;">
+          <label class="form-label" style="font-weight:700; color:#1E40AF; font-size:0.76rem;">Descreva a ressalva identificada: *</label>
+          <textarea id="trg-ressalva-desc" class="form-input" style="min-height:64px; resize:vertical;" placeholder="Ex: Necessita liberação médica para desintoxicação ou acompanhamento psiquiátrico">${ressalva}</textarea>
         </div>
       </div>
 
@@ -1523,13 +1675,24 @@ async function handleSaveTriagem(triagemId) {
     return;
   }
 
+  // Formato do Atendimento (Online ou Presencial)
+  const formatoEl = document.querySelector('input[name="trg-formato"]:checked');
+  const formatoAtendimento = formatoEl ? formatoEl.value : 'presencial';
+
+  // Veio de Casa ou Rua
   const moradiaEl = document.querySelector('input[name="trg-moradia"]:checked');
   const moradia = moradiaEl ? moradiaEl.value : 'rua';
 
-  const temDocsEl = document.querySelector('input[name="trg-tem-docs"]:checked');
-  const temDocumentos = temDocsEl ? (temDocsEl.value === 'sim') : false;
-  const quaisDocumentos = temDocumentos ? (document.getElementById('trg-quais-docs')?.value.trim() || '') : '';
+  // Documentos marcados
+  const docsChecked = Array.from(document.querySelectorAll('input[name="trg-docs"]:checked')).map(cb => cb.value);
+  const temDocumentos = docsChecked.length > 0;
+  const quaisDocumentos = docsChecked.join(', ');
 
+  // Exames marcados
+  const examesChecked = Array.from(document.querySelectorAll('input[name="trg-exames"]:checked')).map(cb => cb.value);
+  const fezExames = examesChecked.length > 0;
+
+  // Demandas de saúde e jurídica
   const demandaSaudeEl = document.querySelector('input[name="trg-demanda-saude"]:checked');
   const demandaSaude = demandaSaudeEl ? (demandaSaudeEl.value === 'sim') : false;
   const qualDemandaSaude = demandaSaude ? (document.getElementById('trg-qual-saude')?.value.trim() || '') : '';
@@ -1538,26 +1701,48 @@ async function handleSaveTriagem(triagemId) {
   const demandaJuridica = demandaJuridicaEl ? (demandaJuridicaEl.value === 'sim') : false;
   const qualDemandaJuridica = demandaJuridica ? (document.getElementById('trg-qual-juridica')?.value.trim() || '') : '';
 
-  const primeiroEl = document.querySelector('input[name="trg-primeiro"]:checked');
-  const primeiroAcolhimento = primeiroEl ? (primeiroEl.value === 'sim') : true;
-  const quantasVezesVal = !primeiroAcolhimento ? (document.getElementById('trg-quantas-vezes')?.value.trim() || '') : '';
+  // Já passou pela Cristolândia
+  const jaPassouEl = document.querySelector('input[name="trg-ja-passou"]:checked');
+  const jaPassouCristolandia = jaPassouEl ? (jaPassouEl.value === 'sim') : false;
+  const primeiroAcolhimento = !jaPassouCristolandia;
+  const quantasVezesVal = jaPassouCristolandia ? (document.getElementById('trg-quantas-vezes')?.value.trim() || '') : '';
+
+  // Aptidão
+  const aptidaoEl = document.querySelector('input[name="trg-aptidao"]:checked');
+  const statusAptidao = aptidaoEl ? aptidaoEl.value : 'apto';
+  const ressalva = (statusAptidao === 'apto_ressalvas') 
+    ? (document.getElementById('trg-ressalva-desc')?.value.trim() || '') 
+    : '';
+
+  if (statusAptidao === 'apto_ressalvas' && !ressalva) {
+    showToast('Por favor, descreva a ressalva identificada.', 'warning');
+    document.getElementById('trg-ressalva-desc')?.focus();
+    return;
+  }
 
   const triagemData = {
     id: triagemId || undefined,
     unitId: 'missao',
     unitName: 'Missão',
     date: dateVal,
+    formatoAtendimento: formatoAtendimento,
     nome: nome,
     idade: idadeVal ? parseInt(idadeVal, 10) : null,
     moradia: moradia,
+    documentos: docsChecked,
     temDocumentos: temDocumentos,
     quaisDocumentos: quaisDocumentos,
+    exames: examesChecked,
+    fezExames: fezExames,
     demandaSaude: demandaSaude,
     qualDemandaSaude: qualDemandaSaude,
     demandaJuridica: demandaJuridica,
     qualDemandaJuridica: qualDemandaJuridica,
+    jaPassouCristolandia: jaPassouCristolandia,
     primeiroAcolhimento: primeiroAcolhimento,
-    quantasVezes: quantasVezesVal ? parseInt(quantasVezesVal, 10) : null
+    quantasVezes: quantasVezesVal ? parseInt(quantasVezesVal, 10) : null,
+    statusAptidao: statusAptidao,
+    ressalva: ressalva
   };
 
   if (btn) btn.disabled = true;
@@ -2963,7 +3148,7 @@ const STOCK_UNITS = [
   {
     id: 'macedonia',
     name: 'Estoque Masculina',
-    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12C12 7 7 4 3 6C3 11 7 15 12 15C17 15 21 11 21 6C17 4 12 7 12 12Z"/><path d="M12 17C15 17 18 19 19 22"/></svg>`,
+    icon: `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8C7.5 4.5 9.5 3.5 12 3.5C14.5 3.5 16.5 4.5 16.5 8" /><path d="M7.5 7.5C9.5 6 12 6.2 16.5 7.5" /><path d="M8.5 8C8.5 11.5 10 13.2 12 13.2C14 13.2 15.5 11.5 15.5 8" /><path d="M4 20C4 16.5 7 14.5 12 14.5C17 14.5 20 16.5 20 20" /><path d="M10 14.5L12 17L14 14.5" /></svg>`,
     subtitle: 'Unidade de Acolhimento Masculino'
   },
   {
@@ -5977,7 +6162,6 @@ function openNovoEstudoModal(faseSugerida = 'triagem', estudoParaEditar = null) 
   const initialTema = estudoParaEditar ? (estudoParaEditar.tema || '') : '';
   const initialRealizado = estudoParaEditar ? (estudoParaEditar.realizado || 'sim') : 'sim';
   const initialParticipantes = estudoParaEditar ? (estudoParaEditar.participantes ?? '') : '';
-  const initialConcluintes = estudoParaEditar ? (estudoParaEditar.concluintes ?? '') : '';
   const initialParticipacao = estudoParaEditar ? (estudoParaEditar.participacao || 'participativa') : 'participativa';
   const initialCompreensao = estudoParaEditar ? (estudoParaEditar.compreensao || 'a_maioria') : 'a_maioria';
   const initialPrecisaAcompanhamento = estudoParaEditar ? (estudoParaEditar.precisaAcompanhamento || 'nao') : 'nao';
