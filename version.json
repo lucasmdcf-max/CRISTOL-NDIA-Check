@@ -1,6 +1,6 @@
 {
-  "version": "1.0.51",
-  "build": "20260924_51",
+  "version": "1.0.52",
+  "build": "20261002_52",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Painel diário estritamente da data corrente sem dados retroativos, e garantia de preservação permanente da última atualização de estoque preenchida pelos usuários."
+  "releaseNotes": "Inclusão do campo Atendimentos Sociais (com opção de atendimento pontual ou encaminhamento) nas 3 unidades, e Cursos Profissionalizantes (com nome, data de início, data de término e participantes com sugestões salvas) nas unidades Masculina e Feminina."
 }

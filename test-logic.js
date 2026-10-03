@@ -879,7 +879,62 @@ assert.strictEqual(feijaoItem.quantity, 45, 'Quantidade de feijão preenchida pe
 assert.strictEqual(arrozItem.quantity, 80, 'Quantidade de arroz preenchida pelo usuário (80) deve prevalecer');
 assert.strictEqual(itemCustom.quantity, 12, 'Novo item cadastrado pelo usuário não pode ser perdido');
 
-console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, triagens completas (aptidão, formato, exames, docs), avisos, estudos, painel diário estritamente da data corrente, estoque real dos usuários, voluntários, frutas e preservação de instituições passaram com 100% de sucesso!');
+// 8.9 Validação dos Novos Campos: Atendimentos Sociais e Cursos Profissionalizantes
+const mockRelatorioMissao = {
+  unitId: 'missao',
+  date: '2026-10-02',
+  encaminhamentosSociais: 7, // Retrocompatibilidade
+  atendimentosSociais: {
+    total: 7,
+    tipo: 'misto',
+    pontual: 4,
+    encaminhamento: 3
+  }
+};
+
+const mockRelatorioMacedonia = {
+  unitId: 'macedonia',
+  date: '2026-10-02',
+  encaminhamentosSociais: 5,
+  atendimentosSociais: {
+    total: 5,
+    tipo: 'pontual',
+    pontual: 5,
+    encaminhamento: 0
+  },
+  cursosProfissionalizantes: [
+    {
+      nome: 'Panificação Artesanal',
+      dataInicio: '2026-10-01',
+      dataTermino: '2026-11-30',
+      participantes: 12
+    },
+    {
+      nome: 'Marcenaria Básica',
+      dataInicio: '2026-09-15',
+      dataTermino: '2026-12-15',
+      participantes: 8
+    }
+  ]
+};
+
+const cleanMissao = sanitize(mockRelatorioMissao);
+assert.strictEqual(cleanMissao.atendimentosSociais.total, 7);
+assert.strictEqual(cleanMissao.atendimentosSociais.pontual, 4);
+assert.strictEqual(cleanMissao.atendimentosSociais.encaminhamento, 3);
+assert.strictEqual(cleanMissao.encaminhamentosSociais, 7, 'encaminhamentosSociais deve ser preservado para retrocompatibilidade');
+
+const cleanMacedonia = sanitize(mockRelatorioMacedonia);
+assert.strictEqual(cleanMacedonia.cursosProfissionalizantes.length, 2);
+assert.strictEqual(cleanMacedonia.cursosProfissionalizantes[0].nome, 'Panificação Artesanal');
+assert.strictEqual(cleanMacedonia.cursosProfissionalizantes[0].participantes, 12);
+
+// Validação de cálculo agregado de participantes em cursos
+const totalPartCursos = cleanMacedonia.cursosProfissionalizantes.reduce((acc, c) => acc + (Number(c.participantes) || 0), 0);
+assert.strictEqual(totalPartCursos, 20, 'Soma de participantes nos cursos deve ser 20');
+
+console.log('✅ Todos os testes de lógica de sanitização, períodos, relatórios, atendimentos sociais (pontual/encaminhamento), cursos profissionalizantes com sugestões, triagens completas, avisos, estudos, painel diário, estoque real e instituições passaram com 100% de sucesso!');
+
 
 
 

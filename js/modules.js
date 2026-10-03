@@ -55,6 +55,7 @@ const MISSAO_ICONS = {
   cultos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10L12 3L21 10"/><path d="M5 10V20H19V10"/><line x1="12" y1="7" x2="12" y2="15"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
   buscaAtiva: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>`,
   voluntarios: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  sociais: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
   decisoes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M7 7h10"/><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
 };
 
@@ -410,6 +411,21 @@ function viewMissaoDayReport(dateStr) {
         </div>
         <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.voluntarios || 0}</div>
       </div>
+
+      <!-- Atendimentos Sociais (Pontuais e Encaminhamentos) -->
+      <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px; grid-column: span 2;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="color:var(--green-primary);">${MISSAO_ICONS.sociais}</span>
+            <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Atendimentos Sociais</span>
+          </div>
+          <span style="font-family:var(--font-gothic); font-size:1.3rem; font-weight:800; color:var(--green-primary);">${(r.atendimentosSociais?.total ?? r.encaminhamentosSociais ?? 0)}</span>
+        </div>
+        <div style="display:flex; gap:12px; font-size:0.7rem; color:var(--text-muted); background:var(--bg-cream); padding:5px 10px; border-radius:8px;">
+          <span>📍 <strong>Pontuais:</strong> ${r.atendimentosSociais?.pontual ?? (r.atendimentosSociais?.tipo === 'pontual' ? (r.atendimentosSociais?.total || r.encaminhamentosSociais || 0) : 0)}</span>
+          <span>📋 <strong>Encaminhamentos:</strong> ${r.atendimentosSociais?.encaminhamento ?? (r.atendimentosSociais?.tipo === 'encaminhamento' ? (r.atendimentosSociais?.total || r.encaminhamentosSociais || 0) : (r.encaminhamentosSociais || 0))}</span>
+        </div>
+      </div>
     </div>
 
     <!-- Decisões por Cristo em destaque -->
@@ -477,6 +493,7 @@ function openMissaoForm(targetDate, isEdit) {
   // Campos individuais
   const isBanhosActive = hasAns ? !!ans.banhos : (!!existing && typeof existing.banhos === 'number');
   const isCortesActive = hasAns ? !!ans.cortes : (!!existing && typeof existing.cortesCabelo === 'number');
+  const isSociaisActive = hasAns ? !!ans.sociais : (!!existing && (typeof existing.atendimentosSociais === 'object' || typeof existing.encaminhamentosSociais === 'number'));
   const isCultosActive = hasAns ? !!ans.cultos : (!!existing && typeof existing.cultos === 'number');
   const isVoluntariosActive = hasAns ? !!ans.voluntarios : (!!existing && typeof existing.voluntarios === 'number');
   const isDecisoesActive = hasAns ? !!ans.decisoes : (!!existing && typeof existing.decisoesCristo === 'number');
@@ -497,6 +514,16 @@ function openMissaoForm(targetDate, isEdit) {
 
   const banhos = existing?.banhos ?? 0;
   const cortes = existing?.cortesCabelo ?? 0;
+
+  // Atendimentos Sociais
+  const socObj = (existing && typeof existing.atendimentosSociais === 'object') ? existing.atendimentosSociais : {};
+  const socTotal = existing?.encaminhamentosSociais ?? socObj.total ?? 0;
+  const socPontual = socObj.pontual ?? (socObj.tipo === 'pontual' ? socTotal : 0);
+  const socEncam = socObj.encaminhamento ?? (socObj.tipo === 'encaminhamento' ? socTotal : (existing?.encaminhamentosSociais ?? 0));
+  const socTipo = socObj.tipo || (socPontual > 0 && socEncam > 0 ? 'ambos' : socPontual > 0 ? 'pontual' : socEncam > 0 ? 'encaminhamento' : '');
+  const socPontualActive = (socObj.pontual > 0) || (socTipo === 'pontual') || (socTipo === 'ambos');
+  const socEncamActive = (socObj.encaminhamento > 0) || (socTipo === 'encaminhamento') || (socTipo === 'ambos') || (typeof existing?.encaminhamentosSociais === 'number' && existing.encaminhamentosSociais > 0);
+
   const cultos = existing?.cultos ?? 0;
   const voluntarios = existing?.voluntarios ?? 0;
   const decisoes = existing?.decisoesCristo ?? 0;
@@ -706,6 +733,55 @@ function openMissaoForm(targetDate, isEdit) {
         </div>
       </div>
 
+      <!-- Nº DE ATENDIMENTOS SOCIAIS -->
+      <div class="missao-q-card">
+        <div class="missao-q-header">
+          <div class="missao-q-icon">${MISSAO_ICONS.sociais}</div>
+          <div class="missao-q-title-box">
+            <div class="missao-q-title">Nº de Atendimentos Sociais</div>
+            <div class="missao-q-sub">Marque se foi atendimento pontual ou encaminhamento</div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
+            <div class="missao-total-val ${isSociaisActive ? 'active-val' : ''}" id="missao-total-sociais">${isSociaisActive ? (socPontual + socEncam) : '-'}</div>
+          </div>
+        </div>
+
+        <!-- Opções para Marcar: Pontual ou Encaminhamento -->
+        <div class="social-type-container">
+          <div class="social-type-pill ${socPontualActive ? 'active' : ''}" id="missao-soc-pill-pontual" onclick="toggleSocialType('missao', 'pontual')">
+            <input type="checkbox" id="missao-soc-chk-pontual" ${socPontualActive ? 'checked' : ''} style="display:none;">
+            <span class="social-type-check">✓</span>
+            <span>Atendimento Pontual</span>
+          </div>
+          <div class="social-type-pill ${socEncamActive ? 'active' : ''}" id="missao-soc-pill-encaminhamento" onclick="toggleSocialType('missao', 'encaminhamento')">
+            <input type="checkbox" id="missao-soc-chk-encaminhamento" ${socEncamActive ? 'checked' : ''} style="display:none;">
+            <span class="social-type-check">✓</span>
+            <span>Encaminhamento</span>
+          </div>
+        </div>
+
+        <div class="missao-sub-grid">
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Pontuais</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustSocialStep('missao', 'pontual', -1)">-</button>
+              <input type="number" id="missao-soc-pontual" class="missao-step-input ${socPontualActive ? 'active-val' : ''}" data-activated="${socPontualActive ? 'true' : 'false'}" value="${socPontualActive ? socPontual : ''}" onfocus="activateSocialInput('missao', 'pontual')" onclick="activateSocialInput('missao', 'pontual')" oninput="activateSocialInput('missao', 'pontual')">
+              <button type="button" class="btn-missao-step" onclick="adjustSocialStep('missao', 'pontual', 1)">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Encaminhamentos</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustSocialStep('missao', 'encaminhamento', -1)">-</button>
+              <input type="number" id="missao-soc-encaminhamento" class="missao-step-input ${socEncamActive ? 'active-val' : ''}" data-activated="${socEncamActive ? 'true' : 'false'}" value="${socEncamActive ? socEncam : ''}" onfocus="activateSocialInput('missao', 'encaminhamento')" onclick="activateSocialInput('missao', 'encaminhamento')" oninput="activateSocialInput('missao', 'encaminhamento')">
+              <button type="button" class="btn-missao-step" onclick="adjustSocialStep('missao', 'encaminhamento', 1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Nº DE CULTOS REALIZADOS -->
       <div class="missao-q-card">
         <div class="missao-stepper-row">
@@ -889,6 +965,107 @@ function recalcMissaoTotal(group) {
 }
 window.recalcMissaoTotal = recalcMissaoTotal;
 
+// ==========================================================================
+// FUNÇÕES GLOBAIS: ATENDIMENTOS SOCIAIS (PONTUAL / ENCAMINHAMENTO)
+// ==========================================================================
+
+function toggleSocialType(unitId, tipo) {
+  const chkPontual = document.getElementById(`${unitId}-soc-chk-pontual`);
+  const chkEncam = document.getElementById(`${unitId}-soc-chk-encaminhamento`);
+  const pillPontual = document.getElementById(`${unitId}-soc-pill-pontual`);
+  const pillEncam = document.getElementById(`${unitId}-soc-pill-encaminhamento`);
+
+  if (tipo === 'pontual' && chkPontual && pillPontual) {
+    chkPontual.checked = !chkPontual.checked;
+    if (chkPontual.checked) {
+      pillPontual.classList.add('active');
+      activateSocialInput(unitId, 'pontual');
+      document.getElementById(`${unitId}-soc-pontual`)?.focus();
+    } else {
+      pillPontual.classList.remove('active');
+    }
+  } else if (tipo === 'encaminhamento' && chkEncam && pillEncam) {
+    chkEncam.checked = !chkEncam.checked;
+    if (chkEncam.checked) {
+      pillEncam.classList.add('active');
+      activateSocialInput(unitId, 'encaminhamento');
+      document.getElementById(`${unitId}-soc-encaminhamento`)?.focus();
+    } else {
+      pillEncam.classList.remove('active');
+    }
+  }
+  recalcSocialTotal(unitId);
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+window.toggleSocialType = toggleSocialType;
+
+function activateSocialInput(unitId, tipo) {
+  const el = document.getElementById(`${unitId}-soc-${tipo}`);
+  if (!el) return;
+  if (el.value === '' || el.value === undefined || el.value === null) {
+    el.value = '0';
+  }
+  el.classList.add('active-val');
+  el.setAttribute('data-activated', 'true');
+
+  const chk = document.getElementById(`${unitId}-soc-chk-${tipo}`);
+  const pill = document.getElementById(`${unitId}-soc-pill-${tipo}`);
+  if (chk && pill) {
+    chk.checked = true;
+    pill.classList.add('active');
+  }
+
+  recalcSocialTotal(unitId);
+}
+window.activateSocialInput = activateSocialInput;
+
+function adjustSocialStep(unitId, tipo, delta) {
+  const el = document.getElementById(`${unitId}-soc-${tipo}`);
+  if (!el) return;
+  let val = parseInt(el.value, 10);
+  if (isNaN(val) || el.value === '') val = 0;
+  val = Math.max(0, val + delta);
+  el.value = val;
+  el.classList.add('active-val');
+  el.setAttribute('data-activated', 'true');
+
+  const chk = document.getElementById(`${unitId}-soc-chk-${tipo}`);
+  const pill = document.getElementById(`${unitId}-soc-pill-${tipo}`);
+  if (chk && pill) {
+    chk.checked = (val > 0 || chk.checked);
+    if (chk.checked) pill.classList.add('active');
+  }
+
+  recalcSocialTotal(unitId);
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+window.adjustSocialStep = adjustSocialStep;
+
+function recalcSocialTotal(unitId) {
+  const elP = document.getElementById(`${unitId}-soc-pontual`);
+  const elE = document.getElementById(`${unitId}-soc-encaminhamento`);
+  const pAct = elP?.getAttribute('data-activated') === 'true';
+  const eAct = elE?.getAttribute('data-activated') === 'true';
+  const chkP = document.getElementById(`${unitId}-soc-chk-pontual`)?.checked;
+  const chkE = document.getElementById(`${unitId}-soc-chk-encaminhamento`)?.checked;
+
+  const valP = parseInt(elP?.value, 10) || 0;
+  const valE = parseInt(elE?.value, 10) || 0;
+  const total = valP + valE;
+
+  const totalEl = document.getElementById(`${unitId}-total-sociais`);
+  if (totalEl) {
+    if (pAct || eAct || chkP || chkE) {
+      totalEl.textContent = total;
+      totalEl.classList.add('active-val');
+    } else {
+      totalEl.textContent = '-';
+      totalEl.classList.remove('active-val');
+    }
+  }
+}
+window.recalcSocialTotal = recalcSocialTotal;
+
 // 5. Salvamento Oficial do Relatório da Missão
 async function handleSaveMissaoReport() {
   const btn = document.getElementById('btn-save-missao-report');
@@ -916,6 +1093,19 @@ async function handleSaveMissaoReport() {
 
   const banhos = parseInt(document.getElementById('missao-rep-banhos')?.value, 10) || 0;
   const cortes = parseInt(document.getElementById('missao-rep-cortes')?.value, 10) || 0;
+
+  // Atendimentos Sociais (Pontuais e Encaminhamentos)
+  const socPontual = parseInt(document.getElementById('missao-soc-pontual')?.value, 10) || 0;
+  const socEncam = parseInt(document.getElementById('missao-soc-encaminhamento')?.value, 10) || 0;
+  const isPontualChecked = document.getElementById('missao-soc-chk-pontual')?.checked;
+  const isEncamChecked = document.getElementById('missao-soc-chk-encaminhamento')?.checked;
+  const socTotal = socPontual + socEncam;
+  let socTipo = 'pontual';
+  if (isPontualChecked && isEncamChecked) socTipo = 'ambos';
+  else if (isEncamChecked) socTipo = 'encaminhamento';
+  else if (isPontualChecked) socTipo = 'pontual';
+  else if (socEncam > 0 && socPontual === 0) socTipo = 'encaminhamento';
+
   const cultos = parseInt(document.getElementById('missao-rep-cultos')?.value, 10) || 0;
   const voluntarios = parseInt(document.getElementById('missao-rep-voluntarios')?.value, 10) || 0;
   const decisoes = parseInt(document.getElementById('missao-rep-decisoes')?.value, 10) || 0;
@@ -939,6 +1129,9 @@ async function handleSaveMissaoReport() {
   // Campos individuais: preenchidos se o campo foi ativado
   const isBanhosComplete = document.getElementById('missao-rep-banhos')?.getAttribute('data-activated') === 'true';
   const isCortesComplete = document.getElementById('missao-rep-cortes')?.getAttribute('data-activated') === 'true';
+  const isSociaisComplete = (document.getElementById('missao-soc-pontual')?.getAttribute('data-activated') === 'true') ||
+                            (document.getElementById('missao-soc-encaminhamento')?.getAttribute('data-activated') === 'true') ||
+                            isPontualChecked || isEncamChecked;
   const isCultosComplete = document.getElementById('missao-rep-cultos')?.getAttribute('data-activated') === 'true';
   const isVoluntariosComplete = document.getElementById('missao-rep-voluntarios')?.getAttribute('data-activated') === 'true';
   const isDecisoesComplete = document.getElementById('missao-rep-decisoes')?.getAttribute('data-activated') === 'true';
@@ -948,6 +1141,7 @@ async function handleSaveMissaoReport() {
     refeicoes: isRefeicoesComplete,
     banhos: isBanhosComplete,
     cortes: isCortesComplete,
+    sociais: isSociaisComplete,
     cultos: isCultosComplete,
     voluntarios: isVoluntariosComplete,
     decisoes: isDecisoesComplete
@@ -989,6 +1183,13 @@ async function handleSaveMissaoReport() {
     },
     banhos: banhos,
     cortesCabelo: cortes,
+    encaminhamentosSociais: socTotal,
+    atendimentosSociais: {
+      total: socTotal,
+      tipo: socTipo,
+      pontual: socPontual,
+      encaminhamento: socEncam
+    },
     cultos: cultos,
     buscaAtivaPessoas: pBusca,
     voluntarios: voluntarios,
@@ -1780,6 +1981,7 @@ const STANDARD_UNIT_ICONS = {
   missionario: MISSAO_ICONS.missionario,
   refeicoes: MISSAO_ICONS.refeicoes,
   sociais: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+  cursos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
   saude: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg>`,
   psico: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>`,
   juridico: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="2 7 12 5 22 7"/><path d="M6 7l-4 7h8l-4-7z"/><path d="M18 7l-4 7h8l-4-7z"/><line x1="8" y1="21" x2="16" y2="21"/></svg>`,
@@ -2091,14 +2293,16 @@ function viewStandardUnitDayReport(unitId, dateStr) {
         </div>
       </div>
 
-      <!-- 2. Encaminhamentos Sociais -->
+      <!-- 2. Atendimentos Sociais -->
       <div style="background:var(--bg-surface); border:1px solid var(--border-beige); border-radius:12px; padding:10px 12px;">
         <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
           <span style="color:var(--green-primary);">${STANDARD_UNIT_ICONS.sociais}</span>
-          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Encam. Sociais</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Atend. Sociais</span>
         </div>
-        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.encaminhamentosSociais || 0}</div>
-        <div style="font-size:0.64rem; color:var(--text-muted);">CRAS, CREAS, INSS, Docs</div>
+        <div style="font-family:var(--font-gothic); font-size:1.4rem; font-weight:800; color:var(--green-primary);">${r.atendimentosSociais?.total ?? r.encaminhamentosSociais ?? 0}</div>
+        <div style="font-size:0.64rem; color:var(--text-muted);">
+          Pontuais: ${r.atendimentosSociais?.pontual ?? (r.atendimentosSociais?.tipo === 'pontual' ? (r.atendimentosSociais?.total || r.encaminhamentosSociais || 0) : 0)} | Encam: ${r.atendimentosSociais?.encaminhamento ?? (r.atendimentosSociais?.tipo === 'encaminhamento' ? (r.atendimentosSociais?.total || r.encaminhamentosSociais || 0) : (r.encaminhamentosSociais || 0))}
+        </div>
       </div>
 
       <!-- 3. Encaminhamentos de Saúde -->
@@ -2215,6 +2419,32 @@ function viewStandardUnitDayReport(unitId, dateStr) {
       </div>
       <div style="font-family:var(--font-gothic); font-size:1.8rem; font-weight:900; color:var(--gold-primary);">${r.decisoesCristo || 0}</div>
     </div>
+
+    <!-- Cursos Profissionalizantes -->
+    <div style="background:linear-gradient(135deg, rgba(197, 137, 8, 0.08), rgba(30, 77, 43, 0.05)); border:1.5px solid rgba(197, 137, 8, 0.35); border-radius:12px; padding:12px; margin-top:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="color:var(--gold-primary);">${STANDARD_UNIT_ICONS.cursos}</span>
+          <span style="font-size:0.75rem; font-weight:800; color:var(--gold-primary); text-transform:uppercase;">Cursos Profissionalizantes</span>
+        </div>
+        <span style="font-family:var(--font-gothic); font-size:1.1rem; font-weight:800; color:var(--green-primary);">${r.participantesCursosProfissionalizantes ?? (Array.isArray(r.cursosProfissionalizantes) ? r.cursosProfissionalizantes.reduce((acc, c) => acc + (Number(c.participantes) || 0), 0) : 0)} participante(s)</span>
+      </div>
+      ${(Array.isArray(r.cursosProfissionalizantes) && r.cursosProfissionalizantes.length > 0) ? `
+        <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+          ${r.cursosProfissionalizantes.map(c => `
+            <div style="background:var(--bg-surface); padding:8px 10px; border-radius:8px; border:1px solid var(--border-beige); display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong style="color:var(--text-main); font-size:0.78rem;">${c.nome}</strong>
+                ${(c.dataInicio || c.dataTermino) ? `<span style="color:var(--text-muted); font-size:0.68rem; display:block;">Período: ${c.dataInicio ? formatDateBR(c.dataInicio) : '-'} até ${c.dataTermino ? formatDateBR(c.dataTermino) : '-'}</span>` : ''}
+              </div>
+              <span style="font-weight:700; color:var(--gold-primary); font-size:0.8rem;">${c.participantes || 0} alunos</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : `
+        <div style="font-size:0.7rem; color:var(--text-muted); font-style:italic;">Nenhum curso profissionalizante registrado neste dia.</div>
+      `}
+    </div>
   `;
 
   modalFooter.innerHTML = `
@@ -2260,7 +2490,7 @@ function openStandardUnitForm(unitId, targetDate, isEdit) {
   const isRefeicoesComplete = isCafeActive && isAlmocoActive && isLancheActive && isJantarActive && isAbordagensActive && isEventosActive;
 
   // Campos individuais
-  const isSociaisActive = hasAns ? !!ans.sociais : (!!existing && (typeof existing.encaminhamentosSociais === 'number' || typeof existing.novasTriagens === 'number'));
+  const isSociaisActive = hasAns ? !!ans.sociais : (!!existing && (typeof existing.atendimentosSociais === 'object' || typeof existing.encaminhamentosSociais === 'number' || typeof existing.novasTriagens === 'number'));
   const isSaudeActive = hasAns ? !!ans.saude : (!!existing && typeof existing.encaminhamentosSaude === 'number');
   const isPsicoActive = hasAns ? !!ans.psicologicos : (!!existing && typeof existing.atendimentosPsicologicos === 'number');
   const isJuridicoActive = hasAns ? !!ans.juridicas : (!!existing && typeof existing.demandasJuridicas === 'number');
@@ -2283,7 +2513,21 @@ function openStandardUnitForm(unitId, targetDate, isEdit) {
   const rEventos = ref.eventosEspeciais ?? 0;
   const rTotal = rCafe + rAlmoco + rLanche + rJantar + rAbordagens + rEventos;
 
-  const sociais = existing?.encaminhamentosSociais ?? existing?.novasTriagens ?? 0;
+  // Atendimentos Sociais
+  const socObj = (existing && typeof existing.atendimentosSociais === 'object') ? existing.atendimentosSociais : {};
+  const socTotal = existing?.encaminhamentosSociais ?? socObj.total ?? existing?.novasTriagens ?? 0;
+  const socPontual = socObj.pontual ?? (socObj.tipo === 'pontual' ? socTotal : 0);
+  const socEncam = socObj.encaminhamento ?? (socObj.tipo === 'encaminhamento' ? socTotal : (existing?.encaminhamentosSociais ?? 0));
+  const socTipo = socObj.tipo || (socPontual > 0 && socEncam > 0 ? 'ambos' : socPontual > 0 ? 'pontual' : socEncam > 0 ? 'encaminhamento' : '');
+  const socPontualActive = (socObj.pontual > 0) || (socTipo === 'pontual') || (socTipo === 'ambos');
+  const socEncamActive = (socObj.encaminhamento > 0) || (socTipo === 'encaminhamento') || (socTipo === 'ambos') || (typeof existing?.encaminhamentosSociais === 'number' && existing.encaminhamentosSociais > 0);
+
+  // Cursos Profissionalizantes
+  const cursosExistentes = Array.isArray(existing?.cursosProfissionalizantes) ? existing.cursosProfissionalizantes : [];
+  const isCursosActive = hasAns ? !!ans.cursosProfissionalizantes : (cursosExistentes.length > 0 || typeof existing?.participantesCursosProfissionalizantes === 'number');
+  const totalPartCursos = existing?.participantesCursosProfissionalizantes ?? cursosExistentes.reduce((acc, c) => acc + (Number(c.participantes) || 0), 0);
+  const cursosSugestoes = (typeof dbManager !== 'undefined' && dbManager.getCursos) ? dbManager.getCursos(unitId) : [];
+
   const saude = existing?.encaminhamentosSaude ?? 0;
   const psico = existing?.atendimentosPsicologicos ?? 0;
   const juridico = existing?.demandasJuridicas ?? 0;
@@ -2419,22 +2663,111 @@ function openStandardUnitForm(unitId, targetDate, isEdit) {
         </div>
       </div>
 
-      <!-- 2. Nº ENCAMINHAMENTOS SOCIAIS -->
+      <!-- 2. Nº DE ATENDIMENTOS SOCIAIS -->
       <div class="missao-q-card">
-        <div class="missao-stepper-row">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="missao-q-icon">${STANDARD_UNIT_ICONS.sociais}</div>
-            <div>
-              <div class="missao-q-title">Nº Encaminhamentos Sociais</div>
-              <div class="missao-q-sub">CRAS, CREAS, INSS, DETRAN, emissão de documentos e outros</div>
-            </div>
+        <div class="missao-q-header">
+          <div class="missao-q-icon">${STANDARD_UNIT_ICONS.sociais}</div>
+          <div class="missao-q-title-box">
+            <div class="missao-q-title">Nº de Atendimentos Sociais</div>
+            <div class="missao-q-sub">Marque se foi atendimento pontual ou encaminhamento (CRAS, CREAS, INSS, Docs etc.)</div>
           </div>
-          <div class="missao-stepper-controls">
-            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-sociais', -1)">-</button>
-            <input type="number" id="${unitId}-rep-sociais" class="missao-step-input ${isSociaisActive ? 'active-val' : ''}" data-activated="${isSociaisActive ? 'true' : 'false'}" value="${isSociaisActive ? sociais : ''}" onfocus="activateStandardUnitInput('${unitId}', this.id)" onclick="activateStandardUnitInput('${unitId}', this.id)" oninput="activateStandardUnitInput('${unitId}', this.id)">
-            <button type="button" class="btn-missao-step" onclick="adjustStandardUnitStep('${unitId}', '${unitId}-rep-sociais', 1)">+</button>
+          <div style="text-align:right;">
+            <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL</span>
+            <div class="missao-total-val ${isSociaisActive ? 'active-val' : ''}" id="${unitId}-total-sociais">${isSociaisActive ? (socPontual + socEncam) : '-'}</div>
           </div>
         </div>
+
+        <!-- Opções para Marcar: Pontual ou Encaminhamento -->
+        <div class="social-type-container">
+          <div class="social-type-pill ${socPontualActive ? 'active' : ''}" id="${unitId}-soc-pill-pontual" onclick="toggleSocialType('${unitId}', 'pontual')">
+            <input type="checkbox" id="${unitId}-soc-chk-pontual" ${socPontualActive ? 'checked' : ''} style="display:none;">
+            <span class="social-type-check">✓</span>
+            <span>Atendimento Pontual</span>
+          </div>
+          <div class="social-type-pill ${socEncamActive ? 'active' : ''}" id="${unitId}-soc-pill-encaminhamento" onclick="toggleSocialType('${unitId}', 'encaminhamento')">
+            <input type="checkbox" id="${unitId}-soc-chk-encaminhamento" ${socEncamActive ? 'checked' : ''} style="display:none;">
+            <span class="social-type-check">✓</span>
+            <span>Encaminhamento</span>
+          </div>
+        </div>
+
+        <div class="missao-sub-grid">
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Pontuais</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustSocialStep('${unitId}', 'pontual', -1)">-</button>
+              <input type="number" id="${unitId}-soc-pontual" class="missao-step-input ${socPontualActive ? 'active-val' : ''}" data-activated="${socPontualActive ? 'true' : 'false'}" value="${socPontualActive ? socPontual : ''}" onfocus="activateSocialInput('${unitId}', 'pontual')" onclick="activateSocialInput('${unitId}', 'pontual')" oninput="activateSocialInput('${unitId}', 'pontual')">
+              <button type="button" class="btn-missao-step" onclick="adjustSocialStep('${unitId}', 'pontual', 1)">+</button>
+            </div>
+          </div>
+
+          <div class="missao-sub-item">
+            <div class="missao-sub-item-header"><span>Encaminhamentos</span></div>
+            <div class="missao-stepper-controls" style="justify-content:center;">
+              <button type="button" class="btn-missao-step" onclick="adjustSocialStep('${unitId}', 'encaminhamento', -1)">-</button>
+              <input type="number" id="${unitId}-soc-encaminhamento" class="missao-step-input ${socEncamActive ? 'active-val' : ''}" data-activated="${socEncamActive ? 'true' : 'false'}" value="${socEncamActive ? socEncam : ''}" onfocus="activateSocialInput('${unitId}', 'encaminhamento')" onclick="activateSocialInput('${unitId}', 'encaminhamento')" oninput="activateSocialInput('${unitId}', 'encaminhamento')">
+              <button type="button" class="btn-missao-step" onclick="adjustSocialStep('${unitId}', 'encaminhamento', 1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CURSOS PROFISSIONALIZANTES (MASCULINA & FEMININA) -->
+      <div class="missao-q-card" style="border: 1.5px solid rgba(197, 137, 8, 0.35); background: rgba(197, 137, 8, 0.02);">
+        <div class="missao-q-header">
+          <div class="missao-q-icon" style="background: rgba(197, 137, 8, 0.12); color: var(--gold-primary); border-color: rgba(197, 137, 8, 0.3);">
+            ${STANDARD_UNIT_ICONS.cursos}
+          </div>
+          <div class="missao-q-title-box">
+            <div class="missao-q-title" style="color: var(--green-primary);">Nº de participantes nos Cursos profissionalizantes</div>
+            <div class="missao-q-sub">Nome do curso, período e participantes (salvo na lista de sugestões)</div>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:0.65rem; color:var(--text-muted); font-weight:700;">TOTAL ALUNOS</span>
+            <div class="missao-total-val ${isCursosActive ? 'active-val' : ''}" id="${unitId}-total-cursos-part">${isCursosActive ? totalPartCursos : '-'}</div>
+          </div>
+        </div>
+
+        <datalist id="cursos-sugestoes-${unitId}">
+          ${cursosSugestoes.map(c => `<option value="${c.nome}">${c.dataInicio ? 'Início: ' + formatDateBR(c.dataInicio) : ''}</option>`).join('')}
+        </datalist>
+
+        <div id="${unitId}-cursos-container">
+          ${(cursosExistentes.length > 0 ? cursosExistentes : [{ nome: '', dataInicio: '', dataTermino: '', participantes: 0 }]).map((c, i) => `
+            <div class="curso-item-card ${unitId}-curso-row" id="${unitId}-curso-row-${i}">
+              <div class="curso-item-card-header">
+                <span class="curso-item-card-title">Curso #${i + 1}</span>
+                ${i > 0 ? `<button type="button" class="btn-remove-curso" onclick="removeCursoRow('${unitId}', ${i})">Remover &times;</button>` : ''}
+              </div>
+              <div style="margin-bottom:8px;">
+                <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Nome do Curso:</label>
+                <input type="text" id="${unitId}-curso-nome-${i}" list="cursos-sugestoes-${unitId}" class="form-input" value="${c.nome || ''}" placeholder="Ex: Barbearia, Panificação, Eletricista..." onchange="onSelectCursoSugestao('${unitId}', ${i}, this.value)" oninput="onCursoFieldChanged('${unitId}')">
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                <div>
+                  <label style="font-size:0.68rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:3px;">Data Início:</label>
+                  <input type="date" id="${unitId}-curso-inicio-${i}" value="${c.dataInicio || ''}" class="form-input" style="padding:4px 6px; font-size:0.75rem;" onchange="onCursoFieldChanged('${unitId}')">
+                </div>
+                <div>
+                  <label style="font-size:0.68rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:3px;">Data Término:</label>
+                  <input type="date" id="${unitId}-curso-termino-${i}" value="${c.dataTermino || ''}" class="form-input" style="padding:4px 6px; font-size:0.75rem;" onchange="onCursoFieldChanged('${unitId}')">
+                </div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.74rem; font-weight:700; color:var(--text-main);">Participantes:</span>
+                <div class="missao-stepper-controls">
+                  <button type="button" class="btn-missao-step" onclick="adjustCursoStep('${unitId}', ${i}, -1)">-</button>
+                  <input type="number" id="${unitId}-curso-part-${i}" class="missao-step-input ${c.participantes > 0 ? 'active-val' : ''}" value="${c.participantes || 0}" min="0" oninput="onCursoFieldChanged('${unitId}')">
+                  <button type="button" class="btn-missao-step" onclick="adjustCursoStep('${unitId}', ${i}, 1)">+</button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <button type="button" class="btn-add-curso" onclick="addCursoRow('${unitId}')">
+          <span>+ Adicionar outro curso</span>
+        </button>
       </div>
 
       <!-- 3. Nº ENCAMINHAMENTOS DE SAÚDE -->
@@ -2736,6 +3069,120 @@ function recalcStandardUnitTotal(unitId, group) {
   }
 }
 
+// ==========================================================================
+// FUNÇÕES GLOBAIS: CURSOS PROFISSIONALIZANTES (MASCULINA & FEMININA)
+// ==========================================================================
+
+function onSelectCursoSugestao(unitId, index, nomeCurso) {
+  if (!nomeCurso) return;
+  const nomeTrim = nomeCurso.trim();
+  const cursosSalvos = (typeof dbManager !== 'undefined' && dbManager.getCursos) ? dbManager.getCursos(unitId) : [];
+  const match = cursosSalvos.find(c => c.nome && c.nome.toLowerCase() === nomeTrim.toLowerCase());
+
+  if (match) {
+    const iniInput = document.getElementById(`${unitId}-curso-inicio-${index}`);
+    const fimInput = document.getElementById(`${unitId}-curso-termino-${index}`);
+    if (iniInput && match.dataInicio && !iniInput.value) {
+      iniInput.value = match.dataInicio;
+    }
+    if (fimInput && match.dataTermino && !fimInput.value) {
+      fimInput.value = match.dataTermino;
+    }
+  }
+  onCursoFieldChanged(unitId);
+}
+window.onSelectCursoSugestao = onSelectCursoSugestao;
+
+function adjustCursoStep(unitId, index, delta) {
+  const el = document.getElementById(`${unitId}-curso-part-${index}`);
+  if (!el) return;
+  let val = parseInt(el.value, 10);
+  if (isNaN(val) || el.value === '') val = 0;
+  val = Math.max(0, val + delta);
+  el.value = val;
+  el.classList.add('active-val');
+  el.setAttribute('data-activated', 'true');
+  onCursoFieldChanged(unitId);
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+window.adjustCursoStep = adjustCursoStep;
+
+function onCursoFieldChanged(unitId) {
+  const rows = document.querySelectorAll(`.${unitId}-curso-row`);
+  let totalPart = 0;
+  let anyFilled = false;
+
+  rows.forEach((row, i) => {
+    const nome = document.getElementById(`${unitId}-curso-nome-${i}`)?.value.trim();
+    const part = parseInt(document.getElementById(`${unitId}-curso-part-${i}`)?.value, 10) || 0;
+    if (nome || part > 0) anyFilled = true;
+    totalPart += part;
+  });
+
+  const totalEl = document.getElementById(`${unitId}-total-cursos-part`);
+  if (totalEl) {
+    if (anyFilled) {
+      totalEl.textContent = totalPart;
+      totalEl.classList.add('active-val');
+    } else {
+      totalEl.textContent = '-';
+      totalEl.classList.remove('active-val');
+    }
+  }
+}
+window.onCursoFieldChanged = onCursoFieldChanged;
+
+function addCursoRow(unitId) {
+  const container = document.getElementById(`${unitId}-cursos-container`);
+  if (!container) return;
+  const currentCount = container.querySelectorAll(`.${unitId}-curso-row`).length;
+  const newIndex = currentCount;
+
+  const rowDiv = document.createElement('div');
+  rowDiv.className = `curso-item-card ${unitId}-curso-row`;
+  rowDiv.id = `${unitId}-curso-row-${newIndex}`;
+  rowDiv.innerHTML = `
+    <div class="curso-item-card-header">
+      <span class="curso-item-card-title">Curso #${newIndex + 1}</span>
+      <button type="button" class="btn-remove-curso" onclick="removeCursoRow('${unitId}', ${newIndex})">Remover &times;</button>
+    </div>
+    <div style="margin-bottom:8px;">
+      <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Nome do Curso:</label>
+      <input type="text" id="${unitId}-curso-nome-${newIndex}" list="cursos-sugestoes-${unitId}" class="form-input" placeholder="Ex: Barbearia, Panificação, Eletricista..." onchange="onSelectCursoSugestao('${unitId}', ${newIndex}, this.value)" oninput="onCursoFieldChanged('${unitId}')">
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+      <div>
+        <label style="font-size:0.68rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:3px;">Data Início:</label>
+        <input type="date" id="${unitId}-curso-inicio-${newIndex}" class="form-input" style="padding:4px 6px; font-size:0.75rem;" onchange="onCursoFieldChanged('${unitId}')">
+      </div>
+      <div>
+        <label style="font-size:0.68rem; font-weight:700; color:var(--text-muted); display:block; margin-bottom:3px;">Data Término:</label>
+        <input type="date" id="${unitId}-curso-termino-${newIndex}" class="form-input" style="padding:4px 6px; font-size:0.75rem;" onchange="onCursoFieldChanged('${unitId}')">
+      </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:0.74rem; font-weight:700; color:var(--text-main);">Participantes:</span>
+      <div class="missao-stepper-controls">
+        <button type="button" class="btn-missao-step" onclick="adjustCursoStep('${unitId}', ${newIndex}, -1)">-</button>
+        <input type="number" id="${unitId}-curso-part-${newIndex}" class="missao-step-input active-val" value="0" min="0" oninput="onCursoFieldChanged('${unitId}')">
+        <button type="button" class="btn-missao-step" onclick="adjustCursoStep('${unitId}', ${newIndex}, 1)">+</button>
+      </div>
+    </div>
+  `;
+  container.appendChild(rowDiv);
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+window.addCursoRow = addCursoRow;
+
+function removeCursoRow(unitId, index) {
+  const row = document.getElementById(`${unitId}-curso-row-${index}`);
+  if (row) {
+    row.remove();
+    onCursoFieldChanged(unitId);
+  }
+}
+window.removeCursoRow = removeCursoRow;
+
 // 5. Salvamento Oficial do Relatório da Unidade (12 Perguntas)
 async function handleSaveStandardUnitReport(unitId) {
   const unit = UNIT_PROFILES[unitId] || { name: 'Unidade', defaultReporter: 'Missionário' };
@@ -2758,7 +3205,60 @@ async function handleSaveStandardUnitReport(unitId) {
   const rAbordagens = parseInt(document.getElementById(`${unitId}-r-abordagens`)?.value, 10) || 0;
   const rEventos = parseInt(document.getElementById(`${unitId}-r-eventos`)?.value, 10) || 0;
 
-  const sociais = parseInt(document.getElementById(`${unitId}-rep-sociais`)?.value, 10) || 0;
+  // Atendimentos Sociais (Pontual / Encaminhamento)
+  const socPontual = parseInt(document.getElementById(`${unitId}-soc-pontual')?.value, 10) || 0;
+  const socEncam = parseInt(document.getElementById(`${unitId}-soc-encaminhamento')?.value, 10) || 0;
+  const isPontualChecked = document.getElementById(`${unitId}-soc-chk-pontual')?.checked;
+  const isEncamChecked = document.getElementById(`${unitId}-soc-chk-encaminhamento')?.checked;
+  const socTotal = socPontual + socEncam;
+  let socTipo = 'pontual';
+  if (isPontualChecked && isEncamChecked) socTipo = 'ambos';
+  else if (isEncamChecked) socTipo = 'encaminhamento';
+  else if (isPontualChecked) socTipo = 'pontual';
+  else if (socEncam > 0 && socPontual === 0) socTipo = 'encaminhamento';
+
+  // Cursos Profissionalizantes
+  const cursosRows = document.querySelectorAll(`.${unitId}-curso-row`);
+  const cursosProf = [];
+  let totalPartCursos = 0;
+  let isCursosComplete = false;
+
+  for (let i = 0; i < cursosRows.length; i++) {
+    const nomeEl = document.getElementById(`${unitId}-curso-nome-${i}`);
+    const iniEl = document.getElementById(`${unitId}-curso-inicio-${i}`);
+    const fimEl = document.getElementById(`${unitId}-curso-termino-${i}`);
+    const partEl = document.getElementById(`${unitId}-curso-part-${i}`);
+
+    const nome = nomeEl?.value.trim();
+    const dataInicio = iniEl?.value || '';
+    const dataTermino = fimEl?.value || '';
+    const participantes = parseInt(partEl?.value, 10) || 0;
+
+    if (nome) {
+      isCursosComplete = true;
+      cursosProf.push({
+        nome,
+        dataInicio,
+        dataTermino,
+        participantes
+      });
+      totalPartCursos += participantes;
+
+      // Salva ou atualiza na lista de sugestões permanente para os próximos preenchimentos
+      if (typeof dbManager.saveCurso === 'function') {
+        await dbManager.saveCurso({
+          nome,
+          dataInicio,
+          dataTermino,
+          unitId
+        });
+      }
+    } else if (participantes > 0) {
+      isCursosComplete = true;
+      totalPartCursos += participantes;
+    }
+  }
+
   const saude = parseInt(document.getElementById(`${unitId}-rep-saude`)?.value, 10) || 0;
   const psico = parseInt(document.getElementById(`${unitId}-rep-psico`)?.value, 10) || 0;
   const juridico = parseInt(document.getElementById(`${unitId}-rep-juridico`)?.value, 10) || 0;
@@ -2783,7 +3283,9 @@ async function handleSaveStandardUnitReport(unitId) {
   const isRefeicoesComplete = cafeAct && almocoAct && lancheAct && jantarAct && abordagensAct && eventosAct;
 
   // Campos individuais
-  const isSociaisComplete = document.getElementById(`${unitId}-rep-sociais`)?.getAttribute('data-activated') === 'true';
+  const isSociaisComplete = (document.getElementById(`${unitId}-soc-pontual')?.getAttribute('data-activated') === 'true') ||
+                            (document.getElementById(`${unitId}-soc-encaminhamento')?.getAttribute('data-activated') === 'true') ||
+                            isPontualChecked || isEncamChecked;
   const isSaudeComplete = document.getElementById(`${unitId}-rep-saude`)?.getAttribute('data-activated') === 'true';
   const isPsicoComplete = document.getElementById(`${unitId}-rep-psico`)?.getAttribute('data-activated') === 'true';
   const isJuridicoComplete = document.getElementById(`${unitId}-rep-juridico`)?.getAttribute('data-activated') === 'true';
@@ -2799,6 +3301,7 @@ async function handleSaveStandardUnitReport(unitId) {
   const answeredQuestions = {
     refeicoes: isRefeicoesComplete,
     sociais: isSociaisComplete,
+    cursosProfissionalizantes: isCursosComplete,
     saude: isSaudeComplete,
     psicologicos: isPsicoComplete,
     juridicas: isJuridicoComplete,
@@ -2833,7 +3336,7 @@ async function handleSaveStandardUnitReport(unitId) {
     date: dateVal,
     reporterName: reporter,
     acolhidosPresentes: acolhidosPresentes,
-    novasTriagens: sociais,
+    novasTriagens: socTotal,
     desligamentos: 0,
     refeicoes: {
       cafe: rCafe,
@@ -2843,7 +3346,16 @@ async function handleSaveStandardUnitReport(unitId) {
       abordagens: rAbordagens,
       eventosEspeciais: rEventos
     },
-    encaminhamentosSociais: sociais,
+    encaminhamentosSociais: socTotal,
+    atendimentosSociais: {
+      total: socTotal,
+      tipo: socTipo,
+      pontual: socPontual,
+      encaminhamento: socEncam
+    },
+    cursosProfissionalizantes: cursosProf,
+    participantesCursosProfissionalizantes: totalPartCursos,
+    encaminhamentosSaude: saude,
     encaminhamentosSaude: saude,
     atendimentosPsicologicos: psico,
     demandasJuridicas: juridico,
@@ -4201,6 +4713,7 @@ function renderReportsHistory() {
     let pTotal = 0, pRua = 0, pUnidade = 0, pBusca = 0;
     let rTotal = 0, rCafe = 0, rAlmoco = 0, rLanche = 0, rJantar = 0, rBusca = 0;
     let banhos = 0, cortes = 0, cultos = 0, buscaPessoas = 0, decisoes = 0;
+    let atendSocTotal = 0, atendSocPontual = 0, atendSocEncam = 0;
 
     matchedReports.forEach(r => {
       // Pessoas atendidas
@@ -4225,6 +4738,13 @@ function renderReportsHistory() {
       cultos += (r.cultos || 0);
       buscaPessoas += (r.buscaAtivaPessoas || 0);
       decisoes += (r.decisoesCristo || 0);
+
+      // Atendimentos Sociais
+      const soc = r.atendimentosSociais || {};
+      const sTot = Number(soc.total) || Number(r.encaminhamentosSociais) || 0;
+      atendSocTotal += sTot;
+      atendSocPontual += (Number(soc.pontual) || (soc.tipo === 'pontual' ? sTot : 0));
+      atendSocEncam += (Number(soc.encaminhamento) || (soc.tipo === 'encaminhamento' ? sTot : 0));
     });
 
     // Quantidade de triagens individuais registradas no período
@@ -4252,6 +4772,28 @@ function renderReportsHistory() {
           <div class="report-subitem-pill">
             <div class="report-subitem-num" style="color:var(--gold-primary);">${finalTriagensMissao}</div>
             <div class="report-subitem-text">Triagens (Geral)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Atendimentos Sociais Missão -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">🤝 Atendimentos Sociais</span>
+          <span class="report-section-badge">${atendSocTotal} atendimentos</span>
+        </div>
+        <div class="report-subitems-grid">
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num" style="color:var(--green-primary);">${atendSocTotal}</div>
+            <div class="report-subitem-text">Total Atendimentos</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${atendSocPontual}</div>
+            <div class="report-subitem-text">Atend. Pontuais</div>
+          </div>
+          <div class="report-subitem-pill">
+            <div class="report-subitem-num">${atendSocEncam}</div>
+            <div class="report-subitem-text">Encaminhamentos</div>
           </div>
         </div>
       </div>
@@ -4349,11 +4891,16 @@ function renderReportsHistory() {
     `;
 
   } else if (unitFilter === 'macedonia' || unitFilter === 'feminina') {
-    // Totais específicos de Macedônia e Feminina (12 perguntas oficiais)
+    // Totais específicos de Macedônia e Feminina
     let rTotal = 0, rCafe = 0, rAlmoco = 0, rJantar = 0, rAbordagens = 0, rEventos = 0;
     let sociais = 0, saude = 0, psico = 0, juridico = 0;
+    let atendSocTotal = 0, atendSocPontual = 0, atendSocEncam = 0;
     let estudos = 0, cultos = 0, musica = 0, coro = 0;
     let esportes = 0, acolhidosEsportes = 0, decisoes = 0;
+
+    // Mapa de Cursos Profissionalizantes no período
+    const cursosMap = {};
+    let totalCursosParticipantes = 0;
 
     matchedReports.forEach(r => {
       const ref = r.refeicoes || {};
@@ -4364,7 +4911,13 @@ function renderReportsHistory() {
       rEventos += (ref.eventosEspeciais || 0);
       rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0));
 
-      sociais += (r.encaminhamentosSociais || 0);
+      const soc = r.atendimentosSociais || {};
+      const sTot = Number(soc.total) || Number(r.encaminhamentosSociais) || 0;
+      sociais += sTot;
+      atendSocTotal += sTot;
+      atendSocPontual += (Number(soc.pontual) || (soc.tipo === 'pontual' ? sTot : 0));
+      atendSocEncam += (Number(soc.encaminhamento) || (soc.tipo === 'encaminhamento' ? sTot : 0));
+
       saude += (r.encaminhamentosSaude || 0);
       psico += (r.atendimentosPsicologicos || 0);
       juridico += (r.demandasJuridicas || 0);
@@ -4377,8 +4930,25 @@ function renderReportsHistory() {
       esportes += (r.atividadesFisicas || 0);
       acolhidosEsportes += (r.participantesAtividadesFisicas || 0);
       decisoes += (r.decisoesCristo || 0);
+
+      // Cursos Profissionalizantes
+      if (Array.isArray(r.cursosProfissionalizantes)) {
+        r.cursosProfissionalizantes.forEach(c => {
+          const nome = (c.nome || '').trim();
+          if (!nome) return;
+          const part = Number(c.participantes) || 0;
+          totalCursosParticipantes += part;
+          if (!cursosMap[nome]) {
+            cursosMap[nome] = { nome, participantes: 0, inicio: c.dataInicio || '', termino: c.dataTermino || '' };
+          }
+          cursosMap[nome].participantes += part;
+          if (c.dataInicio && !cursosMap[nome].inicio) cursosMap[nome].inicio = c.dataInicio;
+          if (c.dataTermino) cursosMap[nome].termino = c.dataTermino;
+        });
+      }
     });
 
+    const cursosList = Object.values(cursosMap);
     const totalEstudosFinal = Math.max(estudos, estudosData.total);
 
     html += `
@@ -4412,20 +4982,23 @@ function renderReportsHistory() {
         </div>
       </div>
 
-      <!-- Card: Encaminhamentos & Apoio -->
+      <!-- Card: Encaminhamentos & Atendimentos Sociais -->
       <div class="report-section-card">
         <div class="report-section-header">
-          <span class="report-section-title">🩺 Encaminhamentos & Assistência</span>
+          <span class="report-section-title">🩺 Atendimentos & Assistência</span>
           <span class="report-section-badge">${sociais + saude + psico + juridico} atend.</span>
         </div>
         <div class="report-grid-kpis">
           <div class="report-kpi-box">
-            <span class="report-kpi-val">${sociais}</span>
-            <span class="report-kpi-lbl">Encaminhamentos Sociais</span>
+            <span class="report-kpi-val" style="color:var(--green-primary);">${atendSocTotal}</span>
+            <span class="report-kpi-lbl">Atendimentos Sociais</span>
+            <span style="font-size:0.65rem; color:var(--text-muted); display:block; margin-top:2px;">
+              ${atendSocPontual} pontuais • ${atendSocEncam} encam.
+            </span>
           </div>
           <div class="report-kpi-box">
             <span class="report-kpi-val">${saude}</span>
-            <span class="report-kpi-lbl">Encaminhamentos de Saúde</span>
+            <span class="report-kpi-lbl">Encaminhamentos Saúde</span>
           </div>
           <div class="report-kpi-box">
             <span class="report-kpi-val">${psico}</span>
@@ -4436,6 +5009,37 @@ function renderReportsHistory() {
             <span class="report-kpi-lbl">Demandas Jurídicas</span>
           </div>
         </div>
+      </div>
+
+      <!-- Card: Cursos Profissionalizantes -->
+      <div class="report-section-card">
+        <div class="report-section-header">
+          <span class="report-section-title">🎓 Cursos Profissionalizantes</span>
+          <span class="report-section-badge" style="background:rgba(30,77,43,0.12); color:var(--green-primary); font-weight:800;">
+            ${cursosList.length} curso(s) • ${totalCursosParticipantes} partic.
+          </span>
+        </div>
+        ${cursosList.length === 0 ? `
+          <div style="font-size:0.75rem; color:var(--text-muted); padding:4px 0;">Nenhum curso profissionalizante registrado neste período.</div>
+        ` : `
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${cursosList.map(c => `
+              <div style="background:var(--bg-main); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="color:var(--text-main); font-size:0.82rem;">${escapeHtml(c.nome)}</strong>
+                  <div style="font-size:0.70rem; color:var(--text-muted);">
+                    ${c.inicio ? `Início: ${formatDateBR(c.inicio)}` : ''} ${c.termino ? `• Término: ${formatDateBR(c.termino)}` : ''}
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <span style="display:inline-block; padding:3px 8px; border-radius:6px; background:var(--green-light); color:var(--green-primary); font-size:0.75rem; font-weight:800;">
+                    ${c.participantes} participante(s)
+                  </span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
       </div>
 
       <!-- Card: Espiritualidade, Música & Esporte -->
@@ -4710,6 +5314,7 @@ async function downloadReportsPDF() {
       let pTotal = 0, pRua = 0, pUnidade = 0, pBusca = 0;
       let rTotal = 0, rCafe = 0, rAlmoco = 0, rLanche = 0, rJantar = 0, rBusca = 0;
       let banhos = 0, cortes = 0, cultos = 0, buscaPessoas = 0, decisoes = 0;
+      let atendSocTotal = 0, atendSocPontual = 0, atendSocEncam = 0;
 
       matchedReports.forEach(r => {
         const p = r.pessoasAtendidas || {};
@@ -4731,6 +5336,12 @@ async function downloadReportsPDF() {
         cultos += (r.cultos || 0);
         buscaPessoas += (r.buscaAtivaPessoas || 0);
         decisoes += (r.decisoesCristo || 0);
+
+        const soc = r.atendimentosSociais || {};
+        const sTot = Number(soc.total) || Number(r.encaminhamentosSociais) || 0;
+        atendSocTotal += sTot;
+        atendSocPontual += (Number(soc.pontual) || (soc.tipo === 'pontual' ? sTot : 0));
+        atendSocEncam += (Number(soc.encaminhamento) || (soc.tipo === 'encaminhamento' ? sTot : 0));
       });
 
       metricsHtml = `
@@ -4762,7 +5373,29 @@ async function downloadReportsPDF() {
           </table>
 
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
-            2. Refeições Servidas na Unidade Missão (Total: ${rTotal})
+            2. Atendimentos Sociais na Unidade Missão (Total: ${atendSocTotal})
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Tipo de Atendimento Social</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Total</th>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Atendimentos Pontuais</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${atendSocPontual}</td>
+            </tr>
+            <tr style="background:#FAF8F5;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Encaminhamentos Sociais</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${atendSocEncam}</td>
+            </tr>
+            <tr style="background:#FFF9E6; font-weight:bold; color:#1E4D2B;">
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">Total de Atendimentos Sociais</td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">${atendSocTotal}</td>
+            </tr>
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            3. Refeições Servidas na Unidade Missão (Total: ${rTotal})
           </h3>
           <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
             <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
@@ -4792,7 +5425,7 @@ async function downloadReportsPDF() {
           </table>
 
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
-            3. Atividades & Cuidado Pessoal
+            4. Atividades & Cuidado Pessoal
           </h3>
           <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
             <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
@@ -4822,7 +5455,7 @@ async function downloadReportsPDF() {
           </table>
 
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
-            4. Estudos Bíblicos & Discipulado na Unidade Missão
+            5. Estudos Bíblicos & Discipulado na Unidade Missão
           </h3>
           <table style="width:100%; border-collapse:collapse; font-size:12px;">
             <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
@@ -4857,8 +5490,12 @@ async function downloadReportsPDF() {
     } else if (unitFilter === 'macedonia' || unitFilter === 'feminina') {
       let rTotal = 0, rCafe = 0, rAlmoco = 0, rJantar = 0, rAbordagens = 0, rEventos = 0;
       let sociais = 0, saude = 0, psico = 0, juridico = 0;
+      let atendSocTotal = 0, atendSocPontual = 0, atendSocEncam = 0;
       let estudos = 0, cultos = 0, musica = 0, coro = 0;
       let esportes = 0, acolhidosEsportes = 0, decisoes = 0;
+
+      const cursosMap = {};
+      let totalCursosParticipantes = 0;
 
       matchedReports.forEach(r => {
         const ref = r.refeicoes || {};
@@ -4869,7 +5506,13 @@ async function downloadReportsPDF() {
         rEventos += (ref.eventosEspeciais || 0);
         rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0));
 
-        sociais += (r.encaminhamentosSociais || 0);
+        const soc = r.atendimentosSociais || {};
+        const sTot = Number(soc.total) || Number(r.encaminhamentosSociais) || 0;
+        sociais += sTot;
+        atendSocTotal += sTot;
+        atendSocPontual += (Number(soc.pontual) || (soc.tipo === 'pontual' ? sTot : 0));
+        atendSocEncam += (Number(soc.encaminhamento) || (soc.tipo === 'encaminhamento' ? sTot : 0));
+
         saude += (r.encaminhamentosSaude || 0);
         psico += (r.atendimentosPsicologicos || 0);
         juridico += (r.demandasJuridicas || 0);
@@ -4882,8 +5525,24 @@ async function downloadReportsPDF() {
         esportes += (r.atividadesFisicas || 0);
         acolhidosEsportes += (r.participantesAtividadesFisicas || 0);
         decisoes += (r.decisoesCristo || 0);
+
+        if (Array.isArray(r.cursosProfissionalizantes)) {
+          r.cursosProfissionalizantes.forEach(c => {
+            const nome = (c.nome || '').trim();
+            if (!nome) return;
+            const part = Number(c.participantes) || 0;
+            totalCursosParticipantes += part;
+            if (!cursosMap[nome]) {
+              cursosMap[nome] = { nome, participantes: 0, inicio: c.dataInicio || '', termino: c.dataTermino || '' };
+            }
+            cursosMap[nome].participantes += part;
+            if (c.dataInicio && !cursosMap[nome].inicio) cursosMap[nome].inicio = c.dataInicio;
+            if (c.dataTermino) cursosMap[nome].termino = c.dataTermino;
+          });
+        }
       });
 
+      const cursosList = Object.values(cursosMap);
       const totalEstudosFinal = Math.max(estudos, estudosPeriodo.total);
 
       metricsHtml = `
@@ -4911,14 +5570,41 @@ async function downloadReportsPDF() {
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Atendimento</th>
               <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Total</th>
             </tr>
-            <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Encaminhamentos Sociais (CRAS, INSS, Documentos)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${sociais}</td></tr>
+            <tr>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8;">
+                Atendimentos Sociais (Total: ${atendSocTotal} | Pontuais: ${atendSocPontual} | Encaminhamentos: ${atendSocEncam})
+              </td>
+              <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${atendSocTotal}</td>
+            </tr>
             <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Encaminhamentos de Saúde (Médicos, Odonto, Vacinas)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${saude}</td></tr>
             <tr><td style="padding:6px 10px; border:1px solid #E2D9C8;">Atendimentos Psicológicos</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${psico}</td></tr>
             <tr style="background:#FAF8F5;"><td style="padding:6px 10px; border:1px solid #E2D9C8;">Demandas Jurídicas (Advogados, Fóruns, Varas)</td><td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold;">${juridico}</td></tr>
           </table>
 
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
-            3. Espiritualidade, Oficinas & Atividades Físicas
+            3. Cursos Profissionalizantes (${cursosList.length} curso(s) • ${totalCursosParticipantes} participantes somados)
+          </h3>
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
+            <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:left;">Nome do Curso</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Período (Início - Término)</th>
+              <th style="padding:6px 10px; border:1px solid #D6CEBE; text-align:center;">Participantes</th>
+            </tr>
+            ${cursosList.length === 0 ? `
+              <tr><td colspan="3" style="padding:8px 10px; border:1px solid #E2D9C8; text-align:center; color:#718096;">Nenhum curso profissionalizante registrado neste período.</td></tr>
+            ` : cursosList.map(c => `
+              <tr>
+                <td style="padding:6px 10px; border:1px solid #E2D9C8; font-weight:bold;">${escapeHtml(c.nome)}</td>
+                <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center;">
+                  ${c.inicio ? formatDateBR(c.inicio) : 'N/I'} até ${c.termino ? formatDateBR(c.termino) : 'Em andamento'}
+                </td>
+                <td style="padding:6px 10px; border:1px solid #E2D9C8; text-align:center; font-weight:bold; color:#1E4D2B;">${c.participantes}</td>
+              </tr>
+            `).join('')}
+          </table>
+
+          <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
+            4. Espiritualidade, Oficinas & Atividades Físicas
           </h3>
           <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px;">
             <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
@@ -4938,7 +5624,7 @@ async function downloadReportsPDF() {
           </table>
 
           <h3 style="font-size:13px; color:#1E4D2B; text-transform:uppercase; border-bottom:2px solid #C58908; padding-bottom:4px; margin-bottom:10px;">
-            4. Detalhamento de Estudos Bíblicos (${estudosPeriodo.participantes} participantes somados)
+            5. Detalhamento de Estudos Bíblicos (${estudosPeriodo.participantes} participantes somados)
           </h3>
           <table style="width:100%; border-collapse:collapse; font-size:12px;">
             <tr style="background:#F5F1E8; color:#1E4D2B; font-weight:bold;">
@@ -5173,6 +5859,7 @@ function shareReportsWhatsApp() {
     let pTotal = 0, pRua = 0, pUnidade = 0, pBusca = 0;
     let rTotal = 0, rCafe = 0, rAlmoco = 0, rLanche = 0, rJantar = 0, rBusca = 0;
     let banhos = 0, cortes = 0, cultos = 0, buscaPessoas = 0, decisoes = 0;
+    let atendSocTotal = 0, atendSocPontual = 0, atendSocEncam = 0;
 
     matchedReports.forEach(r => {
       const p = r.pessoasAtendidas || {};
@@ -5194,6 +5881,12 @@ function shareReportsWhatsApp() {
       cultos += (r.cultos || 0);
       buscaPessoas += (r.buscaAtivaPessoas || 0);
       decisoes += (r.decisoesCristo || 0);
+
+      const soc = r.atendimentosSociais || {};
+      const sTot = Number(soc.total) || Number(r.encaminhamentosSociais) || 0;
+      atendSocTotal += sTot;
+      atendSocPontual += (Number(soc.pontual) || (soc.tipo === 'pontual' ? sTot : 0));
+      atendSocEncam += (Number(soc.encaminhamento) || (soc.tipo === 'encaminhamento' ? sTot : 0));
     });
 
     text += `*1. PESSOAS ATENDIDAS (TOTAL: ${pTotal})*\n`;
@@ -5201,14 +5894,18 @@ function shareReportsWhatsApp() {
     text += `• Na Unidade: ${pUnidade}\n`;
     text += `• Busca Ativa: ${pBusca}\n\n`;
 
-    text += `*2. REFEIÇÕES SERVIDAS (TOTAL: ${rTotal})*\n`;
+    text += `*2. ATENDIMENTOS SOCIAIS (TOTAL: ${atendSocTotal})*\n`;
+    text += `• Pontuais: ${atendSocPontual}\n`;
+    text += `• Encaminhamentos: ${atendSocEncam}\n\n`;
+
+    text += `*3. REFEIÇÕES SERVIDAS (TOTAL: ${rTotal})*\n`;
     text += `• Café da Manhã: ${rCafe}\n`;
     text += `• Almoço: ${rAlmoco}\n`;
     text += `• Lanche da Tarde: ${rLanche}\n`;
     text += `• Jantar: ${rJantar}\n`;
     text += `• Busca Ativa: ${rBusca}\n\n`;
 
-    text += `*3. CUIDADOS & ESPIRITUALIDADE*\n`;
+    text += `*4. CUIDADOS & ESPIRITUALIDADE*\n`;
     text += `• Banhos Tomados: ${banhos}\n`;
     text += `• Cortes de Cabelo: ${cortes}\n`;
     text += `• Cultos Realizados: ${cultos}\n`;
@@ -5219,8 +5916,12 @@ function shareReportsWhatsApp() {
   } else if (unitFilter === 'macedonia' || unitFilter === 'feminina') {
     let rTotal = 0, rCafe = 0, rAlmoco = 0, rJantar = 0, rAbordagens = 0, rEventos = 0;
     let sociais = 0, saude = 0, psico = 0, juridico = 0;
+    let atendSocTotal = 0, atendSocPontual = 0, atendSocEncam = 0;
     let estudos = 0, cultos = 0, musica = 0, coro = 0;
     let esportes = 0, acolhidosEsportes = 0, decisoes = 0;
+
+    const cursosMap = {};
+    let totalCursosParticipantes = 0;
 
     matchedReports.forEach(r => {
       const ref = r.refeicoes || {};
@@ -5231,7 +5932,13 @@ function shareReportsWhatsApp() {
       rEventos += (ref.eventosEspeciais || 0);
       rTotal += ((ref.cafe || 0) + (ref.almoco || 0) + (ref.jantar || 0) + (ref.abordagens || 0) + (ref.eventosEspeciais || 0));
 
-      sociais += (r.encaminhamentosSociais || 0);
+      const soc = r.atendimentosSociais || {};
+      const sTot = Number(soc.total) || Number(r.encaminhamentosSociais) || 0;
+      sociais += sTot;
+      atendSocTotal += sTot;
+      atendSocPontual += (Number(soc.pontual) || (soc.tipo === 'pontual' ? sTot : 0));
+      atendSocEncam += (Number(soc.encaminhamento) || (soc.tipo === 'encaminhamento' ? sTot : 0));
+
       saude += (r.encaminhamentosSaude || 0);
       psico += (r.atendimentosPsicologicos || 0);
       juridico += (r.demandasJuridicas || 0);
@@ -5244,21 +5951,47 @@ function shareReportsWhatsApp() {
       esportes += (r.atividadesFisicas || 0);
       acolhidosEsportes += (r.participantesAtividadesFisicas || 0);
       decisoes += (r.decisoesCristo || 0);
+
+      if (Array.isArray(r.cursosProfissionalizantes)) {
+        r.cursosProfissionalizantes.forEach(c => {
+          const nome = (c.nome || '').trim();
+          if (!nome) return;
+          const part = Number(c.participantes) || 0;
+          totalCursosParticipantes += part;
+          if (!cursosMap[nome]) {
+            cursosMap[nome] = { nome, participantes: 0, inicio: c.dataInicio || '', termino: c.dataTermino || '' };
+          }
+          cursosMap[nome].participantes += part;
+          if (c.dataInicio && !cursosMap[nome].inicio) cursosMap[nome].inicio = c.dataInicio;
+          if (c.dataTermino) cursosMap[nome].termino = c.dataTermino;
+        });
+      }
     });
 
+    const cursosList = Object.values(cursosMap);
     const totalEstudosFinal = Math.max(estudos, estudosPeriodo.total);
 
     text += `*1. REFEIÇÕES SERVIDAS (TOTAL: ${rTotal})*\n`;
     text += `• Café: ${rCafe} | Almoço: ${rAlmoco} | Jantar: ${rJantar}\n`;
     text += `• Abordagens de Rua: ${rAbordagens} | Eventos Especiais: ${rEventos}\n\n`;
 
-    text += `*2. ENCAMINHAMENTOS & APOIO*\n`;
-    text += `• Encaminhamentos Sociais: ${sociais}\n`;
+    text += `*2. ATENDIMENTOS & APOIO*\n`;
+    text += `• Atendimentos Sociais: ${atendSocTotal} (${atendSocPontual} pontuais, ${atendSocEncam} encaminhamentos)\n`;
     text += `• Encaminhamentos de Saúde: ${saude}\n`;
     text += `• Atendimentos Psicológicos: ${psico}\n`;
     text += `• Demandas Jurídicas: ${juridico}\n\n`;
 
-    text += `*3. ESPIRITUALIDADE & OFICINAS*\n`;
+    text += `*3. CURSOS PROFISSIONALIZANTES (${cursosList.length} CURSO(S))*\n`;
+    if (cursosList.length === 0) {
+      text += `• Nenhum curso registrado no período.\n\n`;
+    } else {
+      cursosList.forEach(c => {
+        text += `• ${c.nome}: ${c.participantes} participante(s)${c.inicio ? ` (${formatDateBR(c.inicio)} a ${c.termino ? formatDateBR(c.termino) : 'atual'})` : ''}\n`;
+      });
+      text += `• Total de Participantes Somados: ${totalCursosParticipantes}\n\n`;
+    }
+
+    text += `*4. ESPIRITUALIDADE & OFICINAS*\n`;
     text += `• 📖 *Estudos Bíblicos:* ${totalEstudosFinal} encontro(s) (${estudosPeriodo.participantes} participantes)\n`;
     text += `• Cultos e Vigílias: ${cultos}\n`;
     text += `• Sons da Missão (Música): ${musica}\n`;

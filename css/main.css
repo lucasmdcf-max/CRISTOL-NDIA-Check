@@ -2828,7 +2828,128 @@ body::before {
   transform: translateY(-1px);
 }
 
+/* --- ATENDIMENTOS SOCIAIS & CURSOS PROFISSIONALIZANTES (NOBRES) --- */
+.social-type-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
 
+.social-type-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-beige);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
 
+.social-type-pill:hover {
+  border-color: var(--green-primary);
+  color: var(--green-primary);
+}
 
+.social-type-pill.active {
+  background: rgba(30, 77, 43, 0.08);
+  border-color: var(--green-primary);
+  color: var(--green-primary);
+  box-shadow: 0 2px 6px rgba(30, 77, 43, 0.12);
+}
 
+.social-type-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border-beige);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: transparent;
+  transition: all 0.2s ease;
+  background: var(--bg-surface);
+}
+
+.social-type-pill.active .social-type-check {
+  background: var(--green-primary);
+  border-color: var(--green-primary);
+  color: #FFFFFF;
+}
+
+/* Container de Cursos Profissionalizantes */
+.curso-item-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-beige);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.curso-item-card:hover {
+  border-color: rgba(197, 137, 8, 0.4);
+}
+
+.curso-item-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.curso-item-card-title {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--gold-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.btn-remove-curso {
+  background: transparent;
+  border: none;
+  color: #C53030;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.btn-remove-curso:hover {
+  background: rgba(197, 48, 48, 0.08);
+}
+
+.btn-add-curso {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--gold-primary);
+  background: rgba(197, 137, 8, 0.05);
+  color: var(--gold-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 6px;
+}
+
+.btn-add-curso:hover {
+  background: rgba(197, 137, 8, 0.12);
+  border-style: solid;
+}

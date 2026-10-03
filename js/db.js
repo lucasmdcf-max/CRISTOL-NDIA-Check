@@ -12,6 +12,7 @@ const DB_KEYS = {
   NOTICES: 'cristolandia_check_notices_v1',
   TRIAGENS: 'cristolandia_check_triagens_v1',
   ESTUDOS: 'cristolandia_check_estudos_v1',
+  CURSOS: 'cristolandia_check_cursos_v1',
   FIREBASE_CONFIG: 'cristolandia_check_firebase_cfg_v1',
   APP_CONFIG: 'cristolandia_check_app_cfg_v1'
 };
@@ -371,6 +372,11 @@ class CristolandiaDB {
         localStorage.setItem(DB_KEYS.ESTUDOS, JSON.stringify(toArray(data.estudos)));
       } else {
         localStorage.setItem(DB_KEYS.ESTUDOS, JSON.stringify([]));
+      }
+      if (data.cursos !== undefined) {
+        localStorage.setItem(DB_KEYS.CURSOS, JSON.stringify(toArray(data.cursos)));
+      } else if (!localStorage.getItem(DB_KEYS.CURSOS)) {
+        localStorage.setItem(DB_KEYS.CURSOS, JSON.stringify([]));
       }
       if (data.stock_movements !== undefined) {
         localStorage.setItem(DB_KEYS.STOCK_MOVEMENTS, JSON.stringify(toArray(data.stock_movements)));
@@ -1172,6 +1178,61 @@ class CristolandiaDB {
     }
   }
 
+  // --- MÉTODOS DE CURSOS PROFISSIONALIZANTES (SUGESTÕES E CADASTRO) ---
+  getCursos(unitId = null) {
+    try {
+      const raw = localStorage.getItem(DB_KEYS.CURSOS);
+      const list = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(list)) return [];
+      let filtered = list;
+      if (unitId && unitId !== 'todas') {
+        filtered = list.filter(c => !c.unitId || c.unitId === unitId || c.unitId === 'geral');
+      }
+      return filtered.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+    } catch {
+      return [];
+    }
+  }
+
+  async saveCurso(cursoData) {
+    if (!cursoData || !cursoData.nome || !cursoData.nome.trim()) return null;
+    const cursos = this.getCursos();
+    const nomeLimpo = cursoData.nome.trim();
+    const finalId = cursoData.id || `cur_${nomeLimpo.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+    const existingIndex = cursos.findIndex(c => 
+      c.id === finalId || (c.nome && c.nome.toLowerCase() === nomeLimpo.toLowerCase())
+    );
+
+    const sanitized = this.sanitize({
+      id: finalId,
+      nome: nomeLimpo,
+      dataInicio: cursoData.dataInicio || (existingIndex >= 0 ? cursos[existingIndex].dataInicio : '') || '',
+      dataTermino: cursoData.dataTermino || (existingIndex >= 0 ? cursos[existingIndex].dataTermino : '') || '',
+      unitId: cursoData.unitId || 'geral',
+      updatedAt: Date.now()
+    });
+
+    if (existingIndex >= 0) {
+      cursos[existingIndex] = { ...cursos[existingIndex], ...sanitized };
+    } else {
+      cursos.push(sanitized);
+    }
+
+    localStorage.setItem(DB_KEYS.CURSOS, JSON.stringify(cursos));
+
+    if (this.firebaseDb) {
+      try {
+        this._lastLocalWrite = Date.now();
+        await this.firebaseDb.ref(`cristolandia_check/cursos/${sanitized.id}`).set(sanitized);
+      } catch (e) {
+        console.warn('Firebase pendente (curso salvo localmente):', e);
+      }
+    }
+
+    return sanitized;
+  }
+
   // Configuração do Firebase
   setFirebaseConfig(config) {
     localStorage.setItem(DB_KEYS.FIREBASE_CONFIG, JSON.stringify(config));
@@ -1200,6 +1261,8 @@ class CristolandiaDB {
     localStorage.removeItem(DB_KEYS.ACTIVITIES);
     localStorage.removeItem(DB_KEYS.NOTICES);
     localStorage.removeItem(DB_KEYS.TRIAGENS);
+    localStorage.removeItem(DB_KEYS.ESTUDOS);
+    localStorage.removeItem(DB_KEYS.CURSOS);
     this.ensureLocalSeed();
   }
 }
