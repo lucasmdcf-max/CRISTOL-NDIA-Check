@@ -1,6 +1,6 @@
 {
-  "version": "1.0.52",
-  "build": "20261002_52",
+  "version": "1.0.53",
+  "build": "20261002_53",
   "appName": "Cristolândia Check",
-  "releaseNotes": "Inclusão do campo Atendimentos Sociais (com opção de atendimento pontual ou encaminhamento) nas 3 unidades, e Cursos Profissionalizantes (com nome, data de início, data de término e participantes com sugestões salvas) nas unidades Masculina e Feminina."
+  "releaseNotes": "Correção de delimitadores de string em js/modules.js restabelecendo o funcionamento imediato dos botões das abas e validação automatizada de sintaxe."
 }

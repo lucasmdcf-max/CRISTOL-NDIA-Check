@@ -3206,10 +3206,10 @@ async function handleSaveStandardUnitReport(unitId) {
   const rEventos = parseInt(document.getElementById(`${unitId}-r-eventos`)?.value, 10) || 0;
 
   // Atendimentos Sociais (Pontual / Encaminhamento)
-  const socPontual = parseInt(document.getElementById(`${unitId}-soc-pontual')?.value, 10) || 0;
-  const socEncam = parseInt(document.getElementById(`${unitId}-soc-encaminhamento')?.value, 10) || 0;
-  const isPontualChecked = document.getElementById(`${unitId}-soc-chk-pontual')?.checked;
-  const isEncamChecked = document.getElementById(`${unitId}-soc-chk-encaminhamento')?.checked;
+  const socPontual = parseInt(document.getElementById(`${unitId}-soc-pontual`)?.value, 10) || 0;
+  const socEncam = parseInt(document.getElementById(`${unitId}-soc-encaminhamento`)?.value, 10) || 0;
+  const isPontualChecked = document.getElementById(`${unitId}-soc-chk-pontual`)?.checked;
+  const isEncamChecked = document.getElementById(`${unitId}-soc-chk-encaminhamento`)?.checked;
   const socTotal = socPontual + socEncam;
   let socTipo = 'pontual';
   if (isPontualChecked && isEncamChecked) socTipo = 'ambos';
@@ -3283,8 +3283,8 @@ async function handleSaveStandardUnitReport(unitId) {
   const isRefeicoesComplete = cafeAct && almocoAct && lancheAct && jantarAct && abordagensAct && eventosAct;
 
   // Campos individuais
-  const isSociaisComplete = (document.getElementById(`${unitId}-soc-pontual')?.getAttribute('data-activated') === 'true') ||
-                            (document.getElementById(`${unitId}-soc-encaminhamento')?.getAttribute('data-activated') === 'true') ||
+  const isSociaisComplete = (document.getElementById(`${unitId}-soc-pontual`)?.getAttribute('data-activated') === 'true') ||
+                            (document.getElementById(`${unitId}-soc-encaminhamento`)?.getAttribute('data-activated') === 'true') ||
                             isPontualChecked || isEncamChecked;
   const isSaudeComplete = document.getElementById(`${unitId}-rep-saude`)?.getAttribute('data-activated') === 'true';
   const isPsicoComplete = document.getElementById(`${unitId}-rep-psico`)?.getAttribute('data-activated') === 'true';
